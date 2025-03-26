@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ここからERD Generator用の設定
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "./ERD.svg"  // 出力先ファイルを指定。SVG以外にPDFやPNGに変更することも可能
+}
+
+model User {
+  id                Int            @id @default(autoincrement())
+  name              String
+  topImage          String?
+  age               Int?
+  ageVisible        Boolean        @default(true)
+  email             String?        @unique
+  hashedPassword    String?        // メール+パスワード認証用。外部認証のみのユーザーはNULLになる。
+  primaryAuthMethod String         // 'email' もしくはプロバイダー名（例: 'google', 'github' など）
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  // サブスクリプション情報の追加
+  subscriptionStatus String?       // "active", "inactive", "trial" など
+  subscriptionPlan   String?       // プラン名またはプランID
+  subscriptionStart  DateTime?     // サブスクリプション開始日時
+  subscriptionEnd    DateTime?     // サブスクリプション終了日時
+
+  // Relations
+  units             Unit[]
+  logs              Log[]
+  comments          Comment[]
+  unitLikes         UnitLike[]
+  userSkills        UserSkill[]
+  userInterests     UserInterest[]
+  providers         UserProvider[] // 外部認証情報（UserProvider）とのリレーション
+}
+
+model UserProvider {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  provider     String   // 例: "google", "github", "facebook" など
+  providerId   String   // プロバイダー側のユーザーID
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+}
+
+model Unit {
+  id               Int         @id @default(autoincrement())
+  userId           Int
+  title            String
+  learningGoal     String?
+  preLearningState String?
+  reflection       String?
+  nextAction       String?
+  startDate        DateTime?
+  endDate          DateTime?
+  displayFlag      Boolean     @default(true)
+  status           String      // '計画中', '進行中', '完了'
+  likesCount       Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relations
+  user             User        @relation(fields: [userId], references: [id])
+  logs             Log[]
+  unitTags         UnitTag[]
+  unitLikes        UnitLike[]
+  comments         Comment[]
+}
+
+model Log {
+  id           Int         @id @default(autoincrement())
+  unitId       Int
+  userId       Int
+  title        String
+  learningTime Int?        // 例：分単位の学習時間
+  note         String?
+  logDate      DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  unit         Unit        @relation(fields: [unitId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+  logTags      LogTag[]
+  resources    Resource[]
+}
+
+model Resource {
+  id           Int         @id @default(autoincrement())
+  logId        Int
+  resourceType String?
+  resourceLink String
+  description  String?
+  createdAt    DateTime    @default(now())
+
+  // Relations
+  log          Log         @relation(fields: [logId], references: [id])
+}
+
+model Tag {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+
+  // Relations
+  unitTags      UnitTag[]
+  logTags       LogTag[]
+  userSkills    UserSkill[]
+  userInterests UserInterest[]
+}
+
+model UnitTag {
+  unitId Int
+  tagId  Int
+
+  unit   Unit  @relation(fields: [unitId], references: [id])
+  tag    Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([unitId, tagId])
+}
+
+model LogTag {
+  logId Int
+  tagId Int
+
+  log   Log  @relation(fields: [logId], references: [id])
+  tag   Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([logId, tagId])
+}
+
+model UserSkill {
+  userId Int
+  tagId  Int
+
+  user   User  @relation(fields: [userId], references: [id])
+  tag    Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([userId, tagId])
+}
+
+model UserInterest {
+  userId Int
+  tagId  Int
+
+  user   User  @relation(fields: [userId], references: [id])
+  tag    Tag   @relation(fields: [tagId], references: [id])
+
+  @@id([userId, tagId])
+}
+
+model UnitLike {
+  userId    Int
+  unitId    Int
+  createdAt DateTime   @default(now())
+
+  user      User  @relation(fields: [userId], references: [id])
+  unit      Unit  @relation(fields: [unitId], references: [id])
+
+  @@id([userId, unitId])
+}
+
+model Comment {
+  id        Int         @id @default(autoincrement())
+  unitId    Int
+  userId    Int
+  comment   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  unit      Unit        @relation(fields: [unitId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+}
