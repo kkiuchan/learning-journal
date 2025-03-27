@@ -17,12 +17,12 @@ generator erd {
 }
 
 model User {
-  id                Int            @id @default(autoincrement())
-  name              String
+  id            String          @id @default(cuid())
+  name              String?
   topImage          String?
   age               Int?
   ageVisible        Boolean        @default(true)
-  email             String?        @unique
+  email             String         @unique
   hashedPassword    String?        // メール+パスワード認証用。外部認証のみのユーザーはNULLになる。
   primaryAuthMethod String         // 'email' もしくはプロバイダー名（例: 'google', 'github' など）
   createdAt         DateTime       @default(now())
@@ -33,6 +33,11 @@ model User {
   subscriptionPlan   String?       // プラン名またはプランID
   subscriptionStart  DateTime?     // サブスクリプション開始日時
   subscriptionEnd    DateTime?     // サブスクリプション終了日時
+
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 
   // Relations
   units             Unit[]
@@ -46,9 +51,9 @@ model User {
 
 model UserProvider {
   id           Int      @id @default(autoincrement())
-  userId       Int
-  provider     String   // 例: "google", "github", "facebook" など
-  providerId   String   // プロバイダー側のユーザーID
+  userId       String
+  provider     String
+  providerId   String
   accessToken  String?
   refreshToken String?
   createdAt    DateTime @default(now())
@@ -60,7 +65,7 @@ model UserProvider {
 
 model Unit {
   id               Int         @id @default(autoincrement())
-  userId           Int
+  userId           String
   title            String
   learningGoal     String?
   preLearningState String?
@@ -85,7 +90,7 @@ model Unit {
 model Log {
   id           Int         @id @default(autoincrement())
   unitId       Int
-  userId       Int
+  userId       String
   title        String
   learningTime Int?        // 例：分単位の学習時間
   note         String?
@@ -144,32 +149,32 @@ model LogTag {
 }
 
 model UserSkill {
-  userId Int
-  tagId  Int
+  userId       String
+  tagId        Int
 
-  user   User  @relation(fields: [userId], references: [id])
-  tag    Tag   @relation(fields: [tagId], references: [id])
+  user         User  @relation(fields: [userId], references: [id])
+  tag          Tag   @relation(fields: [tagId], references: [id])
 
   @@id([userId, tagId])
 }
 
 model UserInterest {
-  userId Int
-  tagId  Int
+  userId       String
+  tagId        Int
 
-  user   User  @relation(fields: [userId], references: [id])
-  tag    Tag   @relation(fields: [tagId], references: [id])
+  user         User  @relation(fields: [userId], references: [id])
+  tag          Tag   @relation(fields: [tagId], references: [id])
 
   @@id([userId, tagId])
 }
 
 model UnitLike {
-  userId    Int
-  unitId    Int
-  createdAt DateTime   @default(now())
+  userId       String
+  unitId       Int
+  createdAt    DateTime   @default(now())
 
-  user      User  @relation(fields: [userId], references: [id])
-  unit      Unit  @relation(fields: [unitId], references: [id])
+  user         User  @relation(fields: [userId], references: [id])
+  unit         Unit  @relation(fields: [unitId], references: [id])
 
   @@id([userId, unitId])
 }
@@ -177,7 +182,7 @@ model UnitLike {
 model Comment {
   id        Int         @id @default(autoincrement())
   unitId    Int
-  userId    Int
+  userId    String
   comment   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -186,3 +191,44 @@ model Comment {
   unit      Unit        @relation(fields: [unitId], references: [id])
   user      User        @relation(fields: [userId], references: [id])
 }
+
+// 認証情報
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@id([provider, providerAccountId])
+}
+ 
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+ 
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@id([identifier, token])
+}
+ 

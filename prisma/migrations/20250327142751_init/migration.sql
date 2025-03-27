@@ -1,11 +1,11 @@
 -- CreateTable
 CREATE TABLE "User" (
-    "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "id" TEXT NOT NULL,
+    "name" TEXT,
     "topImage" TEXT,
     "age" INTEGER,
     "ageVisible" BOOLEAN NOT NULL DEFAULT true,
-    "email" TEXT,
+    "email" TEXT NOT NULL,
     "hashedPassword" TEXT,
     "primaryAuthMethod" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -14,6 +14,8 @@ CREATE TABLE "User" (
     "subscriptionPlan" TEXT,
     "subscriptionStart" TIMESTAMP(3),
     "subscriptionEnd" TIMESTAMP(3),
+    "emailVerified" TIMESTAMP(3),
+    "image" TEXT,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -21,7 +23,7 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "UserProvider" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
     "providerId" TEXT NOT NULL,
     "accessToken" TEXT,
@@ -34,7 +36,7 @@ CREATE TABLE "UserProvider" (
 -- CreateTable
 CREATE TABLE "Unit" (
     "id" SERIAL NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "learningGoal" TEXT,
     "preLearningState" TEXT,
@@ -55,7 +57,7 @@ CREATE TABLE "Unit" (
 CREATE TABLE "Log" (
     "id" SERIAL NOT NULL,
     "unitId" INTEGER NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "learningTime" INTEGER,
     "note" TEXT,
@@ -104,7 +106,7 @@ CREATE TABLE "LogTag" (
 
 -- CreateTable
 CREATE TABLE "UserSkill" (
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "tagId" INTEGER NOT NULL,
 
     CONSTRAINT "UserSkill_pkey" PRIMARY KEY ("userId","tagId")
@@ -112,7 +114,7 @@ CREATE TABLE "UserSkill" (
 
 -- CreateTable
 CREATE TABLE "UserInterest" (
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "tagId" INTEGER NOT NULL,
 
     CONSTRAINT "UserInterest_pkey" PRIMARY KEY ("userId","tagId")
@@ -120,7 +122,7 @@ CREATE TABLE "UserInterest" (
 
 -- CreateTable
 CREATE TABLE "UnitLike" (
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "unitId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -131,12 +133,49 @@ CREATE TABLE "UnitLike" (
 CREATE TABLE "Comment" (
     "id" SERIAL NOT NULL,
     "unitId" INTEGER NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "comment" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Account" (
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Account_pkey" PRIMARY KEY ("provider","providerAccountId")
+);
+
+-- CreateTable
+CREATE TABLE "Session" (
+    "sessionToken" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "VerificationToken" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VerificationToken_pkey" PRIMARY KEY ("identifier","token")
 );
 
 -- CreateIndex
@@ -147,6 +186,9 @@ CREATE UNIQUE INDEX "UserProvider_provider_providerId_key" ON "UserProvider"("pr
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 -- AddForeignKey
 ALTER TABLE "UserProvider" ADD CONSTRAINT "UserProvider_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -198,3 +240,9 @@ ALTER TABLE "Comment" ADD CONSTRAINT "Comment_unitId_fkey" FOREIGN KEY ("unitId"
 
 -- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
