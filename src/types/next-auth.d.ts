@@ -5,7 +5,9 @@ declare module "next-auth" {
     id: string;
     name: string | null;
     email: string;
-    subscriptionStatus: string | null;
+    image?: string | null;
+    subscriptionStatus?: string | null;
+    primaryAuthMethod: string;
   }
 
   interface Session {
@@ -13,7 +15,9 @@ declare module "next-auth" {
       id: string;
       name: string | null;
       email: string;
-      subscriptionStatus: string | null;
+      image?: string | null;
+      subscriptionStatus?: string | null;
+      primaryAuthMethod: string;
     };
   }
 }
