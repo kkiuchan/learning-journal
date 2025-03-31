@@ -13,21 +13,15 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      name: string | null;
+      name: string;
       email: string;
-      image?: string | null;
-      subscriptionStatus?: string | null;
-      primaryAuthMethod: string;
+      image?: string;
+      subscriptionStatus?: string;
+      primaryAuthMethod?: string;
       accounts?: {
         provider: string;
         providerAccountId: string;
-        type: string;
-        access_token: string;
-        token_type: string;
-        scope: string;
-        expires_at: number;
       }[];
-      hashedPassword?: string | null;
     };
   }
 }

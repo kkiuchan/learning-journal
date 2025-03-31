@@ -281,6 +281,7 @@ export const authConfig = {
             primaryAuthMethod: token.primaryAuthMethod as string,
             name: token.name as string | null,
             email: token.email as string,
+
             image: token.picture as string | null,
             accounts: await prisma.account.findMany({
               where: {
