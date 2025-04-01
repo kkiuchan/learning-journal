@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface Skill {
@@ -152,57 +153,62 @@ export default async function UserPage({ params }: Props) {
         <h2 className="text-2xl font-bold mb-4">学習ユニット一覧</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.units.data.map((unit) => (
-            <Card key={unit.id} className="p-4">
-              <div className="flex flex-col h-full">
-                <h3 className="text-lg font-semibold mb-2">{unit.title}</h3>
+            <Link href={`/units/${unit.id}`} key={unit.id}>
+              <Card className="p-4 hover:bg-accent transition-colors">
+                <div className="flex flex-col h-full">
+                  <h3 className="text-lg font-semibold mb-2">{unit.title}</h3>
 
-                {/* 学習状況 */}
-                <div className="mb-2">
-                  <Badge variant="outline">{unit.status}</Badge>
+                  {/* 学習状況 */}
+                  <div className="mb-2">
+                    <Badge variant="outline">{unit.status}</Badge>
+                  </div>
+
+                  {/* 学習期間 */}
+                  {(unit.startDate || unit.endDate) && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {unit.startDate &&
+                        `開始: ${new Date(
+                          unit.startDate
+                        ).toLocaleDateString()}`}
+                      {unit.startDate && unit.endDate && " 〜 "}
+                      {unit.endDate &&
+                        `終了: ${new Date(unit.endDate).toLocaleDateString()}`}
+                    </p>
+                  )}
+
+                  {/* タグ */}
+                  {unit.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {unit.tags.map(({ tag }) => (
+                        <Badge
+                          key={tag.id}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 統計情報 */}
+                  <div className="mt-auto pt-2 text-sm text-muted-foreground">
+                    <div className="flex justify-between items-center">
+                      <span>
+                        総学習時間: {Math.floor(unit.totalLearningTime / 60)}
+                        時間
+                        {unit.totalLearningTime % 60}分
+                      </span>
+                      <span>いいね: {unit.likesCount}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <span>ログ: {unit._count.logs}件</span>
+                      <span>コメント: {unit._count.comments}件</span>
+                    </div>
+                  </div>
                 </div>
-
-                {/* 学習期間 */}
-                {(unit.startDate || unit.endDate) && (
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {unit.startDate &&
-                      `開始: ${new Date(unit.startDate).toLocaleDateString()}`}
-                    {unit.startDate && unit.endDate && " 〜 "}
-                    {unit.endDate &&
-                      `終了: ${new Date(unit.endDate).toLocaleDateString()}`}
-                  </p>
-                )}
-
-                {/* タグ */}
-                {unit.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {unit.tags.map(({ tag }) => (
-                      <Badge
-                        key={tag.id}
-                        variant="secondary"
-                        className="text-xs"
-                      >
-                        {tag.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                {/* 統計情報 */}
-                <div className="mt-auto pt-2 text-sm text-muted-foreground">
-                  <div className="flex justify-between items-center">
-                    <span>
-                      総学習時間: {Math.floor(unit.totalLearningTime / 60)}時間
-                      {unit.totalLearningTime % 60}分
-                    </span>
-                    <span>いいね: {unit.likesCount}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span>ログ: {unit._count.logs}件</span>
-                    <span>コメント: {unit._count.comments}件</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           ))}
         </div>
 

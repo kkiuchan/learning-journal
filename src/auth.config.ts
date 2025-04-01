@@ -163,7 +163,6 @@ export const authConfig = {
     async signIn({
       user,
       account,
-      profile,
     }: {
       user: {
         id: string;
@@ -173,7 +172,6 @@ export const authConfig = {
         primaryAuthMethod: string;
       };
       account: Account | null;
-      profile?: any;
     }) {
       if (account?.provider === "credentials") {
         return true;
@@ -297,7 +295,7 @@ export const authConfig = {
     },
   },
   session: {
-    strategy: "jwt" as const,
+    strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
