@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcryptjs from "bcryptjs";
 import type { Account, Session } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
 import Credentials from "next-auth/providers/credentials";
@@ -16,7 +17,8 @@ const adapter = PrismaAdapter(prisma);
 export const authConfig = {
   adapter,
   pages: {
-    signIn: "/login",
+    signIn: "/auth/signin",
+    error: "/auth/error",
   },
   providers: [
     Credentials({
@@ -237,38 +239,29 @@ export const authConfig = {
         primaryAuthMethod: string;
       };
     }) {
-      console.log("JWT Callback - Input:", { token, account, user });
+      if (process.env.NODE_ENV === "development") {
+        console.log("JWT Callback - Input:", { token, account, user });
+      }
 
-      // 初回サインイン時
       if (account && user) {
-        console.log("初回サインイン - アカウント情報:", account);
-        console.log("初回サインイン - ユーザー情報:", user);
-
-        // 新しいトークンを作成
-        const newToken = {
+        return {
           ...token,
           accessToken: account.access_token,
           userId: user.id,
-          primaryAuthMethod: user.primaryAuthMethod,
-          name: user.name,
-          email: user.email,
-          picture: user.image,
+          primaryAuthMethod: account.provider,
         };
-
-        console.log("JWT Callback - 新しいトークン:", newToken);
-        return newToken;
       }
 
-      // 既存のトークンがある場合
-      if (token) {
+      if (process.env.NODE_ENV === "development") {
         console.log("既存のトークンを使用:", token);
-        return token;
       }
 
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      console.log("Session Callback - Input:", { session, token });
+      if (process.env.NODE_ENV === "development") {
+        console.log("Session Callback - Input:", { session, token });
+      }
 
       if (token) {
         const newSession = {
@@ -295,7 +288,7 @@ export const authConfig = {
     },
   },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
@@ -328,4 +321,4 @@ export const authConfig = {
     },
   },
   debug: true, // デバッグモードを有効化
-};
+} satisfies NextAuthOptions;
