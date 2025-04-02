@@ -11,25 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Unit } from "@/types";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-type Unit = {
-  id: number;
-  title: string;
-  learningGoal: string | null;
-  status: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  tags: { id: number; name: string }[];
-  logsCount: number;
-  likesCount: number;
-  commentsCount: number;
-  createdAt: Date;
-};
+import { useCallback, useEffect, useState } from "react";
 
 export default function UnitsPage() {
   const { data: session } = useSession();
@@ -40,35 +27,35 @@ export default function UnitsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUnits();
-  }, [page, searchQuery, statusFilter]);
-
-  const fetchUnits = async () => {
+  const fetchUnits = useCallback(async () => {
     try {
       setIsLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "10",
-        ...(searchQuery && { search: searchQuery }),
+        ...(searchQuery && { query: searchQuery }),
         ...(statusFilter !== "all" && { status: statusFilter }),
       });
+      const renderParams = params.toString();
 
-      const response = await fetch(`/api/units?${params}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setUnits(data.data);
-        setTotalPages(data.pagination.totalPages);
-      } else {
-        console.error("ユニットの取得に失敗しました:", data.error);
+      const response = await fetch(`/api/units?${renderParams}`);
+      if (!response.ok) {
+        throw new Error("ユニットの取得に失敗しました");
       }
+      const data = await response.json();
+      console.log("Fetched units:", data.data.units);
+      setUnits(data.data.units);
+      setTotalPages(data.data.pagination.totalPages);
     } catch (error) {
       console.error("エラーが発生しました:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, searchQuery, statusFilter]);
+
+  useEffect(() => {
+    fetchUnits();
+  }, [fetchUnits]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
@@ -86,6 +73,52 @@ export default function UnitsPage() {
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
+    }
+  };
+
+  const handleLike = async (unitId: number) => {
+    try {
+      const unit = units.find((u) => u.id === unitId);
+      if (!unit) return;
+
+      const method = unit.isLiked ? "DELETE" : "POST";
+      console.log(`Current unit state:`, unit);
+      console.log(`Sending ${method} request to /api/units/${unitId}/like`);
+
+      const response = await fetch(`/api/units/${unitId}/like`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const updatedUnit = await response.json();
+        console.log("Response from like API:", updatedUnit);
+        setUnits((prevUnits) =>
+          prevUnits.map((u) =>
+            u.id === unitId
+              ? {
+                  ...u,
+                  isLiked: !u.isLiked,
+                  _count: {
+                    ...u._count,
+                    unitLikes: u.isLiked
+                      ? u._count.unitLikes - 1
+                      : u._count.unitLikes + 1,
+                  },
+                }
+              : u
+          )
+        );
+      } else {
+        const data = await response.json();
+        console.error("いいねの処理に失敗しました:", data.error);
+        alert(data.error || "いいねの処理に失敗しました");
+      }
+    } catch (error) {
+      console.error("いいねの処理に失敗しました:", error);
+      alert("いいねの処理に失敗しました");
     }
   };
 
@@ -111,9 +144,9 @@ export default function UnitsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="not_started">未着手</SelectItem>
-            <SelectItem value="in_progress">進行中</SelectItem>
-            <SelectItem value="completed">完了</SelectItem>
+            <SelectItem value="PLANNED">未着手</SelectItem>
+            <SelectItem value="IN_PROGRESS">進行中</SelectItem>
+            <SelectItem value="COMPLETED">完了</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -131,12 +164,12 @@ export default function UnitsPage() {
                   </Link>
                   <Badge
                     variant={
-                      unit.status === "completed" ? "default" : "secondary"
+                      unit.status === "COMPLETED" ? "default" : "secondary"
                     }
                   >
-                    {unit.status === "not_started" && "未着手"}
-                    {unit.status === "in_progress" && "進行中"}
-                    {unit.status === "completed" && "完了"}
+                    {unit.status === "PLANNED" && "未着手"}
+                    {unit.status === "IN_PROGRESS" && "進行中"}
+                    {unit.status === "COMPLETED" && "完了"}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -172,24 +205,35 @@ export default function UnitsPage() {
                       )}
                     </div>
                     <div className="flex gap-4">
-                      <span>ログ: {unit.logsCount}</span>
-                      <span>いいね: {unit.likesCount}</span>
-                      <span>コメント: {unit.commentsCount}</span>
+                      <span>ログ: {unit._count.logs}</span>
+                      <button
+                        onClick={() => handleLike(unit.id)}
+                        className={`flex items-center gap-1 ${
+                          unit.isLiked ? "text-red-500" : "text-gray-500"
+                        }`}
+                      >
+                        <span>いいね: {unit._count.unitLikes}</span>
+                      </button>
+                      <span>コメント: {unit._count.comments}</span>
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Link href={`/units/${unit.id}/edit`}>
-                      <Button variant="outline" size="sm">
-                        編集
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(unit.id)}
-                    >
-                      削除
-                    </Button>
+                    {session?.user?.id === unit.userId && (
+                      <>
+                        <Link href={`/units/${unit.id}/edit`}>
+                          <Button variant="outline" size="sm">
+                            編集
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(unit.id)}
+                        >
+                          削除
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </CardContent>

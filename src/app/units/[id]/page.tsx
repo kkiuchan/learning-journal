@@ -4,46 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Comment, Unit } from "@/types";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
-
-type Tag = {
-  id: number;
-  name: string;
-};
-
-type Comment = {
-  id: number;
-  comment: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-};
-
-type Unit = {
-  id: number;
-  title: string;
-  learningGoal: string | null;
-  preLearningState: string | null;
-  reflection: string | null;
-  nextAction: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  status: string;
-  tags: Tag[];
-  likesCount: number;
-  commentsCount: number;
-  isLiked: boolean;
-  createdAt: string;
-};
+import { use, useCallback, useEffect, useState } from "react";
 
 export default function UnitDetailPage({
   params,
@@ -62,6 +30,7 @@ export default function UnitDetailPage({
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -70,21 +39,23 @@ export default function UnitDetailPage({
     }
   }, [id, status]);
 
-  const fetchUnit = async () => {
+  const fetchUnit = useCallback(async () => {
     try {
+      setIsLoading(true);
       const response = await fetch(`/api/units/${id}`);
-      const data = await response.json();
-      if (response.ok) {
-        setUnit(data.data);
-      } else {
-        console.error("ユニットの取得に失敗しました:", data.error);
+      if (!response.ok) {
+        throw new Error("ユニットの取得に失敗しました");
       }
+      const data = await response.json();
+      console.log("Fetched unit:", data.data); // デバッグ用
+      setUnit(data.data);
     } catch (error) {
       console.error("エラーが発生しました:", error);
+      setError(error instanceof Error ? error.message : "エラーが発生しました");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   const fetchComments = async () => {
     try {
@@ -106,19 +77,45 @@ export default function UnitDetailPage({
       return;
     }
 
+    if (!unit) return;
+
     try {
-      const response = await fetch(`/api/units/${id}/like`, {
-        method: unit?.isLiked ? "DELETE" : "POST",
+      const method = unit.isLiked ? "DELETE" : "POST";
+      console.log(`Current unit state:`, unit); // デバッグ用
+      console.log(`Sending ${method} request to /api/units/${unit.id}/like`);
+
+      const response = await fetch(`/api/units/${unit.id}/like`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
-        fetchUnit();
+        const updatedUnit = await response.json();
+        console.log("Response from like API:", updatedUnit); // デバッグ用
+        setUnit((prevUnit) =>
+          prevUnit
+            ? {
+                ...prevUnit,
+                isLiked: !prevUnit.isLiked,
+                _count: {
+                  ...prevUnit._count,
+                  unitLikes: prevUnit.isLiked
+                    ? prevUnit._count.unitLikes - 1
+                    : prevUnit._count.unitLikes + 1,
+                },
+              }
+            : null
+        );
       } else {
         const data = await response.json();
         console.error("いいねの処理に失敗しました:", data.error);
+        alert(data.error || "いいねの処理に失敗しました");
       }
     } catch (error) {
-      console.error("エラーが発生しました:", error);
+      console.error("いいねの処理に失敗しました:", error);
+      alert("いいねの処理に失敗しました");
     }
   };
 
@@ -135,7 +132,7 @@ export default function UnitDetailPage({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ comment: newComment }),
+        body: JSON.stringify({ content: newComment }),
       });
 
       if (response.ok) {
@@ -174,6 +171,10 @@ export default function UnitDetailPage({
     return <div>読み込み中...</div>;
   }
 
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
   if (!unit) {
     return <div>ユニットが見つかりません</div>;
   }
@@ -185,9 +186,9 @@ export default function UnitDetailPage({
           <div>
             <h1 className="text-2xl font-bold mb-2">{unit.title}</h1>
             <Badge variant="outline" className="mb-4">
-              {unit.status === "not_started" && "未着手"}
-              {unit.status === "in_progress" && "進行中"}
-              {unit.status === "completed" && "完了"}
+              {unit.status === "PLANNED" && "計画中"}
+              {unit.status === "IN_PROGRESS" && "進行中"}
+              {unit.status === "COMPLETED" && "完了"}
             </Badge>
           </div>
           <div className="flex gap-2">
@@ -274,11 +275,11 @@ export default function UnitDetailPage({
                 unit.isLiked ? "fill-current text-red-500" : ""
               }`}
             />
-            <span>{unit.likesCount}</span>
+            <span>{unit._count.unitLikes}</span>
           </Button>
           <div className="flex items-center gap-2 text-muted-foreground">
             <MessageCircle className="h-4 w-4" />
-            <span>{unit.commentsCount}</span>
+            <span>{unit._count.comments}</span>
           </div>
         </div>
       </Card>
