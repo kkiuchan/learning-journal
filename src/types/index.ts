@@ -124,3 +124,85 @@ export type Comment = {
   createdAt: string;
   user: FrontendUser;
 };
+
+// リソースの型
+export type Resource = {
+  id: number;
+  resourceType: string | null;
+  resourceLink: string;
+  description: string | null;
+  fileName?: string;
+  filePath?: string;
+};
+
+// ログの型
+export type Log = {
+  id: number;
+  unitId: number;
+  userId: number;
+  title: string;
+  learningTime: number;
+  note: string;
+  logDate: string;
+  createdAt: string;
+  updatedAt: string;
+  logTags?: {
+    tag: {
+      id: number;
+      name: string;
+    };
+  }[];
+  resources?: Resource[];
+};
+
+// ユーザー関連の型定義
+export interface User {
+  id: string;
+  name: string | null;
+  image: string | null;
+  selfIntroduction: string | null;
+  age: number | null;
+  ageVisible: boolean;
+  skills: Skill[];
+  interests: Interest[];
+  _count: {
+    units: number;
+  };
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+}
+
+export interface Interest {
+  id: string;
+  name: string;
+}
+
+// ページネーション用の型定義
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    total: number;
+    page: number;
+    perPage: number;
+    totalPages: number;
+  };
+}
+
+// ユーザーAPIレスポンスの型
+export interface UserApiResponse {
+  data: {
+    user: User;
+    units: {
+      data: Unit[];
+      pagination: {
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+      };
+    };
+  };
+}

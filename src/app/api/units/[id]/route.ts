@@ -101,9 +101,10 @@ import { NextResponse } from "next/server";
  */
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // 認証チェック
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
@@ -115,7 +116,7 @@ export async function PUT(
 
     // ユニットの存在確認と権限チェック
     const existingUnit = await prisma.unit.findUnique({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       select: { userId: true },
     });
 
@@ -128,7 +129,7 @@ export async function PUT(
 
     if (existingUnit.userId !== session.user.id) {
       return NextResponse.json(
-        { error: "このユニットを更新する権限がありません", status: 403 },
+        { error: "このユニットを編集する権限がありません", status: 403 },
         { status: 403 }
       );
     }
@@ -147,9 +148,17 @@ export async function PUT(
       tags,
     } = body;
 
+    // バリデーション
+    if (!title) {
+      return NextResponse.json(
+        { error: "タイトルは必須です", status: 400 },
+        { status: 400 }
+      );
+    }
+
     // Unitの更新
     const unit = await prisma.unit.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         title,
         learningGoal,
@@ -355,6 +364,10 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    // セッションの取得
+    const session = await getServerSession(authConfig);
+    const currentUserId = session?.user?.id;
+
     // ユニットの取得
     const unit = await prisma.unit.findUnique({
       where: { id: parseInt(id) },
@@ -406,6 +419,13 @@ export async function GET(
             comments: true,
           },
         },
+        unitLikes: currentUserId
+          ? {
+              where: {
+                userId: currentUserId,
+              },
+            }
+          : false,
       },
     });
 
@@ -421,6 +441,9 @@ export async function GET(
       data: {
         ...unit,
         tags: unit.unitTags.map((ut) => ut.tag),
+        isLiked: currentUserId
+          ? unit.unitLikes && unit.unitLikes.length > 0
+          : false,
         _count: {
           ...unit._count,
           totalLearningTime: unit._count.logs, // ログ数を総学習時間として使用

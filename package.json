@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "node --loader ts-node/esm prisma/seed.ts"
+    "seed": "node --loader ts-node/esm prisma/seed.ts",
+    "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",

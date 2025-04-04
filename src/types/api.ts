@@ -1,3 +1,11 @@
+import {
+  PaginatedResponse as BasePaginatedResponse,
+  User as BaseUser,
+  Comment,
+  Log,
+  Unit,
+} from "./index";
+
 // 共通のレスポンス型
 export interface ApiResponse<T = unknown> {
   data?: T;
@@ -7,11 +15,16 @@ export interface ApiResponse<T = unknown> {
 // 共通のエラーレスポンス型
 export interface ApiError {
   error: string;
+  status: number;
 }
 
 // 認証関連の型定義
 export interface AuthResponse {
-  message: string;
+  user: BaseUser;
+  session: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
 export interface LinkAccountRequest {
@@ -141,20 +154,81 @@ export interface PublicUserResponse {
   units: PaginatedResponse<UnitSummary>;
 }
 
-// APIエンドポイントの一覧
-export const API_ENDPOINTS = {
+// ユニット検索レスポンスの型
+export type UnitSearchResponse = BasePaginatedResponse<Unit>;
+
+// ログ検索レスポンスの型
+export type LogSearchResponse = BasePaginatedResponse<Log>;
+
+// コメント検索レスポンスの型
+export type CommentSearchResponse = BasePaginatedResponse<Comment>;
+
+// APIエンドポイントの型
+export interface ApiEndpoints {
   auth: {
-    checkPassword: "/api/auth/check-password",
-    linkAccount: "/api/auth/link-account",
-    setPassword: "/api/auth/set-password",
-    unlinkAccount: "/api/auth/unlink-account",
-  },
-  user: {
-    me: "/api/users/me",
-    update: "/api/users/update",
+    signup: string;
+    signin: string;
+    signout: string;
+    refresh: string;
+  };
+  users: {
+    me: string;
+    search: string;
+    profile: (userId: string) => string;
+  };
+  units: {
+    create: string;
+    update: (unitId: number) => string;
+    delete: (unitId: number) => string;
+    search: string;
+    detail: (unitId: number) => string;
+  };
+  logs: {
+    create: string;
+    update: (logId: number) => string;
+    delete: (logId: number) => string;
+    search: string;
+    detail: (logId: number) => string;
+  };
+  comments: {
+    create: string;
+    update: (commentId: number) => string;
+    delete: (commentId: number) => string;
+    search: string;
+  };
+}
+
+// APIエンドポイントの定義
+export const API_ENDPOINTS: ApiEndpoints = {
+  auth: {
+    signup: "/api/auth/signup",
+    signin: "/api/auth/signin",
+    signout: "/api/auth/signout",
+    refresh: "/api/auth/refresh",
   },
   users: {
-    getById: (id: string) => `/api/users/${id}`,
+    me: "/api/users/me",
     search: "/api/users/search",
+    profile: (userId: string) => `/api/users/${userId}/profile`,
   },
-} as const;
+  units: {
+    create: "/api/units",
+    update: (unitId: number) => `/api/units/${unitId}`,
+    delete: (unitId: number) => `/api/units/${unitId}`,
+    search: "/api/units/search",
+    detail: (unitId: number) => `/api/units/${unitId}`,
+  },
+  logs: {
+    create: "/api/logs",
+    update: (logId: number) => `/api/logs/${logId}`,
+    delete: (logId: number) => `/api/logs/${logId}`,
+    search: "/api/logs/search",
+    detail: (logId: number) => `/api/logs/${logId}`,
+  },
+  comments: {
+    create: "/api/comments",
+    update: (commentId: number) => `/api/comments/${commentId}`,
+    delete: (commentId: number) => `/api/comments/${commentId}`,
+    search: "/api/comments/search",
+  },
+};

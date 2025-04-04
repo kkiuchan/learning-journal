@@ -1,7 +1,9 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
+import { ApiResponse, ApiUser } from "@/types";
 import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 
 /**
@@ -132,7 +134,7 @@ const updateUserSchema = z.object({
   interests: z.array(z.string().min(1).max(50)).max(10).optional(),
 });
 
-export async function GET() {
+export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user?.email) {
@@ -171,6 +173,8 @@ export async function GET() {
             },
           },
         },
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -179,8 +183,16 @@ export async function GET() {
     }
 
     // レスポンスの形式を整形
-    const { userSkills, userInterests, ...formattedUser } = {
-      ...user,
+    const formattedUser: ApiUser = {
+      id: user.id,
+      name: user.name,
+      image: user.image,
+      topImage: user.topImage,
+      selfIntroduction: user.selfIntroduction,
+      age: user.age,
+      ageVisible: user.ageVisible,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       skills: user.userSkills.map((skill) => ({
         id: String(skill.tag.id),
         name: skill.tag.name,
@@ -201,7 +213,9 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request
+): Promise<NextResponse<ApiResponse<ApiUser>>> {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user?.email) {
@@ -250,6 +264,8 @@ export async function PUT(request: Request) {
               },
             },
           },
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
@@ -332,9 +348,16 @@ export async function PUT(request: Request) {
       return updatedUser;
     });
 
-    // レスポンスの形式を整形
-    const { userSkills, userInterests, ...formattedUser } = {
-      ...user,
+    const formattedUser: ApiUser = {
+      id: user.id,
+      name: user.name,
+      image: user.image,
+      topImage: user.topImage,
+      selfIntroduction: user.selfIntroduction,
+      age: user.age,
+      ageVisible: user.ageVisible,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
       skills: user.userSkills.map((skill) => ({
         id: String(skill.tag.id),
         name: skill.tag.name,
@@ -347,10 +370,10 @@ export async function PUT(request: Request) {
 
     return createApiResponse(formattedUser);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return createErrorResponse("入力データが不正です", 400);
-    }
     console.error("ユーザー情報の更新中にエラーが発生しました:", error);
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(error.errors[0].message);
+    }
     return createErrorResponse(
       "ユーザー情報の更新中にエラーが発生しました",
       500

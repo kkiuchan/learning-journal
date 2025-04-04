@@ -3,9 +3,10 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
-import { LinkAccountRequest, AuthResponse } from "@/types/api";
-import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
+import { ApiResponse } from "@/types";
+import { z } from "zod";
 
 /**
  * @swagger
@@ -100,7 +101,24 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
  *                   example: パスワードの更新中にエラーが発生しました
  */
 
-export async function POST(request: Request) {
+// リクエストのバリデーションスキーマ
+const linkAccountSchema = z
+  .object({
+    email: z.string().email("メールアドレスの形式が正しくありません"),
+    currentPassword: z.string().optional(),
+    newPassword: z.string().min(8, "パスワードは8文字以上で入力してください"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "新しいパスワードが一致しません",
+    path: ["confirmPassword"],
+  });
+
+type LinkAccountRequest = z.infer<typeof linkAccountSchema>;
+
+export async function POST(
+  request: Request
+): Promise<NextResponse<ApiResponse<{ message: string }>>> {
   try {
     const session = await getServerSession(authConfig);
 
@@ -114,7 +132,7 @@ export async function POST(request: Request) {
     }
 
     const formData = await request.formData();
-    const requestData: LinkAccountRequest = {
+    const rawData: LinkAccountRequest = {
       email: formData.get("email") as string,
       currentPassword: formData.get("currentPassword") as string,
       newPassword: formData.get("newPassword") as string,
@@ -122,12 +140,10 @@ export async function POST(request: Request) {
     };
 
     // バリデーション
-    if (!requestData.email) {
-      return createErrorResponse("メールアドレスを入力してください");
-    }
+    const validatedData = linkAccountSchema.parse(rawData);
 
     // メールアドレスの一致を確認
-    if (requestData.email !== session.user.email) {
+    if (validatedData.email !== session.user.email) {
       return createErrorResponse("メールアドレスが一致しません");
     }
 
@@ -143,41 +159,22 @@ export async function POST(request: Request) {
 
     // パスワード変更の場合
     if (user.hashedPassword) {
-      if (
-        !requestData.currentPassword ||
-        !requestData.newPassword ||
-        !requestData.confirmPassword
-      ) {
-        return createErrorResponse("すべての項目を入力してください");
+      if (!validatedData.currentPassword) {
+        return createErrorResponse("現在のパスワードを入力してください");
       }
 
       // 現在のパスワードの検証
       const isValid = await bcryptjs.compare(
-        requestData.currentPassword,
+        validatedData.currentPassword,
         user.hashedPassword
       );
       if (!isValid) {
         return createErrorResponse("現在のパスワードが正しくありません");
       }
-    } else {
-      // 新規パスワード設定の場合
-      if (!requestData.newPassword || !requestData.confirmPassword) {
-        return createErrorResponse("パスワードを入力してください");
-      }
-    }
-
-    // 新規パスワードの一致確認
-    if (requestData.newPassword !== requestData.confirmPassword) {
-      return createErrorResponse("新しいパスワードが一致しません");
-    }
-
-    // パスワードの長さチェック
-    if (requestData.newPassword.length < 8) {
-      return createErrorResponse("パスワードは8文字以上で入力してください");
     }
 
     // パスワードのハッシュ化
-    const hashedPassword = await bcryptjs.hash(requestData.newPassword, 10);
+    const hashedPassword = await bcryptjs.hash(validatedData.newPassword, 10);
 
     // ユーザーの更新
     await prisma.user.update({
@@ -188,9 +185,12 @@ export async function POST(request: Request) {
       },
     });
 
-    return createSuccessResponse("パスワードを更新しました");
+    return createApiResponse({ message: "パスワードを更新しました" });
   } catch (error) {
     console.error("パスワード更新エラー:", error);
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(error.errors[0].message);
+    }
     return createErrorResponse("パスワードの更新中にエラーが発生しました", 500);
   }
 }

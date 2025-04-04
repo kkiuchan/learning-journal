@@ -103,6 +103,10 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
 
+    // セッションの取得
+    const session = await getServerSession(authConfig);
+    const currentUserId = session?.user?.id;
+
     // 検索条件の構築
     const where: Prisma.UnitWhereInput = {
       AND: [
@@ -178,6 +182,13 @@ export async function GET(request: Request) {
               comments: true,
             },
           },
+          unitLikes: currentUserId
+            ? {
+                where: {
+                  userId: currentUserId,
+                },
+              }
+            : false,
         },
       }),
       prisma.unit.count({ where }),
@@ -189,6 +200,9 @@ export async function GET(request: Request) {
         units: units.map((unit) => ({
           ...unit,
           tags: unit.unitTags.map((ut) => ut.tag),
+          isLiked: currentUserId
+            ? unit.unitLikes && unit.unitLikes.length > 0
+            : false,
           _count: {
             ...unit._count,
             totalLearningTime: unit._count.logs, // ログ数を総学習時間として使用

@@ -1,43 +1,20 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { UnitStatus } from "@/types/unit";
+import { translateUnitStatus } from "@/utils/i18n";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 interface Skill {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface Interest {
-  id: string;
-  name: string;
-}
-
-interface Unit {
   id: number;
-  title: string;
-  learningGoal: string | null;
-  preLearningState: string | null;
-  reflection: string | null;
-  nextAction: string | null;
-  status: string;
-  startDate: string | null;
-  endDate: string | null;
-  displayFlag: boolean;
-  likesCount: number;
-  createdAt: string;
-  totalLearningTime: number;
-  isLiked: boolean;
-  tags: Array<{
-    tag: {
-      id: number;
-      name: string;
-    };
-  }>;
-  _count: {
-    logs: number;
-    comments: number;
-  };
+  name: string;
 }
 
 interface User {
@@ -51,6 +28,21 @@ interface User {
   interests: Interest[];
   _count: {
     units: number;
+  };
+}
+
+interface Unit {
+  id: number;
+  title: string;
+  status: UnitStatus;
+  startDate: string | null;
+  endDate: string | null;
+  tags: { tag: { id: number; name: string } }[];
+  totalLearningTime: number;
+  likesCount: number;
+  _count: {
+    logs: number;
+    comments: number;
   };
 }
 
@@ -70,13 +62,13 @@ interface ApiResponse {
 }
 
 interface Props {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 }
 
 export default async function UserPage({ params }: Props) {
   const { id } = await params;
+  const session = await getServerSession();
+  const currentUserId = session?.user?.id;
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL}/api/users/${id}`,
@@ -150,7 +142,14 @@ export default async function UserPage({ params }: Props) {
 
       {/* ユーザーの学習ユニット一覧 */}
       <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">学習ユニット一覧</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">学習ユニット一覧</h2>
+          {currentUserId === id && (
+            <Link href="/units/new">
+              <Button>新規作成</Button>
+            </Link>
+          )}
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.units.data.map((unit) => (
             <Link href={`/units/${unit.id}`} key={unit.id}>
@@ -160,7 +159,9 @@ export default async function UserPage({ params }: Props) {
 
                   {/* 学習状況 */}
                   <div className="mb-2">
-                    <Badge variant="outline">{unit.status}</Badge>
+                    <Badge variant="outline">
+                      {translateUnitStatus(unit.status)}
+                    </Badge>
                   </div>
 
                   {/* 学習期間 */}

@@ -229,9 +229,9 @@ export default function EditUnitPage({
                   <SelectValue placeholder="ステータスを選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="not_started">未着手</SelectItem>
-                  <SelectItem value="in_progress">進行中</SelectItem>
-                  <SelectItem value="completed">完了</SelectItem>
+                  <SelectItem value="PLANNED">未着手</SelectItem>
+                  <SelectItem value="IN_PROGRESS">進行中</SelectItem>
+                  <SelectItem value="COMPLETED">完了</SelectItem>
                 </SelectContent>
               </Select>
             </div>

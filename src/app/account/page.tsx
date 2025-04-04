@@ -181,25 +181,26 @@ export default function AccountPage() {
                           <span className="text-xs text-green-600 font-medium">
                             連携済み
                           </span>
-                          {session?.user?.accounts?.length > 1 && (
-                            <form
-                              action="/api/auth/unlink-account"
-                              method="POST"
-                              className="inline"
-                            >
-                              <input
-                                type="hidden"
-                                name="provider"
-                                value={account.provider}
-                              />
-                              <button
-                                type="submit"
-                                className="text-xs text-red-600 hover:text-red-800 font-medium"
+                          {session?.user?.accounts &&
+                            session.user.accounts.length > 1 && (
+                              <form
+                                action="/api/auth/unlink-account"
+                                method="POST"
+                                className="inline"
                               >
-                                連携解除
-                              </button>
-                            </form>
-                          )}
+                                <input
+                                  type="hidden"
+                                  name="provider"
+                                  value={account.provider}
+                                />
+                                <button
+                                  type="submit"
+                                  className="text-xs text-red-600 hover:text-red-800 font-medium"
+                                >
+                                  連携解除
+                                </button>
+                              </form>
+                            )}
                         </div>
                       </div>
                     ))}

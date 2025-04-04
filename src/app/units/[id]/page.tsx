@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Comment, Unit } from "@/types";
+import { Comment, Log, Unit } from "@/types";
+import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
@@ -12,6 +13,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
+import CreateLogForm from "./components/CreateLogForm";
+import EditLogForm from "./components/EditLogForm";
 
 export default function UnitDetailPage({
   params,
@@ -28,16 +31,33 @@ export default function UnitDetailPage({
   });
   const [unit, setUnit] = useState<Unit | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [logs, setLogs] = useState<Log[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingLogId, setEditingLogId] = useState<number | null>(null);
+  const [isCreatingLog, setIsCreatingLog] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") {
       fetchUnit();
       fetchComments();
+      fetchLogs();
     }
   }, [id, status]);
+
+  const fetchLogs = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/units/${id}/logs`);
+      if (!response.ok) {
+        throw new Error("ログの取得に失敗しました");
+      }
+      const data = await response.json();
+      setLogs(data.data);
+    } catch (error) {
+      console.error("ログの取得中にエラーが発生しました:", error);
+    }
+  }, [id]);
 
   const fetchUnit = useCallback(async () => {
     try {
@@ -186,9 +206,7 @@ export default function UnitDetailPage({
           <div>
             <h1 className="text-2xl font-bold mb-2">{unit.title}</h1>
             <Badge variant="outline" className="mb-4">
-              {unit.status === "PLANNED" && "計画中"}
-              {unit.status === "IN_PROGRESS" && "進行中"}
-              {unit.status === "COMPLETED" && "完了"}
+              {translateUnitStatus(unit.status)}
             </Badge>
           </div>
           <div className="flex gap-2">
@@ -283,6 +301,134 @@ export default function UnitDetailPage({
           </div>
         </div>
       </Card>
+
+      {/* ログセクション */}
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-2xl font-bold">学習ログ</h2>
+            <p className="text-muted-foreground">
+              総学習時間: {logs.reduce((sum, log) => sum + log.learningTime, 0)}
+              分
+            </p>
+          </div>
+          {unit && unit.userId === session?.user?.id && (
+            <Button onClick={() => setIsCreatingLog(true)}>ログを追加</Button>
+          )}
+        </div>
+
+        {isCreatingLog ? (
+          <Card className="p-4 mb-4">
+            <CreateLogForm
+              unitId={id}
+              onCancel={() => setIsCreatingLog(false)}
+              onSuccess={() => {
+                fetchLogs();
+                setIsCreatingLog(false);
+              }}
+            />
+          </Card>
+        ) : null}
+
+        <div className="space-y-4">
+          {logs.map((log) => (
+            <Card key={log.id} className="p-4">
+              {editingLogId === log.id ? (
+                <EditLogForm
+                  log={log}
+                  unitId={id}
+                  onCancel={() => setEditingLogId(null)}
+                  onUpdate={(updatedLog) => {
+                    setLogs(
+                      logs.map((l) => (l.id === updatedLog.id ? updatedLog : l))
+                    );
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-lg font-semibold">{log.title}</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setEditingLogId(log.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={async () => {
+                          if (!confirm("このログを削除してもよろしいですか？"))
+                            return;
+                          try {
+                            const response = await fetch(
+                              `/api/units/${id}/logs/${log.id}`,
+                              {
+                                method: "DELETE",
+                              }
+                            );
+                            if (response.ok) {
+                              setLogs(logs.filter((l) => l.id !== log.id));
+                            } else {
+                              throw new Error("ログの削除に失敗しました");
+                            }
+                          } catch (error) {
+                            console.error("Error deleting log:", error);
+                            alert("ログの削除に失敗しました");
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(log.logDate), "yyyy/MM/dd", {
+                        locale: ja,
+                      })}
+                    </span>
+                    <span className="text-sm text-muted-foreground ml-4">
+                      学習時間: {log.learningTime}分
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground mb-2">{log.note}</p>
+                  {log.logTags && log.logTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {log.logTags.map(({ tag }) => (
+                        <Badge key={tag.id} variant="secondary">
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  {log.resources && log.resources.length > 0 && (
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold">参考資料</h4>
+                      <ul className="list-disc list-inside text-sm text-muted-foreground">
+                        {log.resources.map((resource, index) => (
+                          <li key={index}>
+                            <a
+                              href={resource.resourceLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline"
+                            >
+                              {resource.description || resource.resourceLink}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card>
+          ))}
+        </div>
+      </div>
 
       {/* コメントセクション */}
       <div className="mt-8">

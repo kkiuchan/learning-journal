@@ -42,6 +42,25 @@ export function UserList() {
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<Pagination | null>(null);
 
+  // 有効な画像URLかどうかをチェックする関数
+  const isValidImageUrl = (url: string | null): boolean => {
+    if (!url) return false;
+    // 許可するドメインのリスト
+    const allowedDomains = [
+      "lh3.googleusercontent.com",
+      "avatars.githubusercontent.com",
+      "localhost",
+      window.location.hostname,
+      "supabase.co",
+    ];
+    try {
+      const urlObj = new URL(url);
+      return allowedDomains.some((domain) => urlObj.hostname.includes(domain));
+    } catch {
+      return false;
+    }
+  };
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -67,7 +86,12 @@ export function UserList() {
         }
 
         const data: SearchResponse = await response.json();
-        setUsers(data.data.users);
+        // 画像URLを検証して、無効なURLをnullに置き換える
+        const validatedUsers = data.data.users.map((user) => ({
+          ...user,
+          image: isValidImageUrl(user.image) ? user.image : null,
+        }));
+        setUsers(validatedUsers);
         setPagination(data.data.pagination);
       } catch (err) {
         setError(
@@ -126,11 +150,18 @@ export function UserList() {
             <Card className="p-4 hover:bg-accent/50">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={user.image || "/images/default-avatar.png"}
-                    alt={user.name || "ユーザー"}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
+                  <div className="relative w-12 h-12">
+                    <img
+                      src={user.image || "/images/default-avatar.png"}
+                      alt={user.name || "ユーザー"}
+                      className="h-12 w-12 rounded-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/images/default-avatar.png";
+                      }}
+                    />
+                  </div>
                   <div>
                     <h3 className="font-semibold">{user.name || "名前なし"}</h3>
                     <p className="text-sm text-muted-foreground">

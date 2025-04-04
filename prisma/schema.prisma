@@ -65,7 +65,7 @@ model Unit {
   startDate        DateTime?
   endDate          DateTime?
   displayFlag      Boolean    @default(true)
-  status           String
+  status           String     @default("PLANNED")
   likesCount       Int        @default(0)
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
@@ -75,6 +75,10 @@ model Unit {
   user             User       @relation(fields: [userId], references: [id])
   unitLikes        UnitLike[]
   unitTags         UnitTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Log {
@@ -99,6 +103,8 @@ model Resource {
   resourceType String?
   resourceLink String
   description  String?
+  fileName     String?
+  filePath     String?
   createdAt    DateTime @default(now())
   log          Log      @relation(fields: [logId], references: [id])
 }

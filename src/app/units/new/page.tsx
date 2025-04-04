@@ -34,7 +34,7 @@ export default function NewUnitPage() {
   const [nextAction, setNextAction] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("not_started");
+  const [status, setStatus] = useState("PLANNED");
   const [newTag, setNewTag] = useState("");
   const [tags, setTags] = useState<Tag[]>([]);
 
@@ -170,9 +170,9 @@ export default function NewUnitPage() {
                   <SelectValue placeholder="ステータスを選択" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="not_started">未着手</SelectItem>
-                  <SelectItem value="in_progress">進行中</SelectItem>
-                  <SelectItem value="completed">完了</SelectItem>
+                  <SelectItem value="PLANNED">未着手</SelectItem>
+                  <SelectItem value="IN_PROGRESS">進行中</SelectItem>
+                  <SelectItem value="COMPLETED">完了</SelectItem>
                 </SelectContent>
               </Select>
             </div>

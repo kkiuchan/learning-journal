@@ -14,7 +14,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { storage } from "@/lib/supabaseClient";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -27,12 +29,16 @@ const profileFormSchema = z.object({
   ageVisible: z.boolean(),
   skills: z.array(z.string()),
   interests: z.array(z.string()),
+  image: z.string().nullable(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -43,6 +49,7 @@ export function ProfileForm() {
       ageVisible: false,
       skills: [],
       interests: [],
+      image: null,
     },
   });
 
@@ -62,7 +69,12 @@ export function ProfileForm() {
           interests: data.data.interests.map(
             (interest: { name: string }) => interest.name
           ),
+          image: data.data.image || null,
         });
+
+        if (data.data.image) {
+          setPreviewUrl(data.data.image);
+        }
       } catch (error) {
         console.error("プロフィール取得エラー:", error);
         toast.error("プロフィールの取得に失敗しました");
@@ -71,6 +83,33 @@ export function ProfileForm() {
 
     fetchProfile();
   }, [form]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) return;
+
+    setUploadingImage(true);
+    try {
+      const publicUrl = await storage.uploadProfileImage(selectedImage);
+      form.setValue("image", publicUrl);
+      setPreviewUrl(publicUrl);
+      toast.success("画像をアップロードしました");
+    } catch (error) {
+      console.error("画像アップロードエラー:", error);
+      toast.error("画像のアップロードに失敗しました");
+    } finally {
+      setUploadingImage(false);
+      setSelectedImage(null);
+    }
+  };
 
   async function onSubmit(values: ProfileFormValues) {
     setIsLoading(true);
@@ -96,6 +135,49 @@ export function ProfileForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="image"
+          render={() => (
+            <FormItem>
+              <FormLabel>プロフィール画像</FormLabel>
+              <FormControl>
+                <div className="space-y-4">
+                  {previewUrl && (
+                    <div className="relative w-32 h-32">
+                      <Image
+                        src={previewUrl}
+                        alt="プロフィール画像"
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      disabled={uploadingImage}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleImageUpload}
+                      disabled={!selectedImage || uploadingImage}
+                    >
+                      {uploadingImage ? "アップロード中..." : "アップロード"}
+                    </Button>
+                  </div>
+                </div>
+              </FormControl>
+              <FormDescription>
+                プロフィール画像をアップロードできます
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="name"

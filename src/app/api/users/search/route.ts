@@ -1,6 +1,8 @@
-import { createErrorResponse } from "@/lib/api-utils";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
+import { ApiResponse, FrontendUser, SearchResult } from "@/types";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 /**
  * @swagger
@@ -143,12 +145,34 @@ import { NextResponse } from "next/server";
  *                 error: ユーザー検索中にエラーが発生しました
  *                 status: 500
  */
-export async function GET(request: Request) {
+
+// クエリパラメータのバリデーションスキーマ
+const searchQuerySchema = z.object({
+  query: z.string().optional(),
+  page: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(1))
+    .optional(),
+  limit: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .pipe(z.number().min(1).max(50))
+    .optional(),
+});
+
+export async function GET(
+  request: Request
+): Promise<NextResponse<ApiResponse<SearchResult>>> {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get("query");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const rawData = {
+      query: searchParams.get("query"),
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit"),
+    };
+
+    const { query, page = 1, limit = 20 } = searchQuerySchema.parse(rawData);
 
     // 検索クエリが"*"の場合は全ユーザーを返す
     if (!query || query === "*") {
@@ -211,17 +235,15 @@ export async function GET(request: Request) {
           name: interest.tag.name,
         })),
         _count: user._count,
-      }));
+      })) as FrontendUser[];
 
-      return NextResponse.json({
-        data: {
-          users: formattedUsers,
-          total,
-          pagination: {
-            page,
-            limit,
-            totalPages,
-          },
+      return createApiResponse({
+        users: formattedUsers,
+        total,
+        pagination: {
+          page,
+          limit,
+          totalPages,
         },
       });
     }
@@ -336,21 +358,22 @@ export async function GET(request: Request) {
         name: interest.tag.name,
       })),
       _count: user._count,
-    }));
+    })) as FrontendUser[];
 
-    return NextResponse.json({
-      data: {
-        users: formattedUsers,
-        total,
-        pagination: {
-          page,
-          limit,
-          totalPages,
-        },
+    return createApiResponse({
+      users: formattedUsers,
+      total,
+      pagination: {
+        page,
+        limit,
+        totalPages,
       },
     });
   } catch (error) {
     console.error("ユーザー検索エラー:", error);
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(error.errors[0].message);
+    }
     return createErrorResponse("ユーザー検索中にエラーが発生しました", 500);
   }
 }

@@ -60,79 +60,51 @@ import { NextResponse } from "next/server";
  */
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    // 認証チェック
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    const unitId = parseInt(params.id);
+    const unitId = parseInt(id);
     if (isNaN(unitId)) {
       return NextResponse.json(
-        { error: "無効なユニットIDです", status: 400 },
+        { error: "無効なユニットIDです" },
         { status: 400 }
       );
     }
 
-    // ユニットの存在確認
-    const unit = await prisma.unit.findUnique({
-      where: { id: unitId },
-      select: { id: true },
-    });
-
-    if (!unit) {
-      return NextResponse.json(
-        { error: "ユニットが見つかりません", status: 404 },
-        { status: 404 }
-      );
-    }
-
-    // いいねの重複チェック
-    const existingLike = await prisma.unitLike.findUnique({
+    // いいねが既に存在するかチェック
+    const existingLike = await prisma.unitLike.findFirst({
       where: {
-        userId_unitId: {
-          userId: session.user.id,
-          unitId: unitId,
-        },
+        userId: session.user.id,
+        unitId: unitId,
       },
     });
 
     if (existingLike) {
       return NextResponse.json(
-        { error: "すでにいいね済みです", status: 409 },
+        { error: "すでにいいねしています" },
         { status: 409 }
       );
     }
 
-    // いいねの作成
-    await prisma.unitLike.create({
+    // いいねを作成
+    const like = await prisma.unitLike.create({
       data: {
         userId: session.user.id,
         unitId: unitId,
       },
     });
 
-    // ユニットのいいね数を更新
-    await prisma.unit.update({
-      where: { id: unitId },
-      data: {
-        likesCount: {
-          increment: 1,
-        },
-      },
-    });
-
-    return NextResponse.json({ message: "いいねを追加しました" });
+    return NextResponse.json({ data: like });
   } catch (error) {
-    console.error("いいねの追加中にエラーが発生しました:", error);
+    console.error("いいねの作成に失敗しました:", error);
     return NextResponse.json(
-      { error: "いいねの追加中にエラーが発生しました", status: 500 },
+      { error: "いいねの作成に失敗しました" },
       { status: 500 }
     );
   }
@@ -189,44 +161,39 @@ export async function POST(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    // 認証チェック
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    const unitId = parseInt(params.id);
+    const unitId = parseInt(id);
     if (isNaN(unitId)) {
       return NextResponse.json(
-        { error: "無効なユニットIDです", status: 400 },
+        { error: "無効なユニットIDです" },
         { status: 400 }
       );
     }
 
-    // いいねの存在確認
-    const like = await prisma.unitLike.findUnique({
+    // いいねが存在するかチェック
+    const existingLike = await prisma.unitLike.findFirst({
       where: {
-        userId_unitId: {
-          userId: session.user.id,
-          unitId: unitId,
-        },
+        userId: session.user.id,
+        unitId: unitId,
       },
     });
 
-    if (!like) {
+    if (!existingLike) {
       return NextResponse.json(
-        { error: "いいねが見つかりません", status: 404 },
+        { error: "いいねが存在しません" },
         { status: 404 }
       );
     }
 
-    // いいねの削除
+    // いいねを削除
     await prisma.unitLike.delete({
       where: {
         userId_unitId: {
@@ -236,21 +203,11 @@ export async function DELETE(
       },
     });
 
-    // ユニットのいいね数を更新
-    await prisma.unit.update({
-      where: { id: unitId },
-      data: {
-        likesCount: {
-          decrement: 1,
-        },
-      },
-    });
-
     return NextResponse.json({ message: "いいねを削除しました" });
   } catch (error) {
-    console.error("いいねの削除中にエラーが発生しました:", error);
+    console.error("いいねの削除に失敗しました:", error);
     return NextResponse.json(
-      { error: "いいねの削除中にエラーが発生しました", status: 500 },
+      { error: "いいねの削除に失敗しました" },
       { status: 500 }
     );
   }

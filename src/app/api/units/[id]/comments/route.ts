@@ -260,6 +260,7 @@ export async function POST(
     const body = await request.json();
     const { content } = body;
 
+    // バリデーション
     if (!content) {
       return NextResponse.json(
         { error: "コメントの内容は必須です", status: 400 },
@@ -268,7 +269,7 @@ export async function POST(
     }
 
     // コメントの作成
-    const newComment = await prisma.comment.create({
+    const comment = await prisma.comment.create({
       data: {
         comment: content,
         userId: session.user.id,
@@ -295,7 +296,7 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ data: newComment }, { status: 201 });
+    return NextResponse.json({ data: comment }, { status: 201 });
   } catch (error) {
     console.error("コメントの追加中にエラーが発生しました:", error);
     return NextResponse.json(

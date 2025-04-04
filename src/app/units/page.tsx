@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Unit } from "@/types";
+import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { useSession } from "next-auth/react";
@@ -167,9 +168,7 @@ export default function UnitsPage() {
                       unit.status === "COMPLETED" ? "default" : "secondary"
                     }
                   >
-                    {unit.status === "PLANNED" && "未着手"}
-                    {unit.status === "IN_PROGRESS" && "進行中"}
-                    {unit.status === "COMPLETED" && "完了"}
+                    {translateUnitStatus(unit.status)}
                   </Badge>
                 </CardTitle>
               </CardHeader>
