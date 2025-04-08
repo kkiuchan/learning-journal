@@ -156,6 +156,15 @@ export default function EditLogForm({
     setIsSubmitting(true);
 
     try {
+      const formattedResources = resources.map((resource) => ({
+        id: resource.id,
+        resourceType: resource.resourceType,
+        resourceLink: resource.resourceLink,
+        description: resource.description,
+        fileName: resource.fileName || undefined,
+        filePath: resource.filePath || undefined,
+      }));
+
       const response = await fetch(`/api/units/${unitId}/logs/${log.id}`, {
         method: "PUT",
         headers: {
@@ -167,11 +176,13 @@ export default function EditLogForm({
           note,
           logDate,
           tags,
-          resources,
+          resources: formattedResources,
         }),
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error("サーバーエラー:", errorData);
         throw new Error("ログの更新に失敗しました");
       }
 

@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Comment, Log, Unit } from "@/types";
+import { useComments } from "@/hooks/useComments";
+import { useLogs } from "@/hooks/useLogs";
+import { Unit } from "@/types";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -12,7 +14,8 @@ import { Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useState } from "react";
+import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
 import EditLogForm from "./components/EditLogForm";
 
@@ -23,150 +26,41 @@ export default function UnitDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session, status } = useSession({
+  const { data: session } = useSession({
     required: true,
     onUnauthenticated() {
       router.push("/auth/signin");
     },
   });
-  const [unit, setUnit] = useState<Unit | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [logs, setLogs] = useState<Log[]>([]);
+
+  // SWRを使用してユニットを取得
+  const {
+    data: unitData,
+    error: unitError,
+    mutate: mutateUnit,
+  } = useSWR<{ data: Unit }>(`/api/units/${id}`, undefined);
+
+  // SWRを使用してログを取得
+  const { logs, isLoading: logsLoading, mutate: mutateLogs } = useLogs(id);
+
+  // SWRを使用してコメントを取得
+  const [commentPage, setCommentPage] = useState(1);
+  const {
+    comments,
+    pagination,
+    isLoading: commentsLoading,
+    mutate: mutateComments,
+  } = useComments({
+    unitId: id,
+    page: commentPage,
+    limit: 10,
+  });
+
   const [newComment, setNewComment] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [isCreatingLog, setIsCreatingLog] = useState(false);
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      fetchUnit();
-      fetchComments();
-      fetchLogs();
-    }
-  }, [id, status]);
-
-  const fetchLogs = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/units/${id}/logs`);
-      if (!response.ok) {
-        throw new Error("ログの取得に失敗しました");
-      }
-      const data = await response.json();
-      setLogs(data.data);
-    } catch (error) {
-      console.error("ログの取得中にエラーが発生しました:", error);
-    }
-  }, [id]);
-
-  const fetchUnit = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/units/${id}`);
-      if (!response.ok) {
-        throw new Error("ユニットの取得に失敗しました");
-      }
-      const data = await response.json();
-      console.log("Fetched unit:", data.data); // デバッグ用
-      setUnit(data.data);
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-      setError(error instanceof Error ? error.message : "エラーが発生しました");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id]);
-
-  const fetchComments = async () => {
-    try {
-      const response = await fetch(`/api/units/${id}/comments`);
-      const data = await response.json();
-      if (response.ok) {
-        setComments(data.data);
-      } else {
-        console.error("コメントの取得に失敗しました:", data.error);
-      }
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-    }
-  };
-
-  const handleLike = async () => {
-    if (!session) {
-      router.push("/auth/signin");
-      return;
-    }
-
-    if (!unit) return;
-
-    try {
-      const method = unit.isLiked ? "DELETE" : "POST";
-      console.log(`Current unit state:`, unit); // デバッグ用
-      console.log(`Sending ${method} request to /api/units/${unit.id}/like`);
-
-      const response = await fetch(`/api/units/${unit.id}/like`, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const updatedUnit = await response.json();
-        console.log("Response from like API:", updatedUnit); // デバッグ用
-        setUnit((prevUnit) =>
-          prevUnit
-            ? {
-                ...prevUnit,
-                isLiked: !prevUnit.isLiked,
-                _count: {
-                  ...prevUnit._count,
-                  unitLikes: prevUnit.isLiked
-                    ? prevUnit._count.unitLikes - 1
-                    : prevUnit._count.unitLikes + 1,
-                },
-              }
-            : null
-        );
-      } else {
-        const data = await response.json();
-        console.error("いいねの処理に失敗しました:", data.error);
-        alert(data.error || "いいねの処理に失敗しました");
-      }
-    } catch (error) {
-      console.error("いいねの処理に失敗しました:", error);
-      alert("いいねの処理に失敗しました");
-    }
-  };
-
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session) {
-      router.push("/auth/signin");
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/units/${id}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: newComment }),
-      });
-
-      if (response.ok) {
-        setNewComment("");
-        fetchComments();
-        fetchUnit();
-      } else {
-        const data = await response.json();
-        console.error("コメントの投稿に失敗しました:", data.error);
-      }
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-    }
-  };
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState("");
 
   const handleDelete = async () => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
@@ -174,6 +68,7 @@ export default function UnitDetailPage({
     try {
       const response = await fetch(`/api/units/${id}`, {
         method: "DELETE",
+        next: { tags: [`unit-${id}`, "unit", "unit-list"] },
       });
 
       if (response.ok) {
@@ -187,17 +82,157 @@ export default function UnitDetailPage({
     }
   };
 
-  if (isLoading) {
-    return <div>読み込み中...</div>;
+  const handleCreateComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    try {
+      const response = await fetch(`/api/units/${id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: newComment,
+        }),
+        next: {
+          tags: [`unit-${id}`, "unit", "unit-list", "comment", "comment-list"],
+        },
+      });
+
+      if (response.ok) {
+        setNewComment("");
+        mutateComments();
+      } else {
+        const data = await response.json();
+        console.error("コメントの作成に失敗しました:", data.error);
+      }
+    } catch (error) {
+      console.error("エラーが発生しました:", error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!confirm("このコメントを削除してもよろしいですか？")) return;
+
+    try {
+      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+        method: "DELETE",
+        next: {
+          tags: [
+            `unit-${id}`,
+            "unit",
+            "unit-list",
+            "comment",
+            "comment-list",
+            `comment-${commentId}`,
+          ],
+        },
+      });
+
+      if (response.ok) {
+        mutateComments();
+      } else {
+        const data = await response.json();
+        console.error("コメントの削除に失敗しました:", data.error);
+      }
+    } catch (error) {
+      console.error("エラーが発生しました:", error);
+    }
+  };
+
+  const handleUpdateComment = async (commentId: number) => {
+    if (!editingCommentContent.trim()) return;
+
+    try {
+      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: editingCommentContent,
+        }),
+        next: {
+          tags: [
+            `unit-${id}`,
+            "unit",
+            "unit-list",
+            "comment",
+            "comment-list",
+            `comment-${commentId}`,
+          ],
+        },
+      });
+
+      if (response.ok) {
+        setEditingCommentId(null);
+        setEditingCommentContent("");
+        mutateComments();
+      } else {
+        const data = await response.json();
+        console.error("コメントの更新に失敗しました:", data.error);
+      }
+    } catch (error) {
+      console.error("エラーが発生しました:", error);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!unitData?.data) return;
+
+    const unit = unitData.data;
+
+    // 楽観的更新
+    const previousUnit = { ...unit };
+    mutateUnit(
+      {
+        data: {
+          ...unit,
+          isLiked: !unit.isLiked,
+          _count: {
+            ...unit._count,
+            likes: unit.isLiked ? unit._count.likes - 1 : unit._count.likes + 1,
+          },
+        },
+      },
+      false
+    );
+
+    try {
+      const response = await fetch(`/api/units/${id}/like`, {
+        method: unit.isLiked ? "DELETE" : "POST",
+        next: { tags: [`unit-${id}`, "unit", "unit-list"] },
+      });
+
+      if (!response.ok) {
+        // エラーが発生した場合は元に戻す
+        mutateUnit({ data: previousUnit }, false);
+        const data = await response.json();
+        console.error("いいねの更新に失敗しました:", data.error);
+      }
+    } catch (error) {
+      // エラーが発生した場合は元に戻す
+      mutateUnit({ data: previousUnit }, false);
+      console.error("エラーが発生しました:", error);
+    }
+  };
+
+  const handleLoadMoreComments = () => {
+    if (pagination && commentPage < pagination.totalPages) {
+      setCommentPage((prev) => prev + 1);
+    }
+  };
+
+  if (unitError) {
+    return <div className="text-red-500">ユニットの取得に失敗しました</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
-
-  if (!unit) {
+  if (!unitData?.data) {
     return <div>ユニットが見つかりません</div>;
   }
+
+  const unit = unitData.data;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -209,16 +244,18 @@ export default function UnitDetailPage({
               {translateUnitStatus(unit.status)}
             </Badge>
           </div>
-          <div className="flex gap-2">
-            <Link href={`/units/${id}/edit`}>
-              <Button variant="outline" size="icon">
-                <Pencil className="h-4 w-4" />
+          {session?.user?.id === unit.userId && (
+            <div className="flex gap-2">
+              <Link href={`/units/${id}/edit`}>
+                <Button variant="outline" size="icon">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button variant="destructive" size="icon" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" />
               </Button>
-            </Link>
-            <Button variant="destructive" size="icon" onClick={handleDelete}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -267,212 +304,257 @@ export default function UnitDetailPage({
             </div>
           )}
 
-          {unit.tags.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold mb-2">タグ</h2>
-              <div className="flex flex-wrap gap-2">
-                {unit.tags.map((tag) => (
-                  <Badge key={tag.id} variant="secondary">
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+          <div className="flex flex-wrap gap-2">
+            {unit.tags.map((tag) => (
+              <Badge key={tag.id} variant="outline">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
 
-        <div className="mt-6 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={handleLike}
-          >
-            <Heart
-              className={`h-4 w-4 ${
-                unit.isLiked ? "fill-current text-red-500" : ""
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-1 ${
+                unit.isLiked ? "text-red-500" : "text-gray-500"
               }`}
-            />
-            <span>{unit._count.unitLikes}</span>
-          </Button>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MessageCircle className="h-4 w-4" />
-            <span>{unit._count.comments}</span>
+            >
+              <Heart className={unit.isLiked ? "fill-current" : ""} />
+              <span>{unit._count.likes}</span>
+            </button>
+            <div className="flex items-center gap-1 text-gray-500">
+              <MessageCircle />
+              <span>{unit._count.comments}</span>
+            </div>
           </div>
         </div>
       </Card>
 
-      {/* ログセクション */}
+      {/* 学習ログ */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-2xl font-bold">学習ログ</h2>
-            <p className="text-muted-foreground">
-              総学習時間: {logs.reduce((sum, log) => sum + log.learningTime, 0)}
-              分
-            </p>
-          </div>
-          {unit && unit.userId === session?.user?.id && (
+          <h2 className="text-2xl font-bold">学習ログ</h2>
+          {session?.user?.id === unit.userId && (
             <Button onClick={() => setIsCreatingLog(true)}>ログを追加</Button>
           )}
         </div>
 
-        {isCreatingLog ? (
-          <Card className="p-4 mb-4">
-            <CreateLogForm
-              unitId={id}
-              onCancel={() => setIsCreatingLog(false)}
-              onSuccess={() => {
-                fetchLogs();
-                setIsCreatingLog(false);
-              }}
-            />
-          </Card>
-        ) : null}
+        {isCreatingLog && (
+          <CreateLogForm
+            unitId={id}
+            onCancel={() => setIsCreatingLog(false)}
+            onSuccess={() => {
+              setIsCreatingLog(false);
+              mutateLogs();
+            }}
+          />
+        )}
 
-        <div className="space-y-4">
-          {logs.map((log) => (
-            <Card key={log.id} className="p-4">
-              {editingLogId === log.id ? (
-                <EditLogForm
-                  log={log}
-                  unitId={id}
-                  onCancel={() => setEditingLogId(null)}
-                  onUpdate={(updatedLog) => {
-                    setLogs(
-                      logs.map((l) => (l.id === updatedLog.id ? updatedLog : l))
-                    );
-                  }}
-                />
-              ) : (
-                <>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-semibold">{log.title}</h3>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setEditingLogId(log.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={async () => {
-                          if (!confirm("このログを削除してもよろしいですか？"))
-                            return;
-                          try {
-                            const response = await fetch(
-                              `/api/units/${id}/logs/${log.id}`,
-                              {
-                                method: "DELETE",
+        {logsLoading ? (
+          <div>読み込み中...</div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            まだ学習ログがありません
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {logs.map((log) => (
+              <Card key={log.id} className="p-4">
+                {editingLogId === log.id ? (
+                  <EditLogForm
+                    log={log}
+                    unitId={id}
+                    onCancel={() => setEditingLogId(null)}
+                    onUpdate={(updatedLog) => {
+                      setEditingLogId(null);
+                      mutateLogs();
+                    }}
+                  />
+                ) : (
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold">{log.title}</h3>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(log.logDate), "yyyy/MM/dd", {
+                            locale: ja,
+                          })}
+                        </p>
+                      </div>
+                      {session?.user?.id === log.userId && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingLogId(log.id)}
+                          >
+                            編集
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={async () => {
+                              if (
+                                !confirm("このログを削除してもよろしいですか？")
+                              )
+                                return;
+
+                              try {
+                                const response = await fetch(
+                                  `/api/units/${id}/logs/${log.id}`,
+                                  {
+                                    method: "DELETE",
+                                  }
+                                );
+
+                                if (response.ok) {
+                                  mutateLogs();
+                                } else {
+                                  const data = await response.json();
+                                  console.error(
+                                    "ログの削除に失敗しました:",
+                                    data.error
+                                  );
+                                }
+                              } catch (error) {
+                                console.error("エラーが発生しました:", error);
                               }
-                            );
-                            if (response.ok) {
-                              setLogs(logs.filter((l) => l.id !== log.id));
-                            } else {
-                              throw new Error("ログの削除に失敗しました");
-                            }
-                          } catch (error) {
-                            console.error("Error deleting log:", error);
-                            alert("ログの削除に失敗しました");
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                            }}
+                          >
+                            削除
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  <div className="mb-2">
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(log.logDate), "yyyy/MM/dd", {
-                        locale: ja,
-                      })}
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-4">
-                      学習時間: {log.learningTime}分
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground mb-2">{log.note}</p>
-                  {log.logTags && log.logTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {log.logTags.map(({ tag }) => (
-                        <Badge key={tag.id} variant="secondary">
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                  {log.resources && log.resources.length > 0 && (
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold">参考資料</h4>
-                      <ul className="list-disc list-inside text-sm text-muted-foreground">
-                        {log.resources.map((resource, index) => (
-                          <li key={index}>
-                            <a
-                              href={resource.resourceLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:underline"
-                            >
-                              {resource.description || resource.resourceLink}
-                            </a>
-                          </li>
+                    {log.note && (
+                      <div className="mt-2 whitespace-pre-wrap">{log.note}</div>
+                    )}
+                    {log.learningTime && (
+                      <div className="mt-2 text-sm text-gray-500">
+                        学習時間: {log.learningTime}分
+                      </div>
+                    )}
+                    {log.logTags && log.logTags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {log.logTags.map((logTag) => (
+                          <Badge
+                            key={logTag.tag.id}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {logTag.tag.name}
+                          </Badge>
                         ))}
-                      </ul>
-                    </div>
-                  )}
-                </>
-              )}
-            </Card>
-          ))}
-        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* コメントセクション */}
+      {/* コメント */}
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">コメント</h2>
-        <form onSubmit={handleComment} className="mb-6">
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="コメントを入力..."
-            className="mb-2"
-          />
-          <Button type="submit" disabled={!newComment.trim()}>
-            コメントを投稿
-          </Button>
-        </form>
 
-        <div className="space-y-4">
-          {comments.map((comment) => (
-            <Card key={comment.id} className="p-4">
-              <div className="flex items-start gap-4">
-                {comment.user.image && (
-                  <img
-                    src={comment.user.image}
-                    alt={comment.user.name || "ユーザー"}
-                    className="w-8 h-8 rounded-full"
-                  />
-                )}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold">
-                      {comment.user.name || "匿名"}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
+        {session?.user && (
+          <form onSubmit={handleCreateComment} className="mb-6">
+            <Textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="コメントを入力..."
+              className="mb-2"
+            />
+            <Button type="submit" disabled={!newComment.trim()}>
+              コメントする
+            </Button>
+          </form>
+        )}
+
+        {commentsLoading ? (
+          <div>読み込み中...</div>
+        ) : comments.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            まだコメントがありません
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <Card key={comment.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-gray-500">
                       {format(new Date(comment.createdAt), "yyyy/MM/dd HH:mm", {
                         locale: ja,
                       })}
-                    </span>
+                    </p>
+                    {editingCommentId === comment.id ? (
+                      <div className="mt-2">
+                        <Textarea
+                          value={editingCommentContent}
+                          onChange={(e) =>
+                            setEditingCommentContent(e.target.value)
+                          }
+                          className="mb-2"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleUpdateComment(comment.id)}
+                          >
+                            更新
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingCommentId(null);
+                              setEditingCommentContent("");
+                            }}
+                          >
+                            キャンセル
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 whitespace-pre-wrap">
+                        {comment.comment}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-muted-foreground">{comment.comment}</p>
+                  {session?.user?.id && session.user.id === comment.user.id && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingCommentId(comment.id);
+                          setEditingCommentContent(comment.comment);
+                        }}
+                      >
+                        編集
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        削除
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* もっと見るボタン */}
+        {pagination && commentPage < pagination.totalPages && (
+          <button onClick={handleLoadMoreComments}>もっと見る</button>
+        )}
       </div>
     </div>
   );

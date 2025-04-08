@@ -1,9 +1,12 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
+import { CACHE_TAGS } from "@/utils/cache";
 import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+
+export const revalidate = 60;
 
 export async function DELETE(
   request: NextRequest,
@@ -30,9 +33,31 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await prisma.log.delete({
-      where: { id: parseInt(logId) },
+    // トランザクションを使用して、関連するリソースも一緒に削除する
+    await prisma.$transaction(async (tx) => {
+      // 関連するリソースを削除
+      await tx.resource.deleteMany({
+        where: { logId: parseInt(logId) },
+      });
+
+      // ログのタグ関連を削除
+      await tx.logTag.deleteMany({
+        where: { logId: parseInt(logId) },
+      });
+
+      // ログを削除
+      await tx.log.delete({
+        where: { id: parseInt(logId) },
+      });
     });
+
+    // キャッシュの再検証
+    revalidateTag(CACHE_TAGS.LOG);
+    revalidateTag(CACHE_TAGS.LOG_LIST);
+    revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
+    revalidateTag(CACHE_TAGS.UNIT);
+    revalidateTag(CACHE_TAGS.UNIT_LIST);
+    revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
 
     revalidatePath(`/units/${id}`);
     return NextResponse.json({ data: { id: logId } });
@@ -93,9 +118,11 @@ export async function PUT(
         resources: {
           deleteMany: {},
           create: validatedData.resources?.map((resource) => ({
-            resourceType: "link",
+            resourceType: resource.resourceType || "link",
             resourceLink: resource.resourceLink,
             description: resource.description,
+            fileName: resource.fileName,
+            filePath: resource.filePath,
           })),
         },
       },
@@ -108,6 +135,14 @@ export async function PUT(
         resources: true,
       },
     });
+
+    // キャッシュの再検証
+    revalidateTag(CACHE_TAGS.LOG);
+    revalidateTag(CACHE_TAGS.LOG_LIST);
+    revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
+    revalidateTag(CACHE_TAGS.UNIT);
+    revalidateTag(CACHE_TAGS.UNIT_LIST);
+    revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
 
     revalidatePath(`/units/${id}`);
     return NextResponse.json({ data: updatedLog });
