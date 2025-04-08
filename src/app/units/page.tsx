@@ -11,52 +11,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Unit } from "@/types";
+import { useUnits } from "@/hooks/useUnits";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function UnitsPage() {
   const { data: session } = useSession();
-  const [units, setUnits] = useState<Unit[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUnits = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "10",
-        ...(searchQuery && { query: searchQuery }),
-        ...(statusFilter !== "all" && { status: statusFilter }),
-      });
-      const renderParams = params.toString();
-
-      const response = await fetch(`/api/units?${renderParams}`);
-      if (!response.ok) {
-        throw new Error("ユニットの取得に失敗しました");
-      }
-      const data = await response.json();
-      console.log("Fetched units:", data.data.units);
-      setUnits(data.data.units);
-      setTotalPages(data.data.pagination.totalPages);
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, searchQuery, statusFilter]);
-
-  useEffect(() => {
-    fetchUnits();
-  }, [fetchUnits]);
+  // SWRを使用してユニットを取得
+  const { units, isLoading, mutate, totalPages, currentPage } = useUnits({
+    page,
+    searchQuery,
+    statusFilter,
+  });
 
   const handleDelete = async (id: number) => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
@@ -67,7 +41,8 @@ export default function UnitsPage() {
       });
 
       if (response.ok) {
-        fetchUnits();
+        // キャッシュを更新
+        mutate();
       } else {
         const data = await response.json();
         console.error("ユニットの削除に失敗しました:", data.error);
@@ -78,26 +53,15 @@ export default function UnitsPage() {
   };
 
   const handleLike = async (unitId: number) => {
-    try {
-      const unit = units.find((u) => u.id === unitId);
-      if (!unit) return;
+    const unit = units.find((u) => u.id === unitId);
+    if (!unit) return;
 
-      const method = unit.isLiked ? "DELETE" : "POST";
-      console.log(`Current unit state:`, unit);
-      console.log(`Sending ${method} request to /api/units/${unitId}/like`);
-
-      const response = await fetch(`/api/units/${unitId}/like`, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const updatedUnit = await response.json();
-        console.log("Response from like API:", updatedUnit);
-        setUnits((prevUnits) =>
-          prevUnits.map((u) =>
+    // 楽観的更新
+    const previousUnits = [...units];
+    mutate(
+      {
+        data: {
+          units: units.map((u) =>
             u.id === unitId
               ? {
                   ...u,
@@ -110,14 +74,51 @@ export default function UnitsPage() {
                   },
                 }
               : u
-          )
-        );
-      } else {
+          ),
+          pagination: {
+            totalPages,
+            currentPage,
+          },
+        },
+      },
+      { revalidate: false }
+    );
+
+    try {
+      const method = !unit.isLiked ? "POST" : "DELETE";
+      const response = await fetch(`/api/units/${unitId}/like`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        // エラーが発生した場合は元の状態に戻す
+        mutate({
+          data: {
+            units: previousUnits,
+            pagination: {
+              totalPages,
+              currentPage,
+            },
+          },
+        });
         const data = await response.json();
         console.error("いいねの処理に失敗しました:", data.error);
         alert(data.error || "いいねの処理に失敗しました");
       }
     } catch (error) {
+      // エラーが発生した場合は元の状態に戻す
+      mutate({
+        data: {
+          units: previousUnits,
+          pagination: {
+            totalPages,
+            currentPage,
+          },
+        },
+      });
       console.error("いいねの処理に失敗しました:", error);
       alert("いいねの処理に失敗しました");
     }

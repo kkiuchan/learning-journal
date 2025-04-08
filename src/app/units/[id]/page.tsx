@@ -93,7 +93,7 @@ export default function UnitDetailPage({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: newComment,
+          comment: newComment,
         }),
         next: {
           tags: [`unit-${id}`, "unit", "unit-list", "comment", "comment-list"],
@@ -151,7 +151,7 @@ export default function UnitDetailPage({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          content: editingCommentContent,
+          comment: editingCommentContent,
         }),
         next: {
           tags: [
@@ -192,7 +192,9 @@ export default function UnitDetailPage({
           isLiked: !unit.isLiked,
           _count: {
             ...unit._count,
-            likes: unit.isLiked ? unit._count.likes - 1 : unit._count.likes + 1,
+            unitLikes: unit.isLiked
+              ? unit._count.unitLikes - 1
+              : unit._count.unitLikes + 1,
           },
         },
       },
@@ -320,7 +322,7 @@ export default function UnitDetailPage({
               }`}
             >
               <Heart className={unit.isLiked ? "fill-current" : ""} />
-              <span>{unit._count.likes}</span>
+              <span>{unit._count.unitLikes}</span>
             </button>
             <div className="flex items-center gap-1 text-gray-500">
               <MessageCircle />
@@ -365,7 +367,7 @@ export default function UnitDetailPage({
                     log={log}
                     unitId={id}
                     onCancel={() => setEditingLogId(null)}
-                    onUpdate={(updatedLog) => {
+                    onUpdate={() => {
                       setEditingLogId(null);
                       mutateLogs();
                     }}
@@ -381,7 +383,7 @@ export default function UnitDetailPage({
                           })}
                         </p>
                       </div>
-                      {session?.user?.id === log.userId && (
+                      {session?.user?.id === String(log.userId) && (
                         <div className="flex gap-2">
                           <Button
                             variant="outline"

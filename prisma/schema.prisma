@@ -10,6 +10,8 @@ generator erd {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {

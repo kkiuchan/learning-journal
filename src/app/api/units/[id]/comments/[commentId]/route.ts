@@ -1,5 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+import { revalidateCommentData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -94,7 +95,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
-  const { commentId } = await params;
+  const { id, commentId } = await params;
   try {
     // 認証チェック
     const session = await getServerSession(authConfig);
@@ -150,6 +151,9 @@ export async function PUT(
         },
       },
     });
+
+    revalidateCommentData(commentId);
+    revalidateUnitData(id);
 
     return NextResponse.json({ data: updatedComment });
   } catch (error) {
@@ -260,6 +264,10 @@ export async function DELETE(
         },
       },
     });
+
+    // キャッシュの再検証
+    revalidateUnitData(id);
+    revalidateCommentData(commentId);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

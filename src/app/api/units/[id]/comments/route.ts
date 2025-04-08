@@ -1,5 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+import { revalidateCommentData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -143,7 +144,14 @@ export async function GET(
       },
     };
 
-    return NextResponse.json(response);
+    // キャッシュヘッダーの設定
+    const responseObj = NextResponse.json(response);
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=10, stale-while-revalidate=59"
+    );
+
+    return responseObj;
   } catch (error) {
     console.error("コメント一覧の取得中にエラーが発生しました:", error);
     return NextResponse.json(
@@ -258,9 +266,8 @@ export async function POST(
 
     // リクエストボディの取得
     const body = await request.json();
-    const { content } = body;
+    const { comment: content } = body;
 
-    // バリデーション
     if (!content) {
       return NextResponse.json(
         { error: "コメントの内容は必須です", status: 400 },
@@ -272,8 +279,8 @@ export async function POST(
     const comment = await prisma.comment.create({
       data: {
         comment: content,
-        userId: session.user.id,
         unitId: parseInt(id),
+        userId: session.user.id,
       },
       include: {
         user: {
@@ -295,12 +302,15 @@ export async function POST(
         },
       },
     });
+    // キャッシュの再検証
+    revalidateUnitData(id);
+    revalidateCommentData(comment.id);
 
-    return NextResponse.json({ data: comment }, { status: 201 });
+    return NextResponse.json({ data: comment });
   } catch (error) {
-    console.error("コメントの追加中にエラーが発生しました:", error);
+    console.error("コメントの作成中にエラーが発生しました:", error);
     return NextResponse.json(
-      { error: "コメントの追加中にエラーが発生しました", status: 500 },
+      { error: "コメントの作成中にエラーが発生しました", status: 500 },
       { status: 500 }
     );
   }

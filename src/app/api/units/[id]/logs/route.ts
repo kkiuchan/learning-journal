@@ -1,9 +1,12 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
+import { revalidateLogData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
-import { revalidatePath } from "next/cache";
+// import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+
+export const revalidate = 60;
 
 export async function POST(
   request: NextRequest,
@@ -67,7 +70,16 @@ export async function POST(
       },
     });
 
-    revalidatePath(`/units/${unit.id}`);
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.LOG);
+    // revalidateTag(CACHE_TAGS.LOG_LIST);
+    // revalidateTag(`${CACHE_TAGS.LOG}-${log.id}`);
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateLogData(log.id);
+    revalidateUnitData(id);
+
     return NextResponse.json({ data: log });
   } catch (error) {
     console.error("Error creating log:", error);
@@ -101,24 +113,57 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const logs = await prisma.log.findMany({
-      where: {
-        unitId: unit.id,
-      },
-      include: {
-        logTags: {
-          include: {
-            tag: true,
-          },
-        },
-        resources: true,
-      },
-      orderBy: {
-        logDate: "desc",
-      },
-    });
+    // クエリパラメータの取得
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
 
-    return NextResponse.json({ data: logs });
+    const [logs, total] = await Promise.all([
+      prisma.log.findMany({
+        where: {
+          unitId: parseInt(id),
+        },
+        orderBy: {
+          logDate: "desc",
+        },
+        skip,
+        take: limit,
+        include: {
+          logTags: {
+            include: {
+              tag: true,
+            },
+          },
+          resources: true,
+        },
+      }),
+      prisma.log.count({
+        where: {
+          unitId: parseInt(id),
+        },
+      }),
+    ]);
+
+    // レスポンスの構築
+    const response = {
+      data: logs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+
+    // キャッシュヘッダーの設定
+    const responseObj = NextResponse.json(response);
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=10, stale-while-revalidate=59"
+    );
+
+    return responseObj;
   } catch (error) {
     console.error("Error fetching logs:", error);
     return NextResponse.json(

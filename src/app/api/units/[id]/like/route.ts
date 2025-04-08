@@ -1,6 +1,8 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+import { revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
+// import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 /**
@@ -99,6 +101,22 @@ export async function POST(
         unitId: unitId,
       },
     });
+
+    // ユニットのいいね数を更新
+    await prisma.unit.update({
+      where: { id: unitId },
+      data: {
+        likesCount: {
+          increment: 1,
+        },
+      },
+    });
+
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateUnitData(id);
 
     return NextResponse.json({ data: like });
   } catch (error) {
@@ -203,6 +221,21 @@ export async function DELETE(
       },
     });
 
+    // ユニットのいいね数を更新
+    await prisma.unit.update({
+      where: { id: unitId },
+      data: {
+        likesCount: {
+          decrement: 1,
+        },
+      },
+    });
+
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateUnitData(id);
     return NextResponse.json({ message: "いいねを削除しました" });
   } catch (error) {
     console.error("いいねの削除に失敗しました:", error);

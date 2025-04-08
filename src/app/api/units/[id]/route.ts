@@ -1,6 +1,8 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+import { revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
+// import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
 /**
@@ -105,7 +107,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    // 認証チェック
+    // セッションの取得
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -115,21 +117,21 @@ export async function PUT(
     }
 
     // ユニットの存在確認と権限チェック
-    const existingUnit = await prisma.unit.findUnique({
+    const unit = await prisma.unit.findUnique({
       where: { id: parseInt(id) },
       select: { userId: true },
     });
 
-    if (!existingUnit) {
+    if (!unit) {
       return NextResponse.json(
         { error: "ユニットが見つかりません", status: 404 },
         { status: 404 }
       );
     }
 
-    if (existingUnit.userId !== session.user.id) {
+    if (unit.userId !== session.user.id) {
       return NextResponse.json(
-        { error: "このユニットを編集する権限がありません", status: 403 },
+        { error: "このユニットを更新する権限がありません", status: 403 },
         { status: 403 }
       );
     }
@@ -145,7 +147,7 @@ export async function PUT(
       startDate,
       endDate,
       status,
-      tags,
+      displayFlag,
     } = body;
 
     // バリデーション
@@ -156,8 +158,8 @@ export async function PUT(
       );
     }
 
-    // Unitの更新
-    const unit = await prisma.unit.update({
+    // ユニットの更新
+    const updatedUnit = await prisma.unit.update({
       where: { id: parseInt(id) },
       data: {
         title,
@@ -165,23 +167,10 @@ export async function PUT(
         preLearningState,
         reflection,
         nextAction,
-        startDate: startDate ? new Date(startDate) : null,
-        endDate: endDate ? new Date(endDate) : null,
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
         status,
-        // タグの更新
-        unitTags: {
-          deleteMany: {}, // 既存のタグを削除
-          create: tags
-            ? tags.map((tagName: string) => ({
-                tag: {
-                  connectOrCreate: {
-                    where: { name: tagName },
-                    create: { name: tagName },
-                  },
-                },
-              }))
-            : [],
-        },
+        displayFlag,
       },
       include: {
         user: {
@@ -196,29 +185,16 @@ export async function PUT(
             tag: true,
           },
         },
-        _count: {
-          select: {
-            logs: true,
-            unitLikes: true,
-            comments: true,
-          },
-        },
       },
     });
 
-    // レスポンスの構築
-    const response = {
-      data: {
-        ...unit,
-        tags: unit.unitTags.map((ut) => ut.tag),
-        _count: {
-          ...unit._count,
-          totalLearningTime: unit._count.logs, // ログ数を総学習時間として使用
-        },
-      },
-    };
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateUnitData(id);
 
-    return NextResponse.json(response);
+    return NextResponse.json({ data: updatedUnit });
   } catch (error) {
     console.error("ユニットの更新中にエラーが発生しました:", error);
     return NextResponse.json(
@@ -277,7 +253,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // 認証チェック
+    const { id } = params;
+    // セッションの取得
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
       return NextResponse.json(
@@ -287,29 +264,35 @@ export async function DELETE(
     }
 
     // ユニットの存在確認と権限チェック
-    const existingUnit = await prisma.unit.findUnique({
-      where: { id: parseInt(params.id) },
+    const unit = await prisma.unit.findUnique({
+      where: { id: parseInt(id) },
       select: { userId: true },
     });
 
-    if (!existingUnit) {
+    if (!unit) {
       return NextResponse.json(
         { error: "ユニットが見つかりません", status: 404 },
         { status: 404 }
       );
     }
 
-    if (existingUnit.userId !== session.user.id) {
+    if (unit.userId !== session.user.id) {
       return NextResponse.json(
         { error: "このユニットを削除する権限がありません", status: 403 },
         { status: 403 }
       );
     }
 
-    // Unitの削除
+    // ユニットの削除
     await prisma.unit.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
     });
+
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateUnitData(id);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
@@ -388,13 +371,13 @@ export async function GET(
           orderBy: {
             logDate: "desc",
           },
-          take: 5, // 最新5件のログを取得
           include: {
             logTags: {
               include: {
                 tag: true,
               },
             },
+            resources: true,
           },
         },
         comments: {
@@ -450,8 +433,13 @@ export async function GET(
         },
       },
     };
+    const responseObj = NextResponse.json(response);
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=300"
+    );
 
-    return NextResponse.json(response);
+    return responseObj;
   } catch (error) {
     console.error("ユニットの取得中にエラーが発生しました:", error);
     return NextResponse.json(
@@ -460,3 +448,6 @@ export async function GET(
     );
   }
 }
+
+// キャッシュの有効期限を60秒に設定
+export const revalidate = 60;

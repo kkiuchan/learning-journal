@@ -2,7 +2,9 @@ import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
 import { ApiResponse, ApiUser } from "@/types";
+import { revalidateUserData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
+// import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -134,6 +136,9 @@ const updateUserSchema = z.object({
   interests: z.array(z.string().min(1).max(50)).max(10).optional(),
 });
 
+// キャッシュの有効期限を60秒に設定
+export const revalidate = 60;
+
 export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
   try {
     const session = await getServerSession(authConfig);
@@ -203,7 +208,14 @@ export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
       })),
     };
 
-    return createApiResponse(formattedUser);
+    // キャッシュヘッダーの設定
+    const responseObj = createApiResponse(formattedUser);
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=300"
+    );
+
+    return responseObj;
   } catch (error) {
     console.error("ユーザー情報の取得中にエラーが発生しました:", error);
     return createErrorResponse(
@@ -367,6 +379,12 @@ export async function PUT(
         name: interest.tag.name,
       })),
     };
+
+    // キャッシュの再検証
+    // revalidateTag(CACHE_TAGS.USER);
+    // revalidateTag(CACHE_TAGS.USER_PROFILE);
+    // revalidateTag(`${CACHE_TAGS.USER}-${session.user.id}`);
+    revalidateUserData(session.user.id);
 
     return createApiResponse(formattedUser);
   } catch (error) {

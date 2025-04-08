@@ -1,3 +1,4 @@
+import { authConfig } from "@/auth.config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -67,7 +68,7 @@ interface Props {
 
 export default async function UserPage({ params }: Props) {
   const { id } = await params;
-  const session = await getServerSession();
+  const session = await getServerSession(authConfig);
   const currentUserId = session?.user?.id;
 
   const response = await fetch(
@@ -144,6 +145,7 @@ export default async function UserPage({ params }: Props) {
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold">学習ユニット一覧</h2>
+          <div className="text-xs text-muted-foreground"></div>
           {currentUserId === id && (
             <Link href="/units/new">
               <Button>新規作成</Button>

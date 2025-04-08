@@ -3,10 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Log } from "@/types/log";
+import { CACHE_TAGS } from "@/utils/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ExternalLink, File, Link, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 
 // デバッグ用にwindowオブジェクトを拡張
 declare global {
@@ -28,108 +30,20 @@ interface LogListProps {
 }
 
 export function LogList({ unitId }: LogListProps) {
-  const [logs, setLogs] = useState<Log[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchLogs = async () => {
-    if (typeof window !== "undefined") {
-      console.log("==== Log取得開始 ====");
-      console.log("unitId:", unitId);
-    }
+  // SWRを使ってログを取得
+  const {
+    data,
+    error: swrError,
+    isLoading,
+    mutate,
+  } = useSWR<{ data: Log[] }>(`/api/units/${unitId}/logs`, {
+    revalidateOnFocus: true,
+    dedupingInterval: 5000,
+  });
 
-    try {
-      // API URLの構築
-      const url = `/api/units/${unitId}/logs`;
-      console.log("API URL:", url);
-
-      // API呼び出し
-      console.log("fetch開始...");
-      const response = await fetch(url);
-      console.log("fetch完了, status:", response.status);
-
-      if (!response.ok) {
-        console.error("APIエラー:", {
-          status: response.status,
-          statusText: response.statusText,
-        });
-        throw new Error(`ログの取得に失敗しました: ${response.status}`);
-      }
-
-      // レスポンスのJSON解析
-      console.log("レスポンスデータ取得中...");
-      const data = await response.json();
-      console.log("レスポンスデータ取得完了");
-
-      // グローバル変数に格納
-      if (typeof window !== "undefined") {
-        window.rawApiResponse = data;
-        if (data && data.data) {
-          window.debugLogs = data.data;
-          console.log("window.debugLogsに格納完了:", data.data.length, "件");
-        } else {
-          console.warn("データが空か不正な形式です");
-          window.debugLogs = [];
-        }
-      }
-
-      // データチェック
-      if (!data) {
-        console.error("APIレスポンスが空です");
-        throw new Error("レスポンスデータが空です");
-      }
-
-      if (!data.data) {
-        console.error("data.dataがありません:", data);
-        throw new Error("データ形式が不正です");
-      }
-
-      // 結果表示
-      console.log(`取得成功: ${data.data.length}件のログ`);
-
-      if (data.data.length > 0) {
-        const firstLog = data.data[0];
-        console.log("最初のログのプロパティ:", Object.keys(firstLog));
-
-        if ("resources" in firstLog) {
-          console.log("リソース情報:", firstLog.resources);
-        } else {
-          console.warn("リソース情報がありません");
-        }
-      } else {
-        console.log("ログデータがありません");
-      }
-
-      // ステート更新
-      setLogs(data.data);
-      console.log("==== Log取得完了 ====");
-    } catch (err) {
-      console.error("==== Log取得エラー ====", err);
-      setError(err instanceof Error ? err.message : "ログの取得に失敗しました");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // グローバルに関数を公開（デバッグ用）
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      window.fetchLogsManually = fetchLogs;
-      console.log(
-        "デバッグ用: window.fetchLogsManually() でログを再取得できます"
-      );
-    }
-
-    fetchLogs();
-
-    return () => {
-      if (typeof window !== "undefined") {
-        window.fetchLogsManually = async () => {
-          console.log("コンポーネントはアンマウント済みです");
-        };
-      }
-    };
-  }, [unitId]);
+  const logs = data?.data || [];
 
   const handleDelete = async (logId: number) => {
     if (!confirm("このログを削除してもよろしいですか？")) return;
@@ -137,13 +51,24 @@ export function LogList({ unitId }: LogListProps) {
     try {
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "DELETE",
+        next: {
+          tags: [
+            `${CACHE_TAGS.UNIT}-${unitId}`,
+            CACHE_TAGS.UNIT,
+            CACHE_TAGS.UNIT_LIST,
+            CACHE_TAGS.LOG,
+            CACHE_TAGS.LOG_LIST,
+            `${CACHE_TAGS.LOG}-${logId}`,
+          ],
+        },
       });
 
       if (!response.ok) {
         throw new Error("ログの削除に失敗しました");
       }
 
-      setLogs(logs.filter((log) => log.id !== logId));
+      // キャッシュを再検証
+      mutate();
     } catch (err) {
       console.error("ログ削除エラー:", err);
       setError(err instanceof Error ? err.message : "ログの削除に失敗しました");
@@ -154,8 +79,10 @@ export function LogList({ unitId }: LogListProps) {
     return <div>読み込み中...</div>;
   }
 
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
+  if (swrError || error) {
+    return (
+      <div className="text-red-500">{error || "ログの取得に失敗しました"}</div>
+    );
   }
 
   if (logs.length === 0) {

@@ -1,8 +1,13 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
+import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+
+// キャッシュの有効期限を60秒に設定
+export const revalidate = 60;
 
 /**
  * @swagger
@@ -217,7 +222,14 @@ export async function GET(request: Request) {
       },
     };
 
-    return NextResponse.json(response);
+    // キャッシュヘッダーの設定
+    const responseObj = NextResponse.json(response);
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=300"
+    );
+
+    return responseObj;
   } catch (error) {
     console.error("ユニット一覧の取得中にエラーが発生しました:", error);
     return NextResponse.json(
@@ -399,6 +411,10 @@ export async function POST(request: Request) {
         },
       },
     };
+
+    // キャッシュの再検証
+    revalidateTag(CACHE_TAGS.UNIT);
+    revalidateTag(CACHE_TAGS.UNIT_LIST);
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {

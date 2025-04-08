@@ -1,9 +1,9 @@
 import { authConfig } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
-import { CACHE_TAGS } from "@/utils/cache";
+import { revalidateLogData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = 60;
@@ -52,12 +52,14 @@ export async function DELETE(
     });
 
     // キャッシュの再検証
-    revalidateTag(CACHE_TAGS.LOG);
-    revalidateTag(CACHE_TAGS.LOG_LIST);
-    revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
-    revalidateTag(CACHE_TAGS.UNIT);
-    revalidateTag(CACHE_TAGS.UNIT_LIST);
-    revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    // revalidateTag(CACHE_TAGS.LOG);
+    // revalidateTag(CACHE_TAGS.LOG_LIST);
+    // revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateLogData(logId);
+    revalidateUnitData(id);
 
     revalidatePath(`/units/${id}`);
     return NextResponse.json({ data: { id: logId } });
@@ -137,12 +139,14 @@ export async function PUT(
     });
 
     // キャッシュの再検証
-    revalidateTag(CACHE_TAGS.LOG);
-    revalidateTag(CACHE_TAGS.LOG_LIST);
-    revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
-    revalidateTag(CACHE_TAGS.UNIT);
-    revalidateTag(CACHE_TAGS.UNIT_LIST);
-    revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    // revalidateTag(CACHE_TAGS.LOG);
+    // revalidateTag(CACHE_TAGS.LOG_LIST);
+    // revalidateTag(`${CACHE_TAGS.LOG}-${logId}`);
+    // revalidateTag(CACHE_TAGS.UNIT);
+    // revalidateTag(CACHE_TAGS.UNIT_LIST);
+    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
+    revalidateLogData(logId);
+    revalidateUnitData(id);
 
     revalidatePath(`/units/${id}`);
     return NextResponse.json({ data: updatedLog });

@@ -178,6 +178,16 @@ export default function EditLogForm({
           tags,
           resources: formattedResources,
         }),
+        next: {
+          tags: [
+            `unit-${unitId}`,
+            "unit",
+            "unit-list",
+            "log",
+            "log-list",
+            `log-${log.id}`,
+          ],
+        },
       });
 
       if (!response.ok) {

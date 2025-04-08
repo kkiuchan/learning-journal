@@ -5,6 +5,9 @@ import { PublicUserResponse } from "@/types/api";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
+// キャッシュの有効期限を60秒に設定
+export const revalidate = 60;
+
 /**
  * @swagger
  * /api/users/{id}:
@@ -424,7 +427,14 @@ export async function GET(
       },
     };
 
-    return NextResponse.json({ data: response });
+    // キャッシュヘッダーの設定
+    const responseObj = NextResponse.json({ data: response });
+    responseObj.headers.set(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=300"
+    );
+
+    return responseObj;
   } catch (error) {
     console.error("ユーザー情報の取得中にエラーが発生しました:", error);
     return createErrorResponse(
