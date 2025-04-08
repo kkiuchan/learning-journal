@@ -10,7 +10,15 @@ import { Unit } from "@/types";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Heart, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  File,
+  Heart,
+  Link as LinkIcon,
+  MessageCircle,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -449,6 +457,46 @@ export default function UnitDetailPage({
                         ))}
                       </div>
                     )}
+
+                    {Array.isArray(log.resources) &&
+                      log.resources.length > 0 && (
+                        <div className="space-y-2 mt-3 border-t pt-3">
+                          <h4 className="text-sm font-medium">
+                            リソース ({log.resources.length}件)
+                          </h4>
+                          <div className="space-y-2">
+                            {log.resources.map((resource) => (
+                              <div
+                                key={resource.id}
+                                className="text-sm flex items-start gap-2 bg-gray-50 p-2 rounded"
+                              >
+                                {resource.resourceType === "file" ? (
+                                  <File className="h-4 w-4 mt-0.5 text-blue-500" />
+                                ) : (
+                                  <LinkIcon className="h-4 w-4 mt-0.5 text-blue-500" />
+                                )}
+                                <div className="flex-1">
+                                  <a
+                                    href={resource.resourceLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 hover:underline flex items-center gap-1"
+                                  >
+                                    {resource.description ||
+                                      resource.resourceLink}
+                                    <ExternalLink className="h-3 w-3" />
+                                  </a>
+                                  {resource.fileName && (
+                                    <span className="text-xs text-gray-500 block">
+                                      ファイル名: {resource.fileName}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                   </div>
                 )}
               </Card>
