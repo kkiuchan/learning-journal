@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorMessage } from "@/components/ui/error-message";
 import { Log } from "@/types/log";
 import { CACHE_TAGS } from "@/utils/cache";
 import { format } from "date-fns";
@@ -80,9 +81,7 @@ export function LogList({ unitId }: LogListProps) {
   }
 
   if (swrError || error) {
-    return (
-      <div className="text-red-500">{error || "ログの取得に失敗しました"}</div>
-    );
+    return <ErrorMessage message={error || "ログの取得に失敗しました"} />;
   }
 
   if (logs.length === 0) {

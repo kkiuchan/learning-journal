@@ -1,5 +1,6 @@
 "use client";
 
+import { ErrorMessage } from "@/components/ui/error-message";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -54,11 +55,7 @@ export function LoginForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-700">{error}</div>
-        </div>
-      )}
+      {error && <ErrorMessage message={error} />}
 
       <div>
         <label
