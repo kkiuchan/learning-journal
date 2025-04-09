@@ -34,6 +34,10 @@ const nextConfig = {
     "/api/**/*": ["node_modules/.prisma/**/*"],
   },
   transpilePackages: ["@prisma/client", "bcryptjs"],
+  serverRuntimeConfig: {
+    // APIルートのタイムアウトを60秒に設定
+    apiTimeout: 60000,
+  },
 };
 
 export default nextConfig;
