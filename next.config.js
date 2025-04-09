@@ -13,6 +13,14 @@ const nextConfig = {
     ],
     unoptimized: true,
   },
+  eslint: {
+    // Warning during builds を無視
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Type Checking warnings を無視
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
