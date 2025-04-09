@@ -54,7 +54,6 @@
     "@types/swagger-ui-dist": "^3.30.5",
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
-    "prisma-erd-generator": "^2.0.4",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "typescript": "^5"
