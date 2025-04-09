@@ -66,6 +66,7 @@ export default function UnitDetail({
     pagination,
     isLoading: commentsLoading,
     mutate: mutateComments,
+    optimisticUpdate,
   } = useComments({
     unitId: id,
     page: commentPage,
@@ -100,9 +101,30 @@ export default function UnitDetail({
 
   const handleCreateComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !session?.user) return;
 
     try {
+      // 楽観的更新
+      const optimisticComment = {
+        id: Date.now(),
+        comment: newComment,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: session.user.id,
+          name: session.user.name || null,
+          image: session.user.image || null,
+          topImage: null,
+          selfIntroduction: null,
+          age: null,
+          ageVisible: false,
+          skills: [],
+          interests: [],
+        },
+      };
+
+      await optimisticUpdate("create", optimisticComment);
+      setNewComment("");
+
       const response = await fetch(`/api/units/${id}/comments`, {
         method: "POST",
         headers: {
@@ -111,20 +133,17 @@ export default function UnitDetail({
         body: JSON.stringify({
           comment: newComment,
         }),
-        next: {
-          tags: [`unit-${id}`, "unit", "unit-list", "comment", "comment-list"],
-        },
       });
 
-      if (response.ok) {
-        setNewComment("");
+      if (!response.ok) {
+        // エラーが発生した場合は再取得
         mutateComments();
-      } else {
         const data = await response.json();
         console.error("コメントの作成に失敗しました:", data.error);
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
+      mutateComments();
     }
   };
 
@@ -132,28 +151,22 @@ export default function UnitDetail({
     if (!confirm("このコメントを削除してもよろしいですか？")) return;
 
     try {
+      // 楽観的更新
+      await optimisticUpdate("delete", undefined, commentId);
+
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "DELETE",
-        next: {
-          tags: [
-            `unit-${id}`,
-            "unit",
-            "unit-list",
-            "comment",
-            "comment-list",
-            `comment-${commentId}`,
-          ],
-        },
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        // エラーが発生した場合は再取得
         mutateComments();
-      } else {
         const data = await response.json();
         console.error("コメントの削除に失敗しました:", data.error);
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
+      mutateComments();
     }
   };
 
@@ -161,6 +174,15 @@ export default function UnitDetail({
     if (!editingCommentContent.trim()) return;
 
     try {
+      // 楽観的更新
+      await optimisticUpdate(
+        "update",
+        { comment: editingCommentContent },
+        commentId
+      );
+      setEditingCommentId(null);
+      setEditingCommentContent("");
+
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "PUT",
         headers: {
@@ -169,28 +191,17 @@ export default function UnitDetail({
         body: JSON.stringify({
           comment: editingCommentContent,
         }),
-        next: {
-          tags: [
-            `unit-${id}`,
-            "unit",
-            "unit-list",
-            "comment",
-            "comment-list",
-            `comment-${commentId}`,
-          ],
-        },
       });
 
-      if (response.ok) {
-        setEditingCommentId(null);
-        setEditingCommentContent("");
+      if (!response.ok) {
+        // エラーが発生した場合は再取得
         mutateComments();
-      } else {
         const data = await response.json();
         console.error("コメントの更新に失敗しました:", data.error);
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
+      mutateComments();
     }
   };
 
