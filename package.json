@@ -10,7 +10,8 @@
     "lint": "next lint",
     "seed": "node --loader ts-node/esm prisma/seed.ts",
     "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@auth/core": "0.34.2",
