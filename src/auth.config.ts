@@ -162,6 +162,68 @@ export const authConfig = {
     // }),
   ],
   callbacks: {
+    // async signIn({
+    //   user,
+    //   account,
+    // }: {
+    //   user: {
+    //     id: string;
+    //     name?: string | null;
+    //     email?: string | null;
+    //     image?: string | null;
+    //     primaryAuthMethod: string;
+    //   };
+    //   account: Account | null;
+    // }) {
+    //   if (account?.provider === "credentials") {
+    //     return true;
+    //   }
+
+    //   // 既存のユーザーを検索
+    //   const existingUser = await prisma.user.findUnique({
+    //     where: { email: user.email || "" },
+    //     include: {
+    //       accounts: true,
+    //     },
+    //   });
+
+    //   // 既存のユーザーが存在する場合
+    //   if (existingUser) {
+    //     // 新しい認証方法が既に登録されているかチェック
+    //     const hasProvider = existingUser.accounts.some(
+    //       (acc) => acc.provider === account?.provider
+    //     );
+
+    //     if (!hasProvider && account) {
+    //       // 新しい認証方法を追加
+    //       await prisma.account.create({
+    //         data: {
+    //           userId: existingUser.id,
+    //           type: account.type,
+    //           provider: account.provider,
+    //           providerAccountId: account.providerAccountId,
+    //           access_token: account.access_token,
+    //           token_type: account.token_type,
+    //           scope: account.scope,
+    //           expires_at: account.expires_at,
+    //         },
+    //       });
+    //     }
+
+    //     // 既存のユーザー情報を使用し、primaryAuthMethodを更新
+    //     user.id = existingUser.id;
+    //     user.primaryAuthMethod =
+    //       account?.provider || existingUser.primaryAuthMethod;
+
+    //     // ユーザーのprimaryAuthMethodを更新
+    //     await prisma.user.update({
+    //       where: { id: existingUser.id },
+    //       data: { primaryAuthMethod: user.primaryAuthMethod },
+    //     });
+    //   }
+
+    //   return true;
+    // },
     async signIn({
       user,
       account,
@@ -175,27 +237,37 @@ export const authConfig = {
       };
       account: Account | null;
     }) {
+      console.log(
+        "[signIn] Start - provider:",
+        account?.provider,
+        "email:",
+        user.email
+      );
+
       if (account?.provider === "credentials") {
+        console.log("[signIn] credentials login - return true");
         return true;
       }
 
-      // 既存のユーザーを検索
+      console.log("[signIn] Finding existing user by email...");
       const existingUser = await prisma.user.findUnique({
         where: { email: user.email || "" },
         include: {
           accounts: true,
         },
       });
+      console.log("[signIn] existingUser:", existingUser?.id || "not found");
 
-      // 既存のユーザーが存在する場合
       if (existingUser) {
-        // 新しい認証方法が既に登録されているかチェック
+        console.log("[signIn] Checking if provider is already linked...");
+
         const hasProvider = existingUser.accounts.some(
           (acc) => acc.provider === account?.provider
         );
+        console.log("[signIn] hasProvider:", hasProvider);
 
         if (!hasProvider && account) {
-          // 新しい認証方法を追加
+          console.log("[signIn] Linking new provider:", account.provider);
           await prisma.account.create({
             data: {
               userId: existingUser.id,
@@ -208,20 +280,24 @@ export const authConfig = {
               expires_at: account.expires_at,
             },
           });
+          console.log("[signIn] Provider linked successfully");
         }
 
-        // 既存のユーザー情報を使用し、primaryAuthMethodを更新
+        console.log("[signIn] Updating primaryAuthMethod...");
         user.id = existingUser.id;
         user.primaryAuthMethod =
           account?.provider || existingUser.primaryAuthMethod;
 
-        // ユーザーのprimaryAuthMethodを更新
         await prisma.user.update({
           where: { id: existingUser.id },
           data: { primaryAuthMethod: user.primaryAuthMethod },
         });
+        console.log("[signIn] primaryAuthMethod updated");
+      } else {
+        console.log("[signIn] No existing user found.");
       }
 
+      console.log("[signIn] End - returning true");
       return true;
     },
     async jwt({
