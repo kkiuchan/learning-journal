@@ -1,3 +1,5 @@
+import { env } from "@/lib/env";
+
 interface ErrorLogData {
   message: string;
   stack?: string;
@@ -18,14 +20,25 @@ export async function logError(error: Error & { digest?: string }) {
       typeof window !== "undefined" ? window.navigator.userAgent : undefined,
   };
 
-  // 開発環境ではコンソールに出力
-  if (process.env.NODE_ENV === "development") {
+  // ログレベルに応じて出力
+  // 開発環境または本番環境でもerrorレベルの場合は常にコンソールに出力
+  if (
+    process.env.NODE_ENV === "development" ||
+    env.LOG_LEVEL === "debug" ||
+    env.LOG_LEVEL === "info" ||
+    env.LOG_LEVEL === "warn" ||
+    env.LOG_LEVEL === "error"
+  ) {
     console.error("エラーログ:", errorData);
+  }
+
+  // デバッグモードではサーバーに送信しない
+  if (process.env.NODE_ENV === "development" && env.LOG_LEVEL !== "debug") {
     return;
   }
 
   try {
-    // 本番環境ではエラーログをサーバーに送信
+    // ログをサーバーに送信
     await fetch("/api/logs/error", {
       method: "POST",
       headers: {
