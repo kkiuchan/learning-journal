@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "node --loader ts-node/esm prisma/seed.ts",
-    "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts"
+    "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/core": "0.34.2",
