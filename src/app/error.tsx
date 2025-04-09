@@ -1,46 +1,31 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { logError } from "@/lib/error-logger";
-import { useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
-  useEffect(() => {
-    // エラーをログに記録
-    console.error("アプリケーションエラー:", error);
-    logError(error).catch(console.error);
-  }, [error]);
-
+export default function ErrorPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full space-y-8 text-center">
-        <div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            予期せぬエラーが発生しました
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            申し訳ありませんが、問題が発生しました。もう一度お試しください。
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-red-600">エラーが発生しました</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-600">
+            ページの読み込み中にエラーが発生しました。
+            もう一度お試しいただくか、しばらく経ってからアクセスしてください。
           </p>
-        </div>
-        <div className="mt-8 space-y-4">
-          <Button onClick={reset} className="w-full" variant="default">
-            もう一度試す
-          </Button>
-          <Button
-            onClick={() => (window.location.href = "/")}
-            className="w-full"
-            variant="outline"
-          >
-            ホームに戻る
-          </Button>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter>
+          <Button onClick={() => window.location.reload()}>再読み込み</Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

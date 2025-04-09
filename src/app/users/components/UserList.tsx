@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import UserAvatar from "../[id]/components/UserAvatar";
 
 interface User {
   id: string;
@@ -150,18 +151,11 @@ export function UserList() {
             <Card className="p-4 hover:bg-accent/50">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="relative w-12 h-12">
-                    <img
-                      src={user.image || "/images/default-avatar.png"}
-                      alt={user.name || "ユーザー"}
-                      className="h-12 w-12 rounded-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/images/default-avatar.png";
-                      }}
-                    />
-                  </div>
+                  <UserAvatar
+                    imageUrl={user.image}
+                    userName={user.name}
+                    size="sm"
+                  />
                   <div>
                     <h3 className="font-semibold">{user.name || "名前なし"}</h3>
                     <p className="text-sm text-muted-foreground">

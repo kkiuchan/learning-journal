@@ -171,7 +171,7 @@ export default async function UserPage({ params }: Props) {
     <div className="container mx-auto px-4 py-8">
       <Card className="p-6">
         <div className="flex items-start gap-6">
-          <UserAvatar imageUrl={user.image} userName={user.name} />
+          <UserAvatar imageUrl={user.image} userName={user.name} size="lg" />
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-2">
               {user.name || "名前未設定"}

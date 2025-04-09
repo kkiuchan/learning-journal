@@ -299,7 +299,7 @@ export const authConfig = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
       },
     },
     callbackUrl: {
@@ -307,7 +307,7 @@ export const authConfig = {
       options: {
         sameSite: "lax" as const,
         path: "/",
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
       },
     },
     csrfToken: {
@@ -316,7 +316,7 @@ export const authConfig = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
       },
     },
   },
