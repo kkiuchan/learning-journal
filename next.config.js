@@ -21,6 +21,15 @@ const nextConfig = {
     // Type Checking warnings を無視
     ignoreBuildErrors: true,
   },
+  // ビルドの最適化
+  output: "standalone",
+  poweredByHeader: false,
+  compress: true,
+  productionBrowserSourceMaps: false,
+  // キャッシュの最適化
+  experimental: {
+    optimizePackageImports: ["@prisma/client"],
+  },
 };
 
 export default nextConfig;
