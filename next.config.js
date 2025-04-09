@@ -28,17 +28,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // キャッシュの最適化
   experimental: {
-    outputFileTracingRoot: undefined,
-    outputFileTracingExcludes: {
-      "*": [
-        "node_modules/@swc/core-linux-x64-gnu",
-        "node_modules/@swc/core-linux-x64-musl",
-        "node_modules/@esbuild/linux-x64",
-      ],
-    },
-    outputFileTracingIncludes: {
-      "*": ["node_modules/.prisma/**/*"],
-    },
+    optimizePackageImports: ["@prisma/client"],
   },
 };
 
