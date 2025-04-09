@@ -30,6 +30,10 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["@prisma/client"],
   },
+  outputFileTracingIncludes: {
+    "/api/**/*": ["node_modules/.prisma/**/*"],
+  },
+  transpilePackages: ["@prisma/client", "bcryptjs"],
 };
 
 export default nextConfig;
