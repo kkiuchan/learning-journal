@@ -10,7 +10,7 @@ export const revalidate = 60;
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; logId: string } }
+  { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
   try {
     const session = await getServerSession(authConfig);
@@ -74,7 +74,7 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; logId: string } }
+  { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
   try {
     const session = await getServerSession(authConfig);
@@ -152,6 +152,66 @@ export async function PUT(
     return NextResponse.json({ data: updatedLog });
   } catch (error) {
     console.error("Error updating log:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; logId: string }> }
+) {
+  try {
+    const { id, logId } = await params;
+
+    // セッションの取得（オプショナル）
+    const session = await getServerSession(authConfig);
+
+    // ログデータの取得
+    const log = await prisma.log.findUnique({
+      where: { id: parseInt(logId) },
+      include: {
+        resources: true,
+        logTags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    // ログが存在しない場合はエラー
+    if (!log) {
+      return NextResponse.json({ error: "Log not found" }, { status: 404 });
+    }
+
+    // ユニットの所有者確認（非公開ログへのアクセス制限）
+    const unit = await prisma.unit.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true, displayFlag: true },
+    });
+
+    if (!unit) {
+      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+    }
+
+    // 非表示ユニットの場合、所有者のみアクセス可能
+    if (!unit.displayFlag && (!session || session.user.id !== unit.userId)) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // レスポンスの加工
+    const { logTags, ...restLog } = log;
+    const formattedLog = {
+      ...restLog,
+      tags: logTags.map((lt) => lt.tag),
+    };
+
+    return NextResponse.json({ data: formattedLog });
+  } catch (error) {
+    console.error("Error fetching log:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

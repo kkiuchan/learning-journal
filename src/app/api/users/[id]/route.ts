@@ -227,11 +227,10 @@ export const revalidate = 60;
  */
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ data: PublicUserResponse } | { error: string }>> {
   try {
-    const params = await context.params;
-    const userId = params.id;
+    const { id } = await context.params;
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
@@ -247,7 +246,7 @@ export async function GET(
 
     // ユーザー基本情報の取得
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: id },
       select: {
         id: true,
         name: true,
@@ -291,7 +290,7 @@ export async function GET(
     // ユニット一覧の取得（ページネーション付き）
     const skip = (page - 1) * perPage;
     const where = {
-      userId: userId,
+      userId: id,
       displayFlag: true,
     };
 

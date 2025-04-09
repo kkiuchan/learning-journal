@@ -1,4 +1,5 @@
 import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
@@ -250,10 +251,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     // セッションの取得
     const session = await getServerSession(authConfig);
     if (!session?.user?.id) {
@@ -308,7 +309,7 @@ export async function DELETE(
  * @swagger
  * /api/units/{id}:
  *   get:
- *     summary: ユニットの詳細を取得
+ *     summary: ユニットの詳細情報を取得
  *     description: 指定されたIDのユニットの詳細情報を取得します。
  *     tags: [ユニット]
  *     parameters:
@@ -320,7 +321,7 @@ export async function DELETE(
  *         description: ユニットID
  *     responses:
  *       200:
- *         description: ユニットの詳細取得に成功
+ *         description: ユニットの取得に成功
  *         content:
  *           application/json:
  *             schema:
@@ -334,6 +335,8 @@ export async function DELETE(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: レート制限エラー
  *       500:
  *         description: サーバーエラー
  *         content:
@@ -345,9 +348,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // この関数にセキュリティ対策を直接実装します
   try {
     const { id } = await params;
-    // セッションの取得
+
+    // セッションの取得（いいねの状態チェック用）
     const session = await getServerSession(authConfig);
     const currentUserId = session?.user?.id;
 
@@ -368,9 +373,7 @@ export async function GET(
           },
         },
         logs: {
-          orderBy: {
-            logDate: "desc",
-          },
+          orderBy: { logDate: "desc" },
           include: {
             logTags: {
               include: {
@@ -381,10 +384,7 @@ export async function GET(
           },
         },
         comments: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 5, // 最新5件のコメントを取得
+          orderBy: { createdAt: "desc" },
           include: {
             user: {
               select: {
@@ -408,44 +408,45 @@ export async function GET(
                 userId: currentUserId,
               },
             }
-          : false,
+          : undefined,
       },
     });
 
     if (!unit) {
-      return NextResponse.json(
-        { error: "ユニットが見つかりません", status: 404 },
-        { status: 404 }
-      );
+      return createErrorResponse("ユニットが見つかりません", 404);
     }
 
-    // レスポンスの構築
-    const response = {
-      data: {
-        ...unit,
-        tags: unit.unitTags.map((ut) => ut.tag),
-        isLiked: currentUserId
-          ? unit.unitLikes && unit.unitLikes.length > 0
-          : false,
-        _count: {
-          ...unit._count,
-          totalLearningTime: unit._count.logs, // ログ数を総学習時間として使用
-        },
-      },
+    // レスポンスの整形
+    const { unitTags, unitLikes, ...restUnit } = unit;
+    const formattedUnit = {
+      ...restUnit,
+      tags: unitTags.map((unitTag) => unitTag.tag),
+      isLiked: Array.isArray(unitLikes) && unitLikes.length > 0,
+      // ログにタグ情報を追加
+      logs: unit.logs.map((log) => ({
+        ...log,
+        tags: log.logTags.map((logTag) => logTag.tag),
+        logTags: undefined,
+      })),
     };
-    const responseObj = NextResponse.json(response);
-    responseObj.headers.set(
+
+    // キャッシュヘッダーの設定
+    const response = createApiResponse(formattedUnit);
+    const headers = new Headers(response.headers);
+    headers.set(
       "Cache-Control",
       "public, s-maxage=60, stale-while-revalidate=300"
     );
 
-    return responseObj;
+    // レスポンスの生成
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   } catch (error) {
-    console.error("ユニットの取得中にエラーが発生しました:", error);
-    return NextResponse.json(
-      { error: "ユニットの取得中にエラーが発生しました", status: 500 },
-      { status: 500 }
-    );
+    console.error("ユニット取得エラー:", error);
+    return createErrorResponse("ユニットの取得中にエラーが発生しました", 500);
   }
 }
 

@@ -10,16 +10,13 @@ export const revalidate = 60;
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const body = await request.json();
-    const validatedData = logRequestSchema.parse(body);
 
     const { id } = await params;
     const unit = await prisma.unit.findUnique({
@@ -33,6 +30,9 @@ export async function POST(
     if (unit.userId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const body = await request.json();
+    const validatedData = logRequestSchema.parse(body);
 
     const log = await prisma.log.create({
       data: {
