@@ -42,6 +42,8 @@ export function LogList({ unitId }: LogListProps) {
   } = useSWR<{ data: Log[] }>(`/api/units/${unitId}/logs`, {
     revalidateOnFocus: true,
     dedupingInterval: 5000,
+    revalidateOnMount: true, // コンポーネントマウント時に必ずデータを再検証
+    refreshInterval: 30000, // 30秒ごとに自動更新（オプション）
   });
 
   const logs = data?.data || [];

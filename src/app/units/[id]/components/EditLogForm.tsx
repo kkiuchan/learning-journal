@@ -193,6 +193,17 @@ export default function EditLogForm({
       if (!response.ok) {
         const errorData = await response.json();
         console.error("サーバーエラー:", errorData);
+
+        // ログが見つからない場合の特別なエラーハンドリング
+        if (errorData.error === "Log not found") {
+          alert(
+            "このログは削除された可能性があります。ページを更新してください。"
+          );
+          // フォームをキャンセルして更新を促す
+          onCancel();
+          return;
+        }
+
         throw new Error("ログの更新に失敗しました");
       }
 
