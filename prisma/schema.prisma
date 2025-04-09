@@ -2,6 +2,7 @@ generator client {
   provider = "prisma-client-js"
 }
 
+/// @computed NODE_ENV != "production"
 generator erd {
   provider = "prisma-erd-generator"
   output   = "./ERD.svg"
