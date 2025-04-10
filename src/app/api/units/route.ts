@@ -4,7 +4,7 @@ import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
-import { getServerSession, Session } from "next-auth";
+import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -319,28 +319,46 @@ export const GET = withApiSecurity(
  *               $ref: '#/components/schemas/Error'
  */
 export const POST = withApiSecurity(
-  async (req: NextRequest, sessionOrContext?: unknown) => {
+  async (req: NextRequest) => {
     try {
-      const session = sessionOrContext as Session;
-      // セッションは認証済み（withApiSecurityで確認済み）
+      const session = await getServerSession(authConfig);
+
+      // セッションとユーザーIDの存在確認
+      if (!session?.user?.id) {
+        console.error("セッション情報が不正です:", { session });
+        return createErrorResponse("認証情報が不正です", 401);
+      }
+
       const userId = session.user.id;
       const body = await req.json();
 
       // 必須フィールドのバリデーション
-      const { title, learningGoal } = body;
-      if (!title || !learningGoal) {
-        return createErrorResponse("タイトル、学習目標は必須です", 400);
-      }
+      const {
+        title,
+        learningGoal,
+        preLearningState,
+        reflection,
+        nextAction,
+        startDate,
+        endDate,
+        status = "PLANNED",
+        tags = [],
+      } = body;
 
-      // オプションフィールドの取得
-      const { preLearningState, status = "計画中", tags = [] } = body;
+      if (!title) {
+        return createErrorResponse("タイトルは必須です", 400);
+      }
 
       // ユニットの作成
       const unit = await prisma.unit.create({
         data: {
           title,
-          learningGoal,
+          learningGoal: learningGoal || "",
           preLearningState: preLearningState || "",
+          reflection: reflection || "",
+          nextAction: nextAction || "",
+          startDate: startDate ? new Date(startDate) : null,
+          endDate: endDate ? new Date(endDate) : null,
           status,
           userId,
           unitTags: {
@@ -367,6 +385,13 @@ export const POST = withApiSecurity(
               tag: true,
             },
           },
+          _count: {
+            select: {
+              logs: true,
+              unitLikes: true,
+              comments: true,
+            },
+          },
         },
       });
 
@@ -385,7 +410,12 @@ export const POST = withApiSecurity(
       return NextResponse.json({ data: formattedUnit }, { status: 201 });
     } catch (error) {
       console.error("ユニット作成エラー:", error);
-      return createErrorResponse("ユニットの作成中にエラーが発生しました", 500);
+      return createErrorResponse(
+        error instanceof Error
+          ? error.message
+          : "ユニットの作成中にエラーが発生しました",
+        500
+      );
     }
   },
   {

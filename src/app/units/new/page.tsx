@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
 import { X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,7 @@ export default function NewUnitPage() {
   const [preLearningState, setPreLearningState] = useState("");
   const [reflection, setReflection] = useState("");
   const [nextAction, setNextAction] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState("PLANNED");
   const [newTag, setNewTag] = useState("");
@@ -149,6 +150,7 @@ export default function NewUnitPage() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  className="cursor-pointer"
                 />
               </div>
 
@@ -159,6 +161,8 @@ export default function NewUnitPage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  className="cursor-pointer"
+                  min={startDate}
                 />
               </div>
             </div>
