@@ -376,6 +376,8 @@ export const authConfig = {
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
     callbackUrl: {
@@ -384,6 +386,8 @@ export const authConfig = {
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
     csrfToken: {
@@ -393,6 +397,8 @@ export const authConfig = {
         sameSite: "lax" as const,
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
   },
