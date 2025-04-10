@@ -377,7 +377,9 @@ export const authConfig = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         domain:
-          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
+          process.env.NODE_ENV === "production"
+            ? process.env.COOKIE_DOMAIN || ".vercel.app"
+            : undefined,
       },
     },
     callbackUrl: {
@@ -387,7 +389,9 @@ export const authConfig = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         domain:
-          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
+          process.env.NODE_ENV === "production"
+            ? process.env.COOKIE_DOMAIN || ".vercel.app"
+            : undefined,
       },
     },
     csrfToken: {
@@ -398,7 +402,9 @@ export const authConfig = {
         path: "/",
         secure: process.env.NODE_ENV === "production",
         domain:
-          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
+          process.env.NODE_ENV === "production"
+            ? process.env.COOKIE_DOMAIN || ".vercel.app"
+            : undefined,
       },
     },
   },
