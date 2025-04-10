@@ -95,7 +95,6 @@ export default withAuth(
     // 認証が不要なパス
     const publicPaths = [
       "/auth/login",
-      "/auth/signin",
       "/auth/register",
       "/auth/forgot-password",
       "/api/docs",

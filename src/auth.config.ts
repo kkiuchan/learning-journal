@@ -17,10 +17,9 @@ const adapter = PrismaAdapter(prisma);
 export const authConfig: NextAuthOptions = {
   adapter,
   pages: {
-    signIn: "/auth/signin",
+    signIn: "/auth/login",
     error: "/auth/error",
   },
-  trustHost: true, // NEXTAUTH_URLの検証をスキップ
   providers: [
     Credentials({
       credentials: {
