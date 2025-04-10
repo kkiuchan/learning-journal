@@ -14,12 +14,13 @@ import { prisma } from "./lib/prisma";
 
 const adapter = PrismaAdapter(prisma);
 
-export const authConfig = {
+export const authConfig: NextAuthOptions = {
   adapter,
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
+  trustHost: true, // NEXTAUTH_URLの検証をスキップ
   providers: [
     Credentials({
       credentials: {
@@ -375,11 +376,7 @@ export const authConfig = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? process.env.COOKIE_DOMAIN || ".vercel.app"
-            : undefined,
+        secure: true,
       },
     },
     callbackUrl: {
@@ -387,11 +384,7 @@ export const authConfig = {
       options: {
         sameSite: "lax" as const,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? process.env.COOKIE_DOMAIN || ".vercel.app"
-            : undefined,
+        secure: true,
       },
     },
     csrfToken: {
@@ -400,22 +393,14 @@ export const authConfig = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? process.env.COOKIE_DOMAIN || ".vercel.app"
-            : undefined,
+        secure: true,
       },
     },
   },
   debug: true, // デバッグモードを有効化
   events: {
-    async signIn() {
-      console.log("Cookie設定 - 環境:", process.env.NODE_ENV);
-      console.log(
-        "Cookie設定 - secure:",
-        process.env.NODE_ENV === "production"
-      );
+    async signIn(message) {
+      console.log("サインインイベント:", message);
     },
   },
 } satisfies NextAuthOptions;
