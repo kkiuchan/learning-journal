@@ -1,6 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
@@ -106,6 +106,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const { id } = await params;
     // セッションの取得
@@ -253,6 +254,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const { id } = await params;
     // セッションの取得
@@ -348,6 +350,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   // この関数にセキュリティ対策を直接実装します
   try {
     const { id } = await params;

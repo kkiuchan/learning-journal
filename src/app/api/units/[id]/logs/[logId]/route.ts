@@ -1,5 +1,5 @@
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
@@ -12,6 +12,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
@@ -76,6 +77,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user) {
@@ -163,6 +165,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const { id, logId } = await params;
 

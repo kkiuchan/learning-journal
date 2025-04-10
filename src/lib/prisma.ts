@@ -6,9 +6,6 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// コンストラクタの呼び出しを追跡
-let connectionCount = 0;
-
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -28,27 +25,23 @@ if (process.env.NODE_ENV !== "production") {
 let isConnected = false;
 let connectionPromise: Promise<void> | null = null;
 
-// 接続を確立
-const connect = async () => {
+// 必要なときに呼び出す接続関数
+export const ensurePrismaConnected = async () => {
   if (isConnected) return;
   if (connectionPromise) return connectionPromise;
 
-  connectionCount++;
-  console.log(
-    `🔄 Attempting to connect (connection count: ${connectionCount})`
-  );
+  console.log("🔄 Attempting to connect to database...");
 
   connectionPromise = prisma
     .$connect()
     .then(() => {
       isConnected = true;
-      console.log(
-        `✅ Prisma connected successfully (connection count: ${connectionCount})`
-      );
+      console.log("✅ Database connection established");
     })
     .catch((error) => {
-      console.error("❌ Prisma connection error:", error);
+      console.error("❌ Database connection error:", error);
       isConnected = false;
+      throw error; // エラーを再スロー
     })
     .finally(() => {
       connectionPromise = null;
@@ -56,17 +49,3 @@ const connect = async () => {
 
   return connectionPromise;
 };
-
-// 初期接続を確立
-connect();
-
-// プロダクション環境でのみシャットダウンハンドラーを設定
-if (process.env.NODE_ENV === "production") {
-  process.on("SIGINT", () => {
-    prisma.$disconnect();
-  });
-
-  process.on("SIGTERM", () => {
-    prisma.$disconnect();
-  });
-}
