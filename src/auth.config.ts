@@ -375,7 +375,9 @@ export const authConfig: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
     callbackUrl: {
@@ -383,7 +385,9 @@ export const authConfig: NextAuthOptions = {
       options: {
         sameSite: "lax" as const,
         path: "/",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
     csrfToken: {
@@ -392,11 +396,13 @@ export const authConfig: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax" as const,
         path: "/",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       },
     },
   },
-  debug: true, // デバッグモードを有効化
+  debug: process.env.NODE_ENV === "development",
   events: {
     async signIn(message) {
       console.log("サインインイベント:", message);
