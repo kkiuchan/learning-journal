@@ -43,9 +43,7 @@ export default function UnitDetail({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session, status } = useSession({
-    required: true,
-  }) as {
+  const { data: session, status } = useSession() as {
     data: Session | null;
     status: "loading" | "authenticated" | "unauthenticated";
   };
