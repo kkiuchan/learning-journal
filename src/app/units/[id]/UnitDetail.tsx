@@ -42,11 +42,8 @@ export default function UnitDetail({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { data: session } = useSession({
+  const { data: session, status } = useSession({
     required: true,
-    onUnauthenticated() {
-      router.push("/auth/login");
-    },
   });
 
   // SWRを使用してユニットを取得
@@ -78,6 +75,17 @@ export default function UnitDetail({
   const [isCreatingLog, setIsCreatingLog] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
+
+  // ローディング中の表示
+  if (status === "loading") {
+    return <div>読み込み中...</div>;
+  }
+
+  // 未認証の場合はリダイレクト
+  if (status === "unauthenticated") {
+    router.push("/auth/signin");
+    return null;
+  }
 
   const handleDelete = async () => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
