@@ -24,7 +24,7 @@ export function useComments({
 }: UseCommentsOptions) {
   const { data, error, isLoading, mutate } = useSWR<CommentResponse>(
     `/api/units/${unitId}/comments?page=${page}&limit=${limit}`,
-    undefined,
+    null,
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
