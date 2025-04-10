@@ -87,7 +87,7 @@ export default function UnitDetail({
 
   // 未認証の場合はリダイレクト
   if (status === "unauthenticated") {
-    router.push("/auth/signin");
+    router.push("/auth/login");
     return null;
   }
 
