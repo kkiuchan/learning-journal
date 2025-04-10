@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
+import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -44,7 +45,10 @@ export default function UnitDetail({
   const router = useRouter();
   const { data: session, status } = useSession({
     required: true,
-  });
+  }) as {
+    data: Session | null;
+    status: "loading" | "authenticated" | "unauthenticated";
+  };
 
   // SWRを使用してユニットを取得
   const {
