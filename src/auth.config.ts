@@ -397,4 +397,13 @@ export const authConfig = {
     },
   },
   debug: true, // デバッグモードを有効化
+  events: {
+    async signIn() {
+      console.log("Cookie設定 - 環境:", process.env.NODE_ENV);
+      console.log(
+        "Cookie設定 - secure:",
+        process.env.NODE_ENV === "production"
+      );
+    },
+  },
 } satisfies NextAuthOptions;
