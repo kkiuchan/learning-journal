@@ -1,5 +1,5 @@
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateCommentData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -95,6 +95,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
+  await ensurePrismaConnected();
   const { id, commentId } = await params;
   try {
     // 認証チェック
@@ -219,6 +220,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
+  await ensurePrismaConnected();
   const { id, commentId } = await params;
   try {
     // 認証チェック

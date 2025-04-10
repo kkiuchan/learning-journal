@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { CheckPasswordResponse } from "@/types/api";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 
@@ -49,6 +49,7 @@ import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
  *                   example: ユーザーが見つかりません
  */
 export async function GET() {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
 

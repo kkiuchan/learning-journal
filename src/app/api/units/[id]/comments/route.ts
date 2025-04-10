@@ -1,5 +1,5 @@
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateCommentData, revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -90,6 +90,7 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const { id } = await params;
     // クエリパラメータの取得

@@ -2,7 +2,7 @@ import bcryptjs from "bcryptjs";
 import { getServerSession } from "next-auth";
 
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { SetPasswordRequest } from "@/types/api";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
 
@@ -96,6 +96,7 @@ import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
  *                   example: パスワードの設定中にエラーが発生しました
  */
 export async function POST(request: Request) {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
 

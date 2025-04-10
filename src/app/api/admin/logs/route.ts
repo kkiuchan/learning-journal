@@ -1,9 +1,10 @@
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
+  await ensurePrismaConnected();
   try {
     // 認証チェック（管理者のみアクセス可能）
     const session = await getServerSession(authConfig);

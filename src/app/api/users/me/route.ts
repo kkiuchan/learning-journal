@@ -1,6 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { ApiResponse, ApiUser } from "@/types";
 import { revalidateUserData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
@@ -140,6 +140,7 @@ const updateUserSchema = z.object({
 export const revalidate = 60;
 
 export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user?.email) {
@@ -228,6 +229,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
 export async function PUT(
   request: Request
 ): Promise<NextResponse<ApiResponse<ApiUser>>> {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
     if (!session?.user?.email) {

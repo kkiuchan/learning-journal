@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -12,6 +12,7 @@ const errorLogSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  await ensurePrismaConnected();
   try {
     const body = await request.json();
     const validatedData = errorLogSchema.parse(body);

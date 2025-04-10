@@ -1,5 +1,5 @@
 import { authConfig } from "@/auth.config";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
@@ -64,6 +64,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   const { id } = await params;
   try {
     const session = await getServerSession(authConfig);
@@ -181,6 +182,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   const { id } = await params;
   try {
     const session = await getServerSession(authConfig);

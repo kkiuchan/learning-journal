@@ -1,6 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { PublicUserResponse } from "@/types/api";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
@@ -229,6 +229,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ data: PublicUserResponse } | { error: string }>> {
+  await ensurePrismaConnected();
   try {
     const { id } = await context.params;
 

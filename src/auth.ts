@@ -4,10 +4,7 @@ import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 
 // 開発環境と本番環境で適切なシークレットを使用
-const secret =
-  process.env.NODE_ENV === "production"
-    ? process.env.NEXTAUTH_SECRET
-    : process.env.AUTH_SECRET;
+const secret = process.env.NEXTAUTH_SECRET;
 
 if (!secret) {
   throw new Error("Authentication secret is not set");

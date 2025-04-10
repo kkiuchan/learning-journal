@@ -1,6 +1,6 @@
 import { authConfig } from "@/auth.config";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { UnlinkAccountRequest } from "@/types/api";
 import { getServerSession } from "next-auth";
 
@@ -80,6 +80,7 @@ import { getServerSession } from "next-auth";
  *                   example: アカウントの連携解除中にエラーが発生しました
  */
 export async function POST(request: Request) {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
 

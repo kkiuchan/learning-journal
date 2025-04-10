@@ -1,7 +1,7 @@
 import { authConfig } from "@/auth.config";
 import { withApiSecurity } from "@/lib/api-security";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -98,6 +98,7 @@ export const revalidate = 60;
  */
 export const GET = withApiSecurity(
   async (req: NextRequest) => {
+    await ensurePrismaConnected();
     try {
       const { searchParams } = new URL(req.url);
       const query = searchParams.get("query") || "";
@@ -320,6 +321,7 @@ export const GET = withApiSecurity(
  */
 export const POST = withApiSecurity(
   async (req: NextRequest) => {
+    await ensurePrismaConnected();
     try {
       const session = await getServerSession(authConfig);
 

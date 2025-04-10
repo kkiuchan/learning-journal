@@ -1,5 +1,5 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { ApiResponse } from "@/types";
 import { authRequestSchema } from "@/types/auth";
 import bcryptjs from "bcryptjs";
@@ -9,6 +9,7 @@ import { z } from "zod";
 export async function POST(
   request: Request
 ): Promise<NextResponse<ApiResponse<{ message: string }>>> {
+  await ensurePrismaConnected();
   try {
     const body = await request.json();
     const validatedData = authRequestSchema.parse(body);

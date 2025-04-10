@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { prisma } from "@/lib/prisma";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { ApiResponse } from "@/types";
 import { z } from "zod";
 
@@ -119,6 +119,7 @@ type LinkAccountRequest = z.infer<typeof linkAccountSchema>;
 export async function POST(
   request: Request
 ): Promise<NextResponse<ApiResponse<{ message: string }>>> {
+  await ensurePrismaConnected();
   try {
     const session = await getServerSession(authConfig);
 

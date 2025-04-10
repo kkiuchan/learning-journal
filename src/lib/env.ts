@@ -8,7 +8,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
 
   // 認証
-  AUTH_SECRET: z.string().min(1),
+  NEXTAUTH_SECRET: z.string().min(1),
 
   // アプリURL
   NEXT_PUBLIC_APP_URL: z.string().url(),
