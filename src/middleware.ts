@@ -21,16 +21,17 @@ const publicPaths = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  console.log(`[Edge] Request URL: ${req.url}`);
-  console.log(`[Edge] Cookies:`, req.cookies.toString());
-
   // パスチェックを最適化
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 
+  console.log(`[Edge] Checking path: ${pathname}`);
+  console.log(`[Edge] Is public path: ${isPublicPath}`);
+  console.log(`[Edge] NEXTAUTH_URL: ${process.env.NEXTAUTH_URL}`);
+  console.log(`[Edge] Has NEXTAUTH_SECRET: ${!!process.env.NEXTAUTH_SECRET}`);
+
   if (isPublicPath) {
-    console.log(`[Edge] Public path access: ${pathname}`);
     return NextResponse.next();
   }
 
@@ -39,19 +40,12 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({
       req,
       secret: process.env.NEXTAUTH_SECRET,
-      // 本番環境ではsecureCookieをtrueにする<=これがないとログインできないことに気づくために3日かかった
       secureCookie: process.env.NODE_ENV === "production",
       cookieName: "next-auth.session-token",
     });
 
-    console.log(`[Edge] Environment: ${process.env.NODE_ENV}`);
-    console.log(`[Edge] NEXTAUTH_URL: ${process.env.NEXTAUTH_URL}`);
-    console.log(`[Edge] Secret exists: ${!!process.env.NEXTAUTH_SECRET}`);
-    console.log(`[Edge] Path: ${pathname}`);
-    console.log(`[Edge] Token exists: ${!!token}`);
-    if (token) {
-      console.log(`[Edge] Token content:`, JSON.stringify(token, null, 2));
-    }
+    console.log(`[Edge] Cookie header:`, req.headers.get("cookie"));
+    console.log(`[Edge] Token:`, JSON.stringify(token, null, 2));
 
     if (!token?.sub) {
       console.log(`[Edge] No valid token - redirecting to login`);
@@ -69,7 +63,7 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    console.log(`[Edge] Access granted to: ${pathname}`);
+    console.log(`[Edge] Access granted for user: ${token.sub}`);
     return NextResponse.next();
   } catch (error) {
     console.error(`[Edge] Error in middleware:`, error);
