@@ -224,82 +224,6 @@ export const authConfig: NextAuthOptions = {
 
       return true;
     },
-    // async signIn({
-    //   user,
-    //   account,
-    // }: {
-    //   user: {
-    //     id: string;
-    //     name?: string | null;
-    //     email?: string | null;
-    //     image?: string | null;
-    //     primaryAuthMethod: string;
-    //   };
-    //   account: Account | null;
-    // }) {
-    //   console.log(
-    //     "[signIn] Start - provider:",
-    //     account?.provider,
-    //     "email:",
-    //     user.email
-    //   );
-
-    //   if (account?.provider === "credentials") {
-    //     console.log("[signIn] credentials login - return true");
-    //     return true;
-    //   }
-
-    //   console.log("[signIn] Finding existing user by email...");
-    //   const existingUser = await prisma.user.findUnique({
-    //     where: { email: user.email || "" },
-    //     include: {
-    //       accounts: true,
-    //     },
-    //   });
-    //   console.log("[signIn] existingUser:", existingUser?.id || "not found");
-
-    //   if (existingUser) {
-    //     console.log("[signIn] Checking if provider is already linked...");
-
-    //     const hasProvider = existingUser.accounts.some(
-    //       (acc) => acc.provider === account?.provider
-    //     );
-    //     console.log("[signIn] hasProvider:", hasProvider);
-
-    //     if (!hasProvider && account) {
-    //       console.log("[signIn] Linking new provider:", account.provider);
-    //       await prisma.account.create({
-    //         data: {
-    //           userId: existingUser.id,
-    //           type: account.type,
-    //           provider: account.provider,
-    //           providerAccountId: account.providerAccountId,
-    //           access_token: account.access_token,
-    //           token_type: account.token_type,
-    //           scope: account.scope,
-    //           expires_at: account.expires_at,
-    //         },
-    //       });
-    //       console.log("[signIn] Provider linked successfully");
-    //     }
-
-    //     console.log("[signIn] Updating primaryAuthMethod...");
-    //     user.id = existingUser.id;
-    //     user.primaryAuthMethod =
-    //       account?.provider || existingUser.primaryAuthMethod;
-
-    //     await prisma.user.update({
-    //       where: { id: existingUser.id },
-    //       data: { primaryAuthMethod: user.primaryAuthMethod },
-    //     });
-    //     console.log("[signIn] primaryAuthMethod updated");
-    //   } else {
-    //     console.log("[signIn] No existing user found.");
-    //   }
-
-    //   console.log("[signIn] End - returning true");
-    //   return true;
-    // },
     async jwt({
       token,
       account,
@@ -315,23 +239,32 @@ export const authConfig: NextAuthOptions = {
         primaryAuthMethod: string;
       };
     }) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("JWT Callback - Input:", { token, account, user });
-      }
+      console.log("🔑 JWT Callback - Input:", { token, account, user });
 
       if (account && user) {
-        return {
+        token = {
           ...token,
           accessToken: account.access_token,
           userId: user.id,
           primaryAuthMethod: account.provider,
+          name: user.name,
+          email: user.email,
+          picture: user.image,
+          sub: user.id, // JWTの標準クレームとしてユーザーIDを設定
+          iat: Math.floor(Date.now() / 1000), // 発行時刻
+          exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30日後に有効期限切れ
         };
+        console.log("🔑 JWT生成 - 新しいトークン:", token);
+        return token;
       }
 
-      if (process.env.NODE_ENV === "development") {
-        console.log("既存のトークンを使用:", token);
+      // トークンの有効期限を確認
+      if (token.exp && Date.now() >= (token.exp as number) * 1000) {
+        console.log("🔑 トークンの有効期限切れ");
+        return { ...token, error: "TokenExpired" };
       }
 
+      console.log("🔑 既存のトークンを使用:", token);
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
