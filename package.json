@@ -58,6 +58,7 @@
     "postcss": "^8.4.31",
     "prisma-erd-generator": "^2.0.4",
     "tailwindcss": "^3.3.0",
+    "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   }
