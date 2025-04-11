@@ -85,7 +85,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 // Edge Runtimeを明示的に指定
-export const runtime = "edge";
+// export const runtime = "edge";
 
 // 認証が不要なパス
 const publicPaths = [
