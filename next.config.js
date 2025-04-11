@@ -29,7 +29,6 @@ const nextConfig = {
   // キャッシュの最適化
   experimental: {
     optimizePackageImports: ["@prisma/client"],
-    // next/fontの設定を追加
   },
   outputFileTracingIncludes: {
     "/api/**/*": ["node_modules/.prisma/**/*"],

@@ -130,7 +130,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body
+        className={`${inter.className} min-h-screen bg-background font-sans antialiased`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>
