@@ -80,62 +80,56 @@
 //     "/units/:path*",
 //   ],
 // };
-import { withAuth } from "next-auth/middleware";
+import { getToken } from "next-auth/jwt";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl;
-    const { token } = req.nextauth;
+// Edge Runtimeを明示的に指定
+export const runtime = "edge";
 
-    console.log("===== 🔒 middleware triggered =====");
-    console.log("📍 Pathname:", pathname);
-    console.log("🔐 Token:", JSON.stringify(token, null, 2));
+// 認証が不要なパス
+const publicPaths = [
+  "/auth/login",
+  "/auth/signin",
+  "/auth/register",
+  "/auth/forgot-password",
+  "/api/docs",
+  "/_next",
+  "/favicon.ico",
+  "/sw.js",
+  "/sw-register.js",
+  "/manifest.json",
+  "/offline.html",
+  "/api/auth",
+];
 
-    // 認証が不要なパス
-    const publicPaths = [
-      "/auth/login",
-      "/auth/signin",
-      "/auth/register",
-      "/auth/forgot-password",
-      "/api/docs",
-      "/_next",
-      "/favicon.ico",
-      "/sw.js",
-      "/sw-register.js",
-      "/manifest.json",
-      "/offline.html",
-      "/api/auth", // NextAuthのAPIルートを追加
-    ];
-    const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-    console.log("🌐 Public path?", isPublicPath);
-    console.log("🔍 Checking path against:", publicPaths);
+  // パスチェックを最適化
+  const isPublicPath = publicPaths.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
 
-    if (isPublicPath) {
-      console.log("✅ Allowed (public path)");
-      return NextResponse.next();
+  if (isPublicPath) {
+    return NextResponse.next();
+  }
+
+  try {
+    // JWTトークンを手動で取得
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
+
+    console.log(`[Edge] Path: ${pathname}`);
+    console.log(`[Edge] Token exists: ${!!token}`);
+    if (token?.sub) {
+      console.log(`[Edge] User ID: ${token.sub}`);
     }
 
-    // トークンの詳細な検証
-    if (!token) {
-      console.log("⛔️ No token found, redirecting to login");
-      const url = new URL("/auth/login", req.url);
-      url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
-    }
-
-    // トークンの有効期限チェック
-    if (token.exp && Date.now() >= (token.exp as number) * 1000) {
-      console.log("⛔️ Token expired, redirecting to login");
-      const url = new URL("/auth/login", req.url);
-      url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
-    }
-
-    // 必須フィールドの存在確認
-    if (!token.sub || !token.email) {
-      console.log("⛔️ Invalid token structure:", token);
+    if (!token?.sub) {
+      console.log(`[Edge] No valid token - redirecting to login`);
       const url = new URL("/auth/login", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
@@ -145,34 +139,20 @@ export default withAuth(
     const adminPaths = ["/admin"];
     const isAdminPath = adminPaths.some((path) => pathname.startsWith(path));
 
-    if (isAdminPath) {
-      const userRole = token.role as string;
-      console.log("🛡 Admin path detected - role:", userRole);
-
-      if (userRole !== "admin") {
-        console.log("🚫 Access denied (not admin), redirecting to /dashboard");
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
+    if (isAdminPath && token.role !== "admin") {
+      console.log(`[Edge] Non-admin access attempt to admin path`);
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    console.log("✅ Authentication successful - allowing access");
     return NextResponse.next();
-  },
-  {
-    pages: {
-      signIn: "/auth/login",
-    },
-    callbacks: {
-      authorized: ({ token }) => {
-        console.log(
-          "🧪 authorized() called - token:",
-          JSON.stringify(token, null, 2)
-        );
-        return !!token;
-      },
-    },
+  } catch (error) {
+    console.error(`[Edge] Error in middleware:`, error);
+    // エラーが発生した場合はログインページにリダイレクト
+    const url = new URL("/auth/login", req.url);
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
   }
-);
+}
 
 export const config = {
   matcher: [
