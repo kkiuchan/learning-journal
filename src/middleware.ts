@@ -88,13 +88,14 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const { token } = req.nextauth;
 
-    console.log("===== 🔒 middleware triggered =====");
-    console.log("📍 Pathname:", pathname);
-    console.log("🔐 Token:", token);
+    console.error("===== 🔒 middleware triggered =====");
+    console.error("📍 Pathname:", pathname);
+    console.error("🔐 Token:", token);
 
     // 認証が不要なパス
     const publicPaths = [
       "/auth/login",
+      "/auth/signin",
       "/auth/register",
       "/auth/forgot-password",
       "/api/docs",
@@ -145,7 +146,20 @@ export default withAuth(
     callbacks: {
       authorized: ({ token }) => {
         console.log("🧪 authorized() called - token:", token);
-        return !!token;
+        // トークンの有効性をより詳細に確認
+        if (!token) {
+          console.log("❌ No token found");
+          return false;
+        }
+
+        // トークンの有効期限をチェック（もし設定されている場合）
+        if (token.exp && Date.now() >= (token.exp as number) * 1000) {
+          console.log("❌ Token expired");
+          return false;
+        }
+
+        console.log("✅ Token valid");
+        return true;
       },
     },
   }
