@@ -309,6 +309,10 @@ export const authConfig: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production"
+            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            : undefined,
       },
     },
     callbackUrl: {
@@ -317,6 +321,10 @@ export const authConfig: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production"
+            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            : undefined,
       },
     },
     csrfToken: {
@@ -326,10 +334,14 @@ export const authConfig: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
+        domain:
+          process.env.NODE_ENV === "production"
+            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            : undefined,
       },
     },
   },
-  debug: process.env.NODE_ENV === "development",
+  debug: true, // デバッグモードを有効化
   events: {
     async signIn(message) {
       console.log("サインインイベント:", message);
