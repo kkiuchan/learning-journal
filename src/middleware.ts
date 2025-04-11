@@ -18,11 +18,11 @@ const publicPaths = [
   "/api/auth",
 ];
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  console.log(`[Edge] Request URL: ${request.url}`);
-  console.log(`[Edge] Cookies:`, request.cookies.toString());
+  console.log(`[Edge] Request URL: ${req.url}`);
+  console.log(`[Edge] Cookies:`, req.cookies.toString());
 
   // パスチェックを最適化
   const isPublicPath = publicPaths.some(
@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   try {
     // JWTトークンを手動で取得
     const token = await getToken({
-      req: request,
+      req,
       secret: process.env.NEXTAUTH_SECRET,
       // 本番環境ではsecureCookieをtrueにする<=これがないとログインできないことに気づくために3日かかった
       secureCookie: process.env.NODE_ENV === "production",
@@ -55,7 +55,9 @@ export async function middleware(request: NextRequest) {
 
     if (!token?.sub) {
       console.log(`[Edge] No valid token - redirecting to login`);
-      return NextResponse.redirect(new URL("/auth/login", request.url));
+      const url = new URL("/auth/login", req.url);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
     }
 
     // 管理者チェック
@@ -64,28 +66,26 @@ export async function middleware(request: NextRequest) {
 
     if (isAdminPath && token.role !== "admin") {
       console.log(`[Edge] Non-admin access attempt to admin path`);
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     console.log(`[Edge] Access granted to: ${pathname}`);
     return NextResponse.next();
   } catch (error) {
     console.error(`[Edge] Error in middleware:`, error);
-    return NextResponse.redirect(new URL("/auth/login", request.url));
+    // エラーが発生した場合はログインページにリダイレクト
+    const url = new URL("/auth/login", req.url);
+    url.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(url);
   }
 }
 
-// より具体的なmatcherの設定
 export const config = {
   matcher: [
-    // 認証が必要なパス
+    "/((?!api|_next/static|_next/image|.*\\.png$|favicon.ico|sw.js|sw-register.js|manifest.json|offline.html).*)",
+    "/admin/:path*",
     "/dashboard/:path*",
     "/account/:path*",
-    "/admin/:path*",
     "/units/:path*",
-    "/users/:path*",
-
-    // 以下を除外
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 };
