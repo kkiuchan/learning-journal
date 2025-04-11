@@ -88,9 +88,9 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const { token } = req.nextauth;
 
-    console.error("===== 🔒 middleware triggered =====");
-    console.error("📍 Pathname:", pathname);
-    console.error("🔐 Token:", token);
+    console.log("===== 🔒 middleware triggered =====");
+    console.log("📍 Pathname:", pathname);
+    console.log("🔐 Token:", JSON.stringify(token, null, 2));
 
     // 認証が不要なパス
     const publicPaths = [
@@ -99,24 +99,43 @@ export default withAuth(
       "/auth/register",
       "/auth/forgot-password",
       "/api/docs",
-      "/_next", // Next.js assets
+      "/_next",
       "/favicon.ico",
       "/sw.js",
       "/sw-register.js",
       "/manifest.json",
       "/offline.html",
+      "/api/auth", // NextAuthのAPIルートを追加
     ];
     const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
 
     console.log("🌐 Public path?", isPublicPath);
+    console.log("🔍 Checking path against:", publicPaths);
 
     if (isPublicPath) {
       console.log("✅ Allowed (public path)");
       return NextResponse.next();
     }
 
+    // トークンの詳細な検証
     if (!token) {
-      console.log("⛔️ Not authenticated, redirecting to login");
+      console.log("⛔️ No token found, redirecting to login");
+      const url = new URL("/auth/login", req.url);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    // トークンの有効期限チェック
+    if (token.exp && Date.now() >= (token.exp as number) * 1000) {
+      console.log("⛔️ Token expired, redirecting to login");
+      const url = new URL("/auth/login", req.url);
+      url.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    // 必須フィールドの存在確認
+    if (!token.sub || !token.email) {
+      console.log("⛔️ Invalid token structure:", token);
       const url = new URL("/auth/login", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
@@ -136,7 +155,7 @@ export default withAuth(
       }
     }
 
-    console.log("✅ Authenticated access allowed");
+    console.log("✅ Authentication successful - allowing access");
     return NextResponse.next();
   },
   {
@@ -145,21 +164,11 @@ export default withAuth(
     },
     callbacks: {
       authorized: ({ token }) => {
-        console.log("🧪 authorized() called - token:", token);
-        // トークンの有効性をより詳細に確認
-        if (!token) {
-          console.log("❌ No token found");
-          return false;
-        }
-
-        // トークンの有効期限をチェック（もし設定されている場合）
-        if (token.exp && Date.now() >= (token.exp as number) * 1000) {
-          console.log("❌ Token expired");
-          return false;
-        }
-
-        console.log("✅ Token valid");
-        return true;
+        console.log(
+          "🧪 authorized() called - token:",
+          JSON.stringify(token, null, 2)
+        );
+        return !!token;
       },
     },
   }
