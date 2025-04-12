@@ -27,8 +27,8 @@ let connectionPromise: Promise<void> | null = null;
 let retryCount = 0;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1秒
+const CONNECTION_TIMEOUT = 15000; // 15秒に延長
 let lastConnectionAttempt = 0;
-const CONNECTION_TIMEOUT = 30000; // 30秒
 
 // 接続状態をリセット
 const resetConnectionState = () => {
@@ -40,8 +40,12 @@ const resetConnectionState = () => {
 // 接続状態をチェック
 const checkConnection = async (): Promise<boolean> => {
   try {
-    // 簡単なクエリを実行して接続状態を確認
-    await prisma.$queryRaw`SELECT 1`;
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Connection check timeout")), 5000)
+      ),
+    ]);
     return true;
   } catch (error) {
     console.log("❌ Connection check failed:", error);
@@ -51,22 +55,16 @@ const checkConnection = async (): Promise<boolean> => {
 
 // 必要なときに呼び出す接続関数
 export const ensurePrismaConnected = async () => {
-  // 前回の接続試行から30秒以上経過している場合は接続状態をリセット
   if (Date.now() - lastConnectionAttempt > CONNECTION_TIMEOUT) {
     resetConnectionState();
   }
 
-  // 接続状態を確認
   if (isConnected) {
     const isStillConnected = await checkConnection();
-    if (!isStillConnected) {
-      resetConnectionState();
-    } else {
-      return;
-    }
+    if (isStillConnected) return;
+    resetConnectionState();
   }
 
-  // 接続処理が進行中の場合
   if (connectionPromise) {
     try {
       await connectionPromise;
@@ -83,7 +81,12 @@ export const ensurePrismaConnected = async () => {
           retryCount + 1
         }/${MAX_RETRIES})`
       );
-      await prisma.$connect();
+      await Promise.race([
+        prisma.$connect(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Connection timeout")), 10000)
+        ),
+      ]);
       isConnected = true;
       retryCount = 0;
       lastConnectionAttempt = Date.now();

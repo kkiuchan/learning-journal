@@ -1,7 +1,6 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcryptjs from "bcryptjs";
-import type { Account, Session } from "next-auth";
-import { NextAuthOptions } from "next-auth";
+import type { Account, NextAuthOptions, Session } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
 import Credentials from "next-auth/providers/credentials";
@@ -114,7 +113,7 @@ export const authConfig: NextAuthOptions = {
         const userProfile = {
           id: profile.id.toString(),
           name: profile.name || profile.login,
-          email: profile.email || `${profile.login}@github.com`,
+          email: profile.email,
           image: profile.avatar_url,
           primaryAuthMethod: "github",
         };
@@ -162,67 +161,50 @@ export const authConfig: NextAuthOptions = {
     // }),
   ],
   callbacks: {
-    async signIn({
-      user,
-      account,
-    }: {
-      user: {
-        id: string;
-        name?: string | null;
-        email?: string | null;
-        image?: string | null;
-        primaryAuthMethod: string;
-      };
-      account: Account | null;
-    }) {
-      if (account?.provider === "credentials") {
-        return true;
-      }
-
-      // 既存のユーザーを検索
-      const existingUser = await prisma.user.findUnique({
-        where: { email: user.email || "" },
-        include: {
-          accounts: true,
-        },
-      });
-
-      // 既存のユーザーが存在する場合
-      if (existingUser) {
-        // 新しい認証方法が既に登録されているかチェック
-        const hasProvider = existingUser.accounts.some(
-          (acc) => acc.provider === account?.provider
-        );
-
-        if (!hasProvider && account) {
-          // 新しい認証方法を追加
-          await prisma.account.create({
-            data: {
-              userId: existingUser.id,
-              type: account.type,
-              provider: account.provider,
-              providerAccountId: account.providerAccountId,
-              access_token: account.access_token,
-              token_type: account.token_type,
-              scope: account.scope,
-              expires_at: account.expires_at,
-            },
-          });
+    async signIn({ user, account }): Promise<boolean> {
+      try {
+        if (account?.provider === "credentials") {
+          return true;
         }
 
-        // 既存のユーザー情報を使用し、primaryAuthMethodを更新
-        user.id = existingUser.id;
-        user.primaryAuthMethod =
-          account?.provider || existingUser.primaryAuthMethod;
+        const result = await Promise.race([
+          (async () => {
+            const existingUser = await prisma.user.findUnique({
+              where: { email: user.email || "" },
+              include: { accounts: true },
+            });
 
-        // ユーザーのprimaryAuthMethodを更新
-        await prisma.user.update({
-          where: { id: existingUser.id },
-          data: { primaryAuthMethod: user.primaryAuthMethod },
-        });
+            if (existingUser) {
+              const hasProvider = existingUser.accounts.some(
+                (acc) => acc.provider === account?.provider
+              );
+
+              if (!hasProvider && account) {
+                await prisma.account.create({
+                  data: {
+                    userId: existingUser.id,
+                    type: account.type,
+                    provider: account.provider,
+                    providerAccountId: account.providerAccountId,
+                    access_token: account.access_token,
+                    token_type: account.token_type,
+                    scope: account.scope,
+                  },
+                });
+              }
+            }
+            return true;
+          })(),
+          new Promise<boolean>((_, reject) =>
+            setTimeout(() => reject(new Error("Sign in timeout")), 15000)
+          ),
+        ]);
+
+        return result;
+      } catch (error) {
+        console.error("Sign in error:", error);
+        return false;
       }
-
-      return true;
     },
     async jwt({
       token,
