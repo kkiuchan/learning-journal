@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "mqyoxoyzzrasoakldhoj.supabase.co",
+      },
     ],
     unoptimized: true,
   },
@@ -29,11 +33,23 @@ const nextConfig = {
   // キャッシュの最適化
   experimental: {
     optimizePackageImports: ["@prisma/client"],
+    serverActions: true,
   },
   outputFileTracingIncludes: {
-    "/api/**/*": ["node_modules/.prisma/**/*"],
+    "/api/**/*": [
+      "node_modules/.prisma/**/*",
+      "node_modules/@prisma/client/**/*",
+      ".env*",
+      "prisma/**/*",
+    ],
   },
   transpilePackages: ["@prisma/client", "bcryptjs"],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...config.externals, "@prisma/client", "prisma"];
+    }
+    return config;
+  },
   serverRuntimeConfig: {
     // APIルートのタイムアウトを60秒に設定
     apiTimeout: 60000,

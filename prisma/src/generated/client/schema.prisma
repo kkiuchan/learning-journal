@@ -1,0 +1,224 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+  // engineType = "binary"
+  output        = "./src/generated/client"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id                 String         @id @default(cuid())
+  name               String?
+  topImage           String?
+  age                Int?
+  ageVisible         Boolean        @default(true)
+  email              String         @unique
+  hashedPassword     String?
+  primaryAuthMethod  String
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  subscriptionStatus String?
+  subscriptionPlan   String?
+  subscriptionStart  DateTime?
+  subscriptionEnd    DateTime?
+  emailVerified      DateTime?
+  image              String?
+  selfIntroduction   String?
+  accounts           Account[]
+  comments           Comment[]
+  logs               Log[]
+  sessions           Session[]
+  units              Unit[]
+  unitLikes          UnitLike[]
+  userInterests      UserInterest[]
+  providers          UserProvider[]
+  userSkills         UserSkill[]
+}
+
+model UserProvider {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  provider     String
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
+}
+
+model Unit {
+  id               Int        @id @default(autoincrement())
+  userId           String
+  title            String
+  learningGoal     String?
+  preLearningState String?
+  reflection       String?
+  nextAction       String?
+  startDate        DateTime?
+  endDate          DateTime?
+  displayFlag      Boolean    @default(true)
+  status           String     @default("PLANNED")
+  likesCount       Int        @default(0)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  commentsCount    Int        @default(0)
+  comments         Comment[]
+  logs             Log[]
+  user             User       @relation(fields: [userId], references: [id])
+  unitLikes        UnitLike[]
+  unitTags         UnitTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Log {
+  id           Int        @id @default(autoincrement())
+  unitId       Int
+  userId       String
+  title        String
+  learningTime Int?
+  note         String?
+  logDate      DateTime
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  unit         Unit       @relation(fields: [unitId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+  logTags      LogTag[]
+  resources    Resource[]
+}
+
+model Resource {
+  id           Int      @id @default(autoincrement())
+  logId        Int
+  resourceType String?
+  resourceLink String
+  description  String?
+  fileName     String?
+  filePath     String?
+  createdAt    DateTime @default(now())
+  log          Log      @relation(fields: [logId], references: [id])
+}
+
+model Tag {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  logTags       LogTag[]
+  unitTags      UnitTag[]
+  userInterests UserInterest[]
+  userSkills    UserSkill[]
+}
+
+model UnitTag {
+  unitId Int
+  tagId  Int
+  tag    Tag  @relation(fields: [tagId], references: [id])
+  unit   Unit @relation(fields: [unitId], references: [id])
+
+  @@id([unitId, tagId])
+}
+
+model LogTag {
+  logId Int
+  tagId Int
+  log   Log @relation(fields: [logId], references: [id])
+  tag   Tag @relation(fields: [tagId], references: [id])
+
+  @@id([logId, tagId])
+}
+
+model UserSkill {
+  userId String
+  tagId  Int
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, tagId])
+}
+
+model UserInterest {
+  userId String
+  tagId  Int
+  tag    Tag    @relation(fields: [tagId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, tagId])
+}
+
+model UnitLike {
+  userId    String
+  unitId    Int
+  createdAt DateTime @default(now())
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@id([userId, unitId])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  unitId    Int
+  userId    String
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model ErrorLog {
+  id        Int      @id @default(autoincrement())
+  message   String
+  stack     String?  @db.Text
+  digest    String?
+  url       String?
+  userAgent String?
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

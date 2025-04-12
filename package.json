@@ -10,7 +10,7 @@
     "seed": "node --loader ts-node/esm prisma/seed.ts",
     "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts",
     "postinstall": "npx prisma generate",
-    "vercel-build": "npx prisma generate && next build && cp -r node_modules/.prisma node_modules/@prisma/client node_modules/@prisma/engines .next/standalone/node_modules/"
+    "vercel-build": "npx prisma generate && next build && cp -r node_modules/.prisma/client/libquery_engine-* .next/standalone/.prisma/client/ && cp -r node_modules/@prisma/client .next/standalone/node_modules/@prisma/"
   },
   "dependencies": {
     "@auth/core": "0.34.2",
