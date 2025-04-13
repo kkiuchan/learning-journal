@@ -301,46 +301,46 @@ export const authConfig: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
-            : undefined,
-      },
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
-            : undefined,
-      },
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
-            : undefined,
-      },
-    },
-  },
+  // cookies: {
+  //   sessionToken: {
+  //     name: `next-auth.session-token`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: process.env.NODE_ENV === "production",
+  //       domain:
+  //         process.env.NODE_ENV === "production"
+  //           ? `.${process.env.NEXT_PUBLIC_APP_URL}`
+  //           : undefined,
+  //     },
+  //   },
+  //   callbackUrl: {
+  //     name: `next-auth.callback-url`,
+  //     options: {
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: process.env.NODE_ENV === "production",
+  //       domain:
+  //         process.env.NODE_ENV === "production"
+  //           ? `.${process.env.NEXT_PUBLIC_APP_URL}`
+  //           : undefined,
+  //     },
+  //   },
+  //   csrfToken: {
+  //     name: `next-auth.csrf-token`,
+  //     options: {
+  //       httpOnly: true,
+  //       sameSite: "lax",
+  //       path: "/",
+  //       secure: process.env.NODE_ENV === "production",
+  //       domain:
+  //         process.env.NODE_ENV === "production"
+  //           ? `.${process.env.NEXT_PUBLIC_APP_URL}`
+  //           : undefined,
+  //     },
+  //   },
+  // },
   debug: true, // デバッグモードを有効化
   events: {
     async signIn(message) {
