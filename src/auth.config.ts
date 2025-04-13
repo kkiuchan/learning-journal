@@ -311,7 +311,7 @@ export const authConfig: NextAuthOptions = {
         secure: process.env.NODE_ENV === "production",
         domain:
           process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
             : undefined,
       },
     },
@@ -323,7 +323,7 @@ export const authConfig: NextAuthOptions = {
         secure: process.env.NODE_ENV === "production",
         domain:
           process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
             : undefined,
       },
     },
@@ -336,7 +336,7 @@ export const authConfig: NextAuthOptions = {
         secure: process.env.NODE_ENV === "production",
         domain:
           process.env.NODE_ENV === "production"
-            ? `.${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            ? `.${process.env.NEXT_PUBLIC_APP_URL}`
             : undefined,
       },
     },
