@@ -41,7 +41,10 @@ export async function middleware(req: NextRequest) {
       req,
       secret: process.env.NEXTAUTH_SECRET,
       secureCookie: process.env.NODE_ENV === "production",
-      cookieName: "next-auth.session-token",
+      cookieName:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
     });
 
     console.log(`[Edge] Cookie header:`, req.headers.get("cookie"));
