@@ -9,6 +9,7 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+    errorFormat: "minimal",
   });
 
 if (process.env.NODE_ENV !== "production") {
@@ -42,7 +43,7 @@ const checkConnection = async (): Promise<boolean> => {
     ]);
     return true;
   } catch (error) {
-    console.log("❌ Connection check failed:", error);
+    console.error("❌ Connection check failed:", error);
     return false;
   }
 };

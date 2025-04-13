@@ -1,8 +1,10 @@
+import { Header } from "@/components/layout/Header";
 import { Providers } from "@/components/providers";
 import { validateEnv } from "@/lib/env";
 import { generateSecurityHeaders } from "@/lib/security";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -122,7 +124,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <head>
         <script src="/sw-register.js" defer />
         <link rel="icon" href="/favicon-32x32.png" />
@@ -133,7 +135,11 @@ export default function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-background font-sans antialiased`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
