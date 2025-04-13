@@ -1,4 +1,3 @@
-// src/lib/prisma.ts
 import { PrismaClient } from "@prisma/client";
 
 // グローバルスコープで PrismaClient を再利用
@@ -10,11 +9,6 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
   });
 
 if (process.env.NODE_ENV !== "production") {
