@@ -10,7 +10,7 @@
     "seed": "node --loader ts-node/esm prisma/seed.ts",
     "db:seed": "NODE_OPTIONS='--loader ts-node/esm' node prisma/seed.ts",
     "postinstall": "npx prisma generate",
-    "vercel-build": "npx prisma generate && next build && mkdir -p .next/server/edge-chunks && cp node_modules/.prisma/client/libquery_engine-* .next/server/edge-chunks/ && cp node_modules/.prisma/client/schema.prisma .next/server/edge-chunks/"
+    "vercel-build": "npx prisma generate && next build && mkdir -p .next/server/edge-chunks && cp node_modules/@prisma/client/libquery_engine-* .next/server/edge-chunks/ && cp node_modules/@prisma/client/schema.prisma .next/server/edge-chunks/"
   },
   "dependencies": {
     "@auth/core": "0.34.2",
