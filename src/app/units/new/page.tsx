@@ -188,7 +188,7 @@ export default function NewUnitPage() {
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   placeholder="新しいタグを入力"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       handleAddTag();

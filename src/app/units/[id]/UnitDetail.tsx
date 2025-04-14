@@ -129,6 +129,9 @@ export default function UnitDetail({
           ageVisible: false,
           skills: [],
           interests: [],
+          email: "",
+          hashedPassword: "",
+          primaryAuthMethod: "credentials",
         },
       };
 
@@ -290,7 +293,12 @@ export default function UnitDetail({
                   <Pencil className="h-4 w-4" />
                 </Button>
               </Link>
-              <Button variant="destructive" size="icon" onClick={handleDelete}>
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
@@ -470,14 +478,15 @@ export default function UnitDetail({
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => setEditingLogId(log.id)}
                           >
-                            編集
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="destructive"
                             size="sm"
+                            className="bg-red-600 hover:bg-red-700"
                             onClick={async () => {
                               if (
                                 !confirm("このログを削除してもよろしいですか？")
@@ -532,7 +541,7 @@ export default function UnitDetail({
                               }
                             }}
                           >
-                            削除
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       )}

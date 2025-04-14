@@ -15,6 +15,7 @@ import { useUnits } from "@/hooks/useUnits";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+import { Heart, MessageCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -195,7 +196,7 @@ export default function UnitsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">すべて</SelectItem>
-            <SelectItem value="PLANNED">未着手</SelectItem>
+            <SelectItem value="PLANNED">計画中</SelectItem>
             <SelectItem value="IN_PROGRESS">進行中</SelectItem>
             <SelectItem value="COMPLETED">完了</SelectItem>
           </SelectContent>
@@ -207,10 +208,13 @@ export default function UnitsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {units.map((unit) => (
-            <Card key={unit.id}>
+            <Card key={unit.id} className="h-full flex flex-col">
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
-                  <Link href={`/units/${unit.id}`} className="hover:underline">
+                  <Link
+                    href={`/units/${unit.id}`}
+                    className="hover:underline line-clamp-2"
+                  >
                     {unit.title}
                   </Link>
                   <Badge
@@ -222,20 +226,31 @@ export default function UnitsPage() {
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
+              <CardContent className="flex-1 flex flex-col">
+                <div className="space-y-2 flex-1">
                   {unit.learningGoal && (
-                    <p className="text-sm text-gray-600">{unit.learningGoal}</p>
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                      {unit.learningGoal}
+                    </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {unit.tags.map((tag) => (
-                      <Badge key={tag.id} variant="outline">
+                  <div className="flex flex-wrap gap-1">
+                    {unit.tags.slice(0, 3).map((tag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="outline"
+                        className="bg-gray-100"
+                      >
                         {tag.name}
                       </Badge>
                     ))}
+                    {unit.tags.length > 3 && (
+                      <Badge variant="outline" className="bg-gray-100">
+                        +{unit.tags.length - 3}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="flex justify-between text-sm text-gray-500">
-                    <div>
+                  <div className="flex justify-between text-sm text-gray-500 mt-auto">
+                    <div className="line-clamp-1">
                       {unit.startDate && (
                         <span>
                           開始:{" "}
@@ -261,28 +276,14 @@ export default function UnitsPage() {
                           unit.isLiked ? "text-red-500" : "text-gray-500"
                         }`}
                       >
-                        <span>いいね: {unit._count.unitLikes}</span>
+                        <Heart className={unit.isLiked ? "fill-current" : ""} />
+                        <span>{unit._count.unitLikes}</span>
                       </button>
-                      <span>コメント: {unit._count.comments}</span>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <MessageCircle />
+                        <span>{unit._count.comments}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    {session?.user?.id === unit.userId && (
-                      <>
-                        <Link href={`/units/${unit.id}/edit`}>
-                          <Button variant="outline" size="sm">
-                            編集
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(unit.id)}
-                        >
-                          削除
-                        </Button>
-                      </>
-                    )}
                   </div>
                 </div>
               </CardContent>

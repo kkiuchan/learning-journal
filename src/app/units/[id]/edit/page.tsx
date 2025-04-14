@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidateUnitDataAction } from "@/app/actions/revalidate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,12 +126,13 @@ export default function EditUnitPage({
           startDate: startDate || null,
           endDate: endDate || null,
           status,
-          tags: tags.map((tag) => tag.name),
+          unitTags: tags.map((tag) => tag.name),
         }),
       });
 
       if (response.ok) {
         router.push(`/units/${unit.id}`);
+        await revalidateUnitDataAction(unit.id);
       } else {
         const error = await response.json();
         console.error("ユニットの更新に失敗しました:", error);
@@ -243,7 +245,7 @@ export default function EditUnitPage({
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   placeholder="新しいタグを入力"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
                       handleAddTag();

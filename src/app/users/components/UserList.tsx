@@ -124,20 +124,42 @@ export function UserList() {
                     {user.selfIntroduction}
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {user.skills?.map((skill) => (
-                    <Badge key={skill.id} variant="secondary">
-                      {skill.name}
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {user.interests?.map((interest) => (
-                    <Badge key={interest.id} variant="outline">
-                      {interest.name}
-                    </Badge>
-                  ))}
-                </div>
+                {user.skills && user.skills.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      スキル
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {user.skills.map((skill) => (
+                        <Badge
+                          key={skill.id}
+                          variant="secondary"
+                          className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                        >
+                          {skill.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {user.interests && user.interests.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      興味・関心
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {user.interests.map((interest) => (
+                        <Badge
+                          key={interest.id}
+                          variant="outline"
+                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                        >
+                          {interest.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           </Link>
