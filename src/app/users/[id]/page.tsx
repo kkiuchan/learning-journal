@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UnitStatus } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
+import { Clock, Heart, MessageCircle } from "lucide-react";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -173,9 +174,18 @@ export default async function UserPage({ params }: Props) {
         <div className="flex items-start gap-6">
           <UserAvatar imageUrl={user.image} userName={user.name} size="lg" />
           <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-2">
-              {user.name || "名前未設定"}
-            </h1>
+            <div className="flex justify-between items-start">
+              <h1 className="text-2xl font-bold mb-2">
+                {user.name || "名前未設定"}
+              </h1>
+              {currentUserId === user.id && (
+                <Link href="/settings/profile">
+                  <Button variant="outline" size="sm">
+                    プロフィールを編集
+                  </Button>
+                </Link>
+              )}
+            </div>
             {user.selfIntroduction && (
               <p className="text-muted-foreground mb-4">
                 {user.selfIntroduction}
@@ -228,9 +238,11 @@ export default async function UserPage({ params }: Props) {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.units.data.map((unit) => (
             <Link href={`/units/${unit.id}`} key={unit.id}>
-              <Card className="p-4 hover:bg-accent transition-colors">
+              <Card className="p-4 hover:bg-accent transition-colors h-full">
                 <div className="flex flex-col h-full">
-                  <h3 className="text-lg font-semibold mb-2">{unit.title}</h3>
+                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                    {unit.title}
+                  </h3>
 
                   {/* 学習状況 */}
                   <div className="mb-2">
@@ -241,7 +253,7 @@ export default async function UserPage({ params }: Props) {
 
                   {/* 学習期間 */}
                   {(unit.startDate || unit.endDate) && (
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                       {unit.startDate &&
                         `開始: ${new Date(
                           unit.startDate
@@ -255,7 +267,7 @@ export default async function UserPage({ params }: Props) {
                   {/* タグ */}
                   {unit.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {unit.tags.map(({ tag }) => (
+                      {unit.tags.slice(0, 3).map(({ tag }) => (
                         <Badge
                           key={tag.id}
                           variant="secondary"
@@ -264,22 +276,35 @@ export default async function UserPage({ params }: Props) {
                           {tag.name}
                         </Badge>
                       ))}
+                      {unit.tags.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{unit.tags.length - 3}
+                        </Badge>
+                      )}
                     </div>
                   )}
 
                   {/* 統計情報 */}
                   <div className="mt-auto pt-2 text-sm text-muted-foreground">
                     <div className="flex justify-between items-center">
-                      <span>
-                        総学習時間: {Math.floor(unit.totalLearningTime / 60)}
-                        時間
-                        {unit.totalLearningTime % 60}分
-                      </span>
-                      <span>いいね: {unit.likesCount}</span>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>
+                          {Math.floor(unit.totalLearningTime / 60)}時間
+                          {unit.totalLearningTime % 60}分
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4" />
+                        <span>{unit.likesCount}</span>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center mt-1">
                       <span>ログ: {unit._count.logs}件</span>
-                      <span>コメント: {unit._count.comments}件</span>
+                      <div className="flex items-center gap-1">
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{unit._count.comments}</span>
+                      </div>
                     </div>
                   </div>
                 </div>

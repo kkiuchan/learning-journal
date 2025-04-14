@@ -56,7 +56,14 @@ export function ProfileForm() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch("/api/users/me");
+        const response = await fetch("/api/users/me", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        } as RequestInit);
         if (!response.ok) throw new Error("プロフィールの取得に失敗しました");
         const data = await response.json();
 

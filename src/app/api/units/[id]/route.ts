@@ -149,6 +149,7 @@ export async function PUT(
       startDate,
       endDate,
       status,
+      unitTags = [],
       displayFlag,
     } = body;
 
@@ -172,6 +173,17 @@ export async function PUT(
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         status,
+        unitTags: {
+          deleteMany: {}, // 既存のタグをすべて削除
+          create: unitTags.map((tag: string) => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tag },
+                create: { name: tag },
+              },
+            },
+          })),
+        },
         displayFlag,
       },
       include: {
