@@ -32,6 +32,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // キャッシュの最適化
   experimental: {
+    //これがないとビルドでエラーになる
     optimizePackageImports: ["@prisma/client"],
     serverActions: true,
   },
