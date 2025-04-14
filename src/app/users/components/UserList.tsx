@@ -1,52 +1,68 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useUsers } from "@/hooks/useUsers";
+import { ApiUser as User } from "@/types";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect } from "react";
 import UserAvatar from "../[id]/components/UserAvatar";
-
-interface User {
-  id: string;
-  name: string | null;
-  image: string | null;
-  topImage: string | null;
-  selfIntroduction: string | null;
-  skills: Array<{ id: string; name: string }>;
-  interests: Array<{ id: string; name: string }>;
-  _count: {
-    units: number;
-    logs: number;
-  };
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-interface SearchResponse {
-  data: {
-    users: User[];
-    total: number;
-    pagination: Pagination;
-  };
-}
-
 export function UserList() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+
+  // クエリパラメータから値を取得
+  const searchQuery = searchParams.get("q") || "";
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || "20");
+
+  // SWRを使用してユーザーを取得
+  const { users, isLoading, error, pagination } = useUsers({
+    page,
+    searchQuery,
+    limit,
+  });
+
+  // 検索条件を更新する関数
+  const updateSearchParams = useCallback(
+    (newQuery?: string, newPage?: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (newQuery !== undefined) {
+        if (newQuery) {
+          params.set("q", newQuery);
+        } else {
+          params.delete("q");
+        }
+      }
+
+      if (newPage !== undefined) {
+        if (newPage > 1) {
+          params.set("page", newPage.toString());
+        } else {
+          params.delete("page");
+        }
+      }
+
+      router.push(`/users?${params.toString()}`);
+    },
+    [router, searchParams]
+  );
+
+  // 検索クエリの更新（デバウンス処理付き）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateSearchParams(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, updateSearchParams]);
 
   // 有効な画像URLかどうかをチェックする関数
   const isValidImageUrl = (url: string | null): boolean => {
     if (!url) return false;
-    // 許可するドメインのリスト
     const allowedDomains = [
       "lh3.googleusercontent.com",
       "avatars.githubusercontent.com",
@@ -62,69 +78,8 @@ export function UserList() {
     }
   };
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const query = searchParams.get("q") || "";
-        const page = parseInt(searchParams.get("page") || "1");
-        const limit = parseInt(searchParams.get("limit") || "20");
-
-        const searchQuery = query.trim() || "*";
-        const response = await fetch(
-          `/api/users/search?query=${encodeURIComponent(
-            searchQuery
-          )}&page=${page}&limit=${limit}`
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "ユーザー検索中にエラーが発生しました"
-          );
-        }
-
-        const data: SearchResponse = await response.json();
-        // 画像URLを検証して、無効なURLをnullに置き換える
-        const validatedUsers = data.data.users.map((user) => ({
-          ...user,
-          image: isValidImageUrl(user.image) ? user.image : null,
-        }));
-        setUsers(validatedUsers);
-        setPagination(data.data.pagination);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "予期せぬエラーが発生しました"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [searchParams]);
-
   if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="p-4">
-            <div className="space-y-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Skeleton className="h-6 w-16" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    );
+    return <div>読み込み中...</div>;
   }
 
   if (error) {
@@ -146,21 +101,21 @@ export function UserList() {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {users.map((user) => (
+        {users.map((user: User) => (
           <Link key={user.id} href={`/users/${user.id}`}>
             <Card className="p-4 hover:bg-accent/50">
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <UserAvatar
-                    imageUrl={user.image}
+                    imageUrl={isValidImageUrl(user.image) ? user.image : null}
                     userName={user.name}
                     size="sm"
                   />
                   <div>
                     <h3 className="font-semibold">{user.name || "名前なし"}</h3>
                     <p className="text-sm text-muted-foreground">
-                      ユニット: {user._count.units} | 総学習時間:{" "}
-                      {user._count.logs}時間
+                      ユニット数: {user._count?.units || 0} | 学習ログ数:{" "}
+                      {user._count?.logs || 0}
                     </p>
                   </div>
                 </div>
@@ -170,14 +125,14 @@ export function UserList() {
                   </p>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  {user.skills.map((skill) => (
+                  {user.skills?.map((skill) => (
                     <Badge key={skill.id} variant="secondary">
                       {skill.name}
                     </Badge>
                   ))}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {user.interests.map((interest) => (
+                  {user.interests?.map((interest) => (
                     <Badge key={interest.id} variant="outline">
                       {interest.name}
                     </Badge>
@@ -188,9 +143,31 @@ export function UserList() {
           </Link>
         ))}
       </div>
-      {pagination && (
-        <div className="text-center text-sm text-muted-foreground">
-          全{pagination.totalPages}ページ中{pagination.page}ページ目
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => updateSearchParams(undefined, Math.max(1, page - 1))}
+            disabled={page === 1}
+          >
+            前へ
+          </Button>
+          <span className="py-2 px-4">
+            {page} / {pagination.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            onClick={() =>
+              updateSearchParams(
+                undefined,
+                Math.min(pagination.totalPages, page + 1)
+              )
+            }
+            disabled={page === pagination.totalPages}
+          >
+            次へ
+          </Button>
         </div>
       )}
     </div>

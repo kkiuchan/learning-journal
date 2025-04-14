@@ -35,29 +35,27 @@ export type DbUser = BaseUser & {
 };
 
 // APIレスポンス用のユーザー型
-export type ApiUser = {
+export interface ApiUser {
   id: string;
   name: string | null;
   image: string | null;
   topImage: string | null;
-  selfIntroduction: string | null;
   age: number | null;
   ageVisible: boolean;
+  email: string;
+  hashedPassword: string | null;
+  primaryAuthMethod: string;
   createdAt: Date;
   updatedAt: Date;
-  skills: {
-    id: string;
-    name: string;
-  }[];
-  interests: {
-    id: string;
-    name: string;
-  }[];
+  selfIntroduction: string | null;
+  skills?: Array<{ id: string; name: string }>;
+  interests?: Array<{ id: string; name: string }>;
   _count?: {
     units: number;
+    totalLearningTime: number;
     logs: number;
   };
-};
+}
 
 // フロントエンド表示用のユーザー型
 export type FrontendUser = Omit<ApiUser, "createdAt" | "updatedAt">;
