@@ -38,7 +38,9 @@ const nextConfig = {
   experimental: {
     //これがないとビルドでエラーになる
     optimizePackageImports: ["@prisma/client"],
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ["localhost:3000", "learning-journal.vercel.app"],
+    },
   },
   outputFileTracingIncludes: {
     "/api/**/*": [
