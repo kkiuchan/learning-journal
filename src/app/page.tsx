@@ -1,3 +1,5 @@
+export const revalidate = 3600; // 1時間ごとに再生成
+
 import { authConfig } from "@/auth.config";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Search, User } from "lucide-react";

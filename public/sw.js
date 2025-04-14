@@ -1,5 +1,5 @@
 // サービスワーカーのバージョン - キャッシュを更新する際に変更します
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `learning-journal-${CACHE_VERSION}`;
 
 // キャッシュするアセット - 必要最小限に
@@ -18,26 +18,23 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// 古いキャッシュを消去
+// 古いキャッシュを削除
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames
-            .filter((cacheName) => {
-              return (
-                cacheName.startsWith("learning-journal-") &&
-                cacheName !== CACHE_NAME
-              );
-            })
-            .map((cacheName) => {
-              return caches.delete(cacheName);
-            })
-        );
-      })
-      .then(() => self.clients.claim())
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames
+          .filter((cacheName) => {
+            return (
+              cacheName.startsWith("learning-journal-") &&
+              cacheName !== CACHE_NAME
+            );
+          })
+          .map((cacheName) => {
+            return caches.delete(cacheName);
+          })
+      );
+    })
   );
 });
 
@@ -48,23 +45,31 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // 認証関連のリクエストはキャッシュしない
+  if (event.request.url.includes("/auth/")) {
+    return;
+  }
+
   // GETリクエストのみキャッシュ
   if (event.request.method !== "GET") {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // キャッシュヒットした場合
-      if (response) {
+    fetch(event.request)
+      .then((response) => {
+        // レスポンスをクローンしてキャッシュに保存
+        const responseToCache = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
         return response;
-      }
-
-      // キャッシュがない場合はネットワークからフェッチ
-      return fetch(event.request).catch(() => {
-        // オフラインの場合はオフラインページを返す
-        return caches.match("/offline.html");
-      });
-    })
+      })
+      .catch(() => {
+        // オフラインの場合はキャッシュを確認
+        return caches.match(event.request).then((response) => {
+          return response || caches.match("/offline.html");
+        });
+      })
   );
 });

@@ -9,12 +9,15 @@ const swrConfig: SWRConfiguration = {
   dedupingInterval: 2000,
   errorRetryCount: 3, // エラー時の再試行回数を制限
   errorRetryInterval: 5000, // エラー時の再試行間隔を5秒に設定
-  keepPreviousData: true, // データ更新中も古いデータを表示
+  keepPreviousData: false, // データ更新中も古いデータを表示
   suspense: false, // Suspenseモードを無効化
   fetcher: async (url: string, options?: { tags?: string[] }) => {
     const fetchOptions: RequestInit & { next?: { tags?: string[] } } = {
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     };
 

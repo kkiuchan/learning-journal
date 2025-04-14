@@ -17,13 +17,18 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect } from "react";
 
 export default function UnitsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [page, setPage] = useState(1);
+
+  // クエリパラメータから値を取得
+  const searchQuery = searchParams.get("q") || "";
+  const statusFilter = searchParams.get("status") || "all";
+  const page = parseInt(searchParams.get("page") || "1");
 
   // SWRを使用してユニットを取得
   const { units, isLoading, mutate, totalPages, currentPage } = useUnits({
@@ -31,6 +36,49 @@ export default function UnitsPage() {
     searchQuery,
     statusFilter,
   });
+
+  // 検索条件を更新する関数
+  const updateSearchParams = useCallback(
+    (newQuery?: string, newStatus?: string, newPage?: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      if (newQuery !== undefined) {
+        if (newQuery) {
+          params.set("q", newQuery);
+        } else {
+          params.delete("q");
+        }
+      }
+
+      if (newStatus !== undefined) {
+        if (newStatus !== "all") {
+          params.set("status", newStatus);
+        } else {
+          params.delete("status");
+        }
+      }
+
+      if (newPage !== undefined) {
+        if (newPage > 1) {
+          params.set("page", newPage.toString());
+        } else {
+          params.delete("page");
+        }
+      }
+
+      router.push(`/units?${params.toString()}`);
+    },
+    [router, searchParams]
+  );
+
+  // 検索クエリの更新（デバウンス処理付き）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateSearchParams(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, updateSearchParams]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
@@ -94,7 +142,6 @@ export default function UnitsPage() {
       });
 
       if (!response.ok) {
-        // エラーが発生した場合は元の状態に戻す
         mutate({
           data: {
             units: previousUnits,
@@ -109,7 +156,6 @@ export default function UnitsPage() {
         alert(data.error || "いいねの処理に失敗しました");
       }
     } catch (error) {
-      // エラーが発生した場合は元の状態に戻す
       mutate({
         data: {
           units: previousUnits,
@@ -137,10 +183,13 @@ export default function UnitsPage() {
         <Input
           placeholder="検索..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => updateSearchParams(e.target.value)}
           className="max-w-sm"
         />
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => updateSearchParams(undefined, value)}
+        >
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="ステータス" />
           </SelectTrigger>
@@ -246,7 +295,9 @@ export default function UnitsPage() {
         <div className="flex justify-center gap-2 mt-6">
           <Button
             variant="outline"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() =>
+              updateSearchParams(undefined, undefined, Math.max(1, page - 1))
+            }
             disabled={page === 1}
           >
             前へ
@@ -256,7 +307,13 @@ export default function UnitsPage() {
           </span>
           <Button
             variant="outline"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() =>
+              updateSearchParams(
+                undefined,
+                undefined,
+                Math.min(totalPages, page + 1)
+              )
+            }
             disabled={page === totalPages}
           >
             次へ
