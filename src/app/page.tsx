@@ -7,8 +7,9 @@ import { redirect } from "next/navigation";
 
 export default async function Home() {
   const session = await getServerSession(authConfig);
+  console.log("getServerSessionの確認", session);
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect("/auth/login");
   }
   return (
     <div className="container mx-auto px-4 py-16">
