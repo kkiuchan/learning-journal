@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 
-export const runtime = "edge";
+// export const runtime = "edge";
 
 // OG画像のサイズ
 export const size = {
