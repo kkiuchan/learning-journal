@@ -32,7 +32,7 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // キャッシュの最適化
   experimental: {
-    // optimizePackageImports: ["@prisma/client"],
+    optimizePackageImports: ["@prisma/client"],
     serverActions: true,
   },
   outputFileTracingIncludes: {
