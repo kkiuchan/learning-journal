@@ -1,8 +1,15 @@
+import { authConfig } from "@/auth.config";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Search, User } from "lucide-react";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authConfig);
+  if (!session?.user) {
+    redirect("/auth/signin");
+  }
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="text-center mb-12">
@@ -25,7 +32,7 @@ export default function Home() {
           </div>
         </Link>
 
-        <Link href="/users/search" className="block">
+        <Link href="/users" className="block">
           <div className="border rounded-lg p-6 hover:border-primary transition-colors">
             <Search className="w-12 h-12 mb-4 mx-auto text-primary" />
             <h2 className="text-xl font-semibold mb-2 text-center">
@@ -37,7 +44,7 @@ export default function Home() {
           </div>
         </Link>
 
-        <Link href="/account" className="block">
+        <Link href={`/users/${session.user?.id}`} className="block">
           <div className="border rounded-lg p-6 hover:border-primary transition-colors">
             <User className="w-12 h-12 mb-4 mx-auto text-primary" />
             <h2 className="text-xl font-semibold mb-2 text-center">
@@ -52,7 +59,7 @@ export default function Home() {
 
       <div className="text-center mt-12">
         <Button asChild size="lg">
-          <Link href="/units">学習を始める</Link>
+          <Link href="/units/new">学習を始める</Link>
         </Button>
       </div>
     </div>

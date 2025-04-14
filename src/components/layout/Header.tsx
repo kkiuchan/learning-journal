@@ -49,7 +49,7 @@ export function Header() {
               <span>ユニット</span>
             </Link>
             <Link
-              href="/users/search"
+              href="/users"
               className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1"
             >
               <Search className="h-4 w-4" />
@@ -82,19 +82,25 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuItem asChild>
-                    <Link href="/account" className="flex items-center">
+                    <Link
+                      href={`/users/${session.user?.id}`}
+                      className="flex items-center"
+                    >
                       <User className="mr-2 h-4 w-4" />
                       <span>プロフィール</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/settings" className="flex items-center">
+                    <Link href="/account" className="flex items-center">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>設定</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/auth/signout" className="flex items-center">
+                    <Link
+                      href="/api/auth/signout"
+                      className="flex items-center"
+                    >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>ログアウト</span>
                     </Link>
