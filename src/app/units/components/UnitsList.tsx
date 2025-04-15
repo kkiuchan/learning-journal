@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Loading } from "@/components/ui/loading";
 import {
   Select,
   SelectContent,
@@ -172,6 +173,10 @@ export function UnitsList() {
     }
   };
 
+  if (isLoading) {
+    return <Loading text="ユニットを読み込み中..." className="min-h-[200px]" />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4">
@@ -201,9 +206,7 @@ export function UnitsList() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div>読み込み中...</div>
-      ) : units.length === 0 ? (
+      {units.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
             <p className="text-muted-foreground">

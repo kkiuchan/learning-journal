@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Loading } from "@/components/ui/loading";
 import { useUsers } from "@/hooks/useUsers";
 import { ApiUser as User } from "@/types";
 import Link from "next/link";
@@ -80,7 +81,7 @@ export function UserList() {
   };
 
   if (isLoading) {
-    return <div>読み込み中...</div>;
+    return <Loading text="ユーザーを読み込み中..." className="min-h-[200px]" />;
   }
 
   if (error) {

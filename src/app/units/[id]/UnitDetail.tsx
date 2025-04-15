@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Loading } from "@/components/ui/loading";
 import { Textarea } from "@/components/ui/textarea";
 import { useComments } from "@/hooks/useComments";
 import { useLogs } from "@/hooks/useLogs";
@@ -80,13 +81,27 @@ export default function UnitDetail({
 
   // ローディング中の表示
   if (status === "loading") {
-    return <div>読み込み中...</div>;
+    return <Loading text="認証情報を確認中..." />;
   }
 
   // 未認証の場合はリダイレクト
   if (status === "unauthenticated") {
     router.push("/auth/login");
     return null;
+  }
+
+  // ユニットのローディング中の表示
+  if (!unitData && !unitError) {
+    return <Loading text="ユニット情報を読み込み中..." />;
+  }
+
+  // エラーの表示
+  if (unitError) {
+    return (
+      <div className="rounded-lg bg-destructive/15 p-4 text-destructive">
+        ユニットの読み込みに失敗しました
+      </div>
+    );
   }
 
   const handleDelete = async () => {
@@ -265,14 +280,6 @@ export default function UnitDetail({
       setCommentPage((prev) => prev + 1);
     }
   };
-
-  if (unitError) {
-    return <div className="text-red-500">ユニットの取得に失敗しました</div>;
-  }
-
-  if (!unitData?.data) {
-    return <div>ユニットが見つかりません</div>;
-  }
 
   const unit = unitData.data;
 
