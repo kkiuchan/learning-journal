@@ -20,12 +20,16 @@ import { Heart, MessageCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export function UnitsList() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
+
+  // 検索入力の状態を管理
+  const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
+  const [isComposing, setIsComposing] = useState(false);
 
   // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
@@ -75,12 +79,16 @@ export function UnitsList() {
 
   // 検索入力のデバウンス処理
   useEffect(() => {
+    if (isComposing) return; // 日本語入力中は更新しない
+
     const timer = setTimeout(() => {
-      updateSearchParams(searchQuery);
+      if (searchInput !== searchQuery) {
+        updateSearchParams(searchInput);
+      }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, updateSearchParams]);
+  }, [searchInput, searchQuery, updateSearchParams, isComposing]);
 
   // ユニット削除処理
   const handleDelete = async (id: number) => {
@@ -173,18 +181,19 @@ export function UnitsList() {
     }
   };
 
-  if (isLoading) {
-    return <Loading text="ユニットを読み込み中..." className="min-h-[200px]" />;
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <Input
             placeholder="ユニットを検索..."
-            value={searchQuery}
-            onChange={(e) => updateSearchParams(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={(e) => {
+              setIsComposing(false);
+              setSearchInput((e.target as HTMLInputElement).value);
+            }}
             className="w-full"
           />
         </div>
@@ -206,7 +215,9 @@ export function UnitsList() {
         </div>
       </div>
 
-      {units.length === 0 ? (
+      {isLoading ? (
+        <Loading text="ユニットを読み込み中..." className="min-h-[200px]" />
+      ) : units.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
             <p className="text-muted-foreground">
@@ -235,6 +246,13 @@ export function UnitsList() {
                         : unit.status === "IN_PROGRESS"
                         ? "secondary"
                         : "outline"
+                    }
+                    className={
+                      unit.status === "COMPLETED"
+                        ? "bg-green-100 text-green-800 hover:bg-green-200"
+                        : unit.status === "IN_PROGRESS"
+                        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-100"
                     }
                   >
                     {translateUnitStatus(unit.status)}

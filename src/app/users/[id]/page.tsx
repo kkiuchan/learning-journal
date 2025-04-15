@@ -201,7 +201,11 @@ export default async function UserPage({ params }: Props) {
                 <h2 className="text-lg font-semibold mb-2">スキル</h2>
                 <div className="flex flex-wrap gap-2">
                   {user.skills.map((skill: Skill) => (
-                    <Badge key={skill.id} variant="secondary">
+                    <Badge
+                      key={skill.id}
+                      variant="secondary"
+                      className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                    >
                       {skill.name}
                     </Badge>
                   ))}
@@ -213,7 +217,11 @@ export default async function UserPage({ params }: Props) {
                 <h2 className="text-lg font-semibold mb-2">興味・関心</h2>
                 <div className="flex flex-wrap gap-2">
                   {user.interests.map((interest: Interest) => (
-                    <Badge key={interest.id} variant="outline">
+                    <Badge
+                      key={interest.id}
+                      variant="outline"
+                      className="bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                    >
                       {interest.name}
                     </Badge>
                   ))}

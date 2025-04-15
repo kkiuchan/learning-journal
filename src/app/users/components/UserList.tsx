@@ -136,7 +136,7 @@ export function UserList() {
                         <Badge
                           key={skill.id}
                           variant="secondary"
-                          className="bg-blue-100 text-blue-700 hover:bg-blue-200"
+                          className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
                         >
                           {skill.name}
                         </Badge>
@@ -154,7 +154,7 @@ export function UserList() {
                         <Badge
                           key={interest.id}
                           variant="outline"
-                          className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                          className="bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
                         >
                           {interest.name}
                         </Badge>
