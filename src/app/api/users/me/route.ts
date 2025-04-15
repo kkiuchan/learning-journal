@@ -1,3 +1,4 @@
+import { mutateUserList } from "@/app/users/components/UserList";
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
@@ -6,6 +7,7 @@ import { revalidateUserData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
+import { mutate } from "swr";
 import { z } from "zod";
 
 /**
@@ -284,81 +286,153 @@ export async function PUT(
       });
 
       // スキルの更新
+      // if (skills) {
+      //   // 既存のスキルを削除
+      //   await tx.userSkill.deleteMany({
+      //     where: { userId: updatedUser.id },
+      //   });
+
+      //   // 新しいスキルを追加（重複を防ぐため、小文字に変換）
+      //   const uniqueSkills = [...new Set(skills.map((s) => s.toLowerCase()))];
+      //   for (const skillName of uniqueSkills) {
+      //     try {
+      //       // タグが存在しない場合は作成
+      //       const tag = await tx.tag.upsert({
+      //         where: { name: skillName },
+      //         create: { name: skillName },
+      //         update: {},
+      //       });
+
+      //       // ユーザースキルを追加
+      //       await tx.userSkill.create({
+      //         data: {
+      //           userId: updatedUser.id,
+      //           tagId: tag.id,
+      //         },
+      //       });
+      //     } catch (error) {
+      //       console.error(
+      //         `スキル "${skillName}" の追加中にエラーが発生しました:`,
+      //         error
+      //       );
+      //       throw new Error(
+      //         `スキルの更新中にエラーが発生しました: ${skillName}`
+      //       );
+      //     }
+      //   }
+      // }
       if (skills) {
-        // 既存のスキルを削除
-        await tx.userSkill.deleteMany({
-          where: { userId: updatedUser.id },
-        });
-
-        // 新しいスキルを追加（重複を防ぐため、小文字に変換）
+        // 既存のスキルを一括削除
+        await tx.userSkill.deleteMany({ where: { userId: updatedUser.id } });
         const uniqueSkills = [...new Set(skills.map((s) => s.toLowerCase()))];
-        for (const skillName of uniqueSkills) {
-          try {
-            // タグが存在しない場合は作成
-            const tag = await tx.tag.upsert({
-              where: { name: skillName },
-              create: { name: skillName },
-              update: {},
-            });
 
-            // ユーザースキルを追加
-            await tx.userSkill.create({
-              data: {
-                userId: updatedUser.id,
-                tagId: tag.id,
-              },
-            });
-          } catch (error) {
-            console.error(
-              `スキル "${skillName}" の追加中にエラーが発生しました:`,
-              error
-            );
-            throw new Error(
-              `スキルの更新中にエラーが発生しました: ${skillName}`
-            );
-          }
-        }
+        // 各スキルのタグアップサートとユーザースキル作成を並列実行
+        await Promise.all(
+          uniqueSkills.map(async (skillName) => {
+            try {
+              // タグのアップサート
+              const tag = await tx.tag.upsert({
+                where: { name: skillName },
+                create: { name: skillName },
+                update: {},
+              });
+              // ユーザースキルの作成
+              await tx.userSkill.create({
+                data: {
+                  userId: updatedUser.id,
+                  tagId: tag.id,
+                },
+              });
+            } catch (error) {
+              console.error(
+                `スキル "${skillName}" の追加中にエラーが発生しました:`,
+                error
+              );
+              throw new Error(
+                `スキルの更新中にエラーが発生しました: ${skillName}`
+              );
+            }
+          })
+        );
       }
 
-      // 関心分野の更新
       if (interests) {
-        // 既存の関心分野を削除
-        await tx.userInterest.deleteMany({
-          where: { userId: updatedUser.id },
-        });
-
-        // 新しい関心分野を追加（重複を防ぐため、小文字に変換）
+        //既存の関心分野を一括削除
+        await tx.userInterest.deleteMany({ where: { userId: updatedUser.id } });
         const uniqueInterests = [
           ...new Set(interests.map((i) => i.toLowerCase())),
         ];
-        for (const interestName of uniqueInterests) {
-          try {
-            // タグが存在しない場合は作成
-            const tag = await tx.tag.upsert({
-              where: { name: interestName },
-              create: { name: interestName },
-              update: {},
-            });
 
-            // ユーザー関心分野を追加
-            await tx.userInterest.create({
-              data: {
-                userId: updatedUser.id,
-                tagId: tag.id,
-              },
-            });
-          } catch (error) {
-            console.error(
-              `関心分野 "${interestName}" の追加中にエラーが発生しました:`,
-              error
-            );
-            throw new Error(
-              `関心分野の更新中にエラーが発生しました: ${interestName}`
-            );
-          }
-        }
+        //各関心分野のタグアップサートとユーザー関心分野作成を並列実行
+        await Promise.all(
+          uniqueInterests.map(async (interestName) => {
+            try {
+              //タグのアップサート
+              const tag = await tx.tag.upsert({
+                where: { name: interestName },
+                create: { name: interestName },
+                update: {},
+              });
+
+              //ユーザー関心分野の作成
+              await tx.userInterest.create({
+                data: {
+                  userId: updatedUser.id,
+                  tagId: tag.id,
+                },
+              });
+            } catch (error) {
+              console.error(
+                `関心分野 "${interestName}" の追加中にエラーが発生しました:`,
+                error
+              );
+              throw new Error(
+                `関心分野の更新中にエラーが発生しました: ${interestName}`
+              );
+            }
+          })
+        );
       }
 
+      // 関心分野の更新
+      // if (interests) {
+      //   // 既存の関心分野を削除
+      //   await tx.userInterest.deleteMany({
+      //     where: { userId: updatedUser.id },
+      //   });
+
+      //   // 新しい関心分野を追加（重複を防ぐため、小文字に変換）
+      //   const uniqueInterests = [
+      //     ...new Set(interests.map((i) => i.toLowerCase())),
+      //   ];
+      //   for (const interestName of uniqueInterests) {
+      //     try {
+      //       // タグが存在しない場合は作成
+      //       const tag = await tx.tag.upsert({
+      //         where: { name: interestName },
+      //         create: { name: interestName },
+      //         update: {},
+      //       });
+
+      //       // ユーザー関心分野を追加
+      //       await tx.userInterest.create({
+      //         data: {
+      //           userId: updatedUser.id,
+      //           tagId: tag.id,
+      //         },
+      //       });
+      //     } catch (error) {
+      //       console.error(
+      //         `関心分野 "${interestName}" の追加中にエラーが発生しました:`,
+      //         error
+      //       );
+      //       throw new Error(
+      //         `関心分野の更新中にエラーが発生しました: ${interestName}`
+      //       );
+      //     }
+      //   }
+      // }
+      revalidateUserData(session.user.id);
       return updatedUser;
     });
 

@@ -20,7 +20,53 @@ const nextConfig = {
       },
     ],
     unoptimized: true,
+    minimumCacheTTL: 60,
+    deviceSizes: [640, 750, 828, 1080, 1200],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
+
+  // キャッシュヘッダーの設定
+  async headers() {
+    return [
+      {
+        source: "/favicon.ico",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/manifest.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=31536000",
+          },
+        ],
+      },
+    ];
+  },
+
   eslint: {
     // Warning during builds を無視
     ignoreDuringBuilds: true,
@@ -36,8 +82,8 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // キャッシュの最適化
   experimental: {
-    //これがないとビルドでエラーになる
-    optimizePackageImports: ["@prisma/client"],
+    optimizePackageImports: ["@prisma/client", "@/components"],
+    optimizeCss: true,
     serverActions: {
       allowedOrigins: ["localhost:3000", "learning-journal.vercel.app"],
     },

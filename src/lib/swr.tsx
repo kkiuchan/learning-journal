@@ -3,10 +3,11 @@ import { SWRConfig, SWRConfiguration } from "swr";
 
 // SWRのグローバル設定
 const swrConfig: SWRConfiguration = {
-  revalidateOnFocus: true, // フォーカス時の再検証を有効化
+  revalidateOnFocus: false, // フォーカス時の再検証を有効化
+  revalidateIfStale: false, // 古いデータを再検証しない
   revalidateOnReconnect: true, // 再接続時の再検証を有効化
   refreshInterval: 30000, // 30秒ごとに再検証
-  dedupingInterval: 2000,
+  dedupingInterval: 5000,
   errorRetryCount: 3, // エラー時の再試行回数を制限
   errorRetryInterval: 5000, // エラー時の再試行間隔を5秒に設定
   keepPreviousData: false, // データ更新中も古いデータを表示

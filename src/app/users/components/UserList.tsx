@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";
 import UserAvatar from "../[id]/components/UserAvatar";
+
 export function UserList() {
   const router = useRouter();
   const searchParams = useSearchParams();
