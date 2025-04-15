@@ -123,7 +123,12 @@ const nextConfig = {
       "prisma/**/*",
     ],
   },
-  transpilePackages: ["@prisma/client", "bcryptjs"],
+  transpilePackages: [
+    "@prisma/client",
+    "bcryptjs",
+    "@radix-ui/react-dialog",
+    "class-variance-authority",
+  ],
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [...config.externals, "@prisma/client", "prisma"];
