@@ -101,22 +101,24 @@ export function UserList() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {users.map((user: User) => (
           <Link key={user.id} href={`/users/${user.id}`}>
-            <Card className="p-4 hover:bg-accent/50">
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
+            <Card className="h-full flex flex-col hover:bg-accent/50 transition-colors">
+              <div className="p-4 space-y-3">
+                <div className="flex items-center gap-3">
                   <UserAvatar
                     imageUrl={isValidImageUrl(user.image) ? user.image : null}
                     userName={user.name}
                     size="sm"
                   />
                   <div>
-                    <h3 className="font-semibold">{user.name || "名前なし"}</h3>
+                    <h3 className="font-semibold text-lg">
+                      {user.name || "名前なし"}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      ユニット数: {user._count?.units || 0} | 学習ログ数:{" "}
+                      ユニット: {user._count?.units || 0} | ログ:{" "}
                       {user._count?.logs || 0}
                     </p>
                   </div>
@@ -127,7 +129,7 @@ export function UserList() {
                   </p>
                 )}
                 {user.skills && user.skills.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground">
                       スキル
                     </p>
@@ -136,7 +138,7 @@ export function UserList() {
                         <Badge
                           key={skill.id}
                           variant="secondary"
-                          className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                          className="text-xs bg-primary/10 hover:bg-primary/20"
                         >
                           {skill.name}
                         </Badge>
@@ -145,7 +147,7 @@ export function UserList() {
                   </div>
                 )}
                 {user.interests && user.interests.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground">
                       興味・関心
                     </p>
@@ -153,8 +155,8 @@ export function UserList() {
                       {user.interests.map((interest) => (
                         <Badge
                           key={interest.id}
-                          variant="outline"
-                          className="bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                          variant="secondary"
+                          className="text-xs bg-secondary/20 hover:bg-secondary/30"
                         >
                           {interest.name}
                         </Badge>
@@ -169,19 +171,21 @@ export function UserList() {
       </div>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="flex justify-center items-center gap-4 mt-6">
           <Button
             variant="outline"
+            size="sm"
             onClick={() => updateSearchParams(undefined, Math.max(1, page - 1))}
             disabled={page === 1}
           >
             前へ
           </Button>
-          <span className="py-2 px-4">
+          <div className="text-sm text-muted-foreground">
             {page} / {pagination.totalPages}
-          </span>
+          </div>
           <Button
             variant="outline"
+            size="sm"
             onClick={() =>
               updateSearchParams(
                 undefined,
