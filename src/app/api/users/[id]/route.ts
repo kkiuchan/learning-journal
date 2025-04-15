@@ -367,76 +367,76 @@ export async function GET(
       prisma.unit.count({ where }),
     ]);
 
-    // 総学習時間を計算する関数
-    const calculateTotalLearningTime = async (
-      unitId: number
-    ): Promise<number> => {
-      const result = await prisma.log.aggregate({
-        where: {
-          unitId,
-          learningTime: {
-            not: null,
+    // 総学習時間を一括で取得
+    const learningTimes = await prisma.log.groupBy({
+      by: ["unitId"],
+      where: {
+        unit: {
+          userId: id,
+          displayFlag: true,
+        },
+        learningTime: {
+          not: null,
+        },
+      },
+      _sum: {
+        learningTime: true,
+      },
+    });
+
+    const learningTimeMap = new Map(
+      learningTimes.map((lt) => [lt.unitId, lt._sum.learningTime || 0])
+    );
+
+    // ユニットデータの整形
+    const unitsWithTotalTime = units.map((unit) => ({
+      ...unit,
+      totalLearningTime: learningTimeMap.get(unit.id) || 0,
+      isLiked: unit.unitLikes && unit.unitLikes.length > 0,
+      tags: unit.unitTags,
+      logs: unit.logs.map((log) => ({
+        id: log.id,
+        title: log.title,
+        learningTime: log.learningTime,
+        note: log.note,
+        logDate: log.logDate,
+        tags: log.logTags,
+      })),
+    }));
+
+    // レスポンスヘッダーの設定
+    const response = NextResponse.json(
+      {
+        data: {
+          user: {
+            ...user,
+            skills: user.userSkills.map((skill) => skill.tag),
+            interests: user.userInterests.map((interest) => interest.tag),
+            _count: {
+              units: user._count.units,
+            },
+          },
+          units: {
+            data: unitsWithTotalTime,
+            pagination: {
+              total: totalUnits,
+              page,
+              perPage,
+              totalPages: Math.ceil(totalUnits / perPage),
+            },
           },
         },
-        _sum: {
-          learningTime: true,
+      } as { data: PublicUserResponse },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, stale-while-revalidate=600",
         },
-      });
-      return result._sum.learningTime || 0;
-    };
-
-    // 各Unitの総学習時間を取得
-    const unitsWithTotalTime = await Promise.all(
-      units.map(async (unit) => {
-        const totalLearningTime = await calculateTotalLearningTime(unit.id);
-        return {
-          ...unit,
-          totalLearningTime,
-          isLiked: unit.unitLikes && unit.unitLikes.length > 0,
-          tags: unit.unitTags,
-          logs: unit.logs.map((log) => ({
-            id: log.id,
-            title: log.title,
-            learningTime: log.learningTime,
-            note: log.note,
-            logDate: log.logDate,
-            tags: log.logTags,
-          })),
-        };
-      })
+      }
     );
 
-    // レスポンスの形式を整える
-    const response: PublicUserResponse = {
-      user: {
-        ...user,
-        skills: user.userSkills.map((skill) => skill.tag),
-        interests: user.userInterests.map((interest) => interest.tag),
-        _count: {
-          units: user._count.units,
-        },
-      },
-      units: {
-        data: unitsWithTotalTime,
-        pagination: {
-          total: totalUnits,
-          page,
-          perPage,
-          totalPages: Math.ceil(totalUnits / perPage),
-        },
-      },
-    };
-
-    // キャッシュヘッダーの設定
-    const responseObj = NextResponse.json({ data: response });
-    responseObj.headers.set(
-      "Cache-Control",
-      "public, s-maxage=60, stale-while-revalidate=300"
-    );
-
-    return responseObj;
+    return response;
   } catch (error) {
-    console.error("ユーザー情報の取得中にエラーが発生しました:", error);
+    console.error("ユーザー情報取得エラー:", error);
     return createErrorResponse(
       "ユーザー情報の取得中にエラーが発生しました",
       500
