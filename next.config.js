@@ -83,7 +83,7 @@ const nextConfig = {
   // キャッシュの最適化
   experimental: {
     optimizePackageImports: ["@prisma/client", "@/components"],
-    optimizeCss: true,
+    optimizeCss: false,
     serverActions: {
       allowedOrigins: ["localhost:3000", "learning-journal.vercel.app"],
     },
