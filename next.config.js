@@ -82,6 +82,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: "/api/users/search",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=10, stale-while-revalidate=59",
+          },
+        ],
+      },
     ];
   },
 

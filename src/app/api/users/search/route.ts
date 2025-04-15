@@ -177,56 +177,55 @@ export async function GET(
 
     // 検索クエリが"*"の場合は全ユーザーを返す
     if (!query || query === "*") {
-      const users = await prisma.user.findMany({
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          topImage: true,
-          selfIntroduction: true,
-          userSkills: {
-            select: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
+      const [users, total] = await Promise.all([
+        prisma.user.findMany({
+          skip: (page - 1) * limit,
+          take: limit,
+          orderBy: {
+            createdAt: "desc",
+          },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            _count: {
+              select: {
+                units: true,
+              },
+            },
+            userSkills: {
+              take: 5, // 最初の5つのスキルのみを取得
+              select: {
+                tag: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+            userInterests: {
+              take: 5, // 最初の5つの興味のみを取得
+              select: {
+                tag: {
+                  select: {
+                    id: true,
+                    name: true,
+                  },
                 },
               },
             },
           },
-          userInterests: {
-            select: {
-              tag: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-          _count: {
-            select: {
-              units: true,
-              logs: true,
-            },
-          },
-        },
-      });
+        }),
+        prisma.user.count(),
+      ]);
 
-      const total = await prisma.user.count();
       const totalPages = Math.ceil(total / limit);
 
       const formattedUsers = users.map((user) => ({
         id: user.id,
         name: user.name,
         image: user.image,
-        topImage: user.topImage,
-        selfIntroduction: user.selfIntroduction,
         skills: user.userSkills.map((skill) => ({
           id: String(skill.tag.id),
           name: skill.tag.name,
