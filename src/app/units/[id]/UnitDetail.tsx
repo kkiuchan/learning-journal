@@ -1,5 +1,6 @@
 "use client";
 
+import { AdviceButton } from "@/components/AdviceButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -722,6 +723,10 @@ export default function UnitDetail({
         {pagination && commentPage < pagination.totalPages && (
           <button onClick={handleLoadMoreComments}>もっと見る</button>
         )}
+      </div>
+
+      <div className="mt-6">
+        <AdviceButton unitId={id} />
       </div>
     </div>
   );
