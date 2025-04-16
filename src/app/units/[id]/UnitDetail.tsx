@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useComments } from "@/hooks/useComments";
 import { useLogs } from "@/hooks/useLogs";
 import { Unit } from "@/types";
+import { UnitStatus } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -27,6 +28,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useState } from "react";
+import { toast } from "sonner";
 import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
 import EditLogForm from "./components/EditLogForm";
@@ -55,7 +57,8 @@ export default function UnitDetail({
     data: unitData,
     error: unitError,
     mutate: mutateUnit,
-  } = useSWR<{ data: Unit }>(`/api/units/${id}`, undefined);
+    isLoading,
+  } = useSWR<{ data: Unit } | undefined>(`/api/units/${id}`, undefined);
 
   // SWRを使用してログを取得
   const { logs, isLoading: logsLoading, mutate: mutateLogs } = useLogs(id);
@@ -79,6 +82,7 @@ export default function UnitDetail({
   const [isCreatingLog, setIsCreatingLog] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
+  const [expandedComments, setExpandedComments] = useState<number[]>([]);
 
   // ローディング中の表示
   if (status === "loading") {
@@ -92,8 +96,8 @@ export default function UnitDetail({
   }
 
   // ユニットのローディング中の表示
-  if (!unitData && !unitError) {
-    return <Loading text="ユニット情報を読み込み中..." />;
+  if (isLoading || !unitData) {
+    return <Loading />;
   }
 
   // エラーの表示
@@ -282,6 +286,64 @@ export default function UnitDetail({
     }
   };
 
+  const handleAddAIComment = async (comment: string) => {
+    if (!session?.user) return;
+
+    try {
+      // 楽観的更新
+      const optimisticComment = {
+        id: Date.now(),
+        comment: comment,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: "ai-assistant",
+          name: "AIアシスタント",
+          image: "/images/ai-assistant.png",
+          topImage: null,
+          selfIntroduction: "学習をサポートするAIアシスタントです",
+          age: null,
+          ageVisible: false,
+          skills: [],
+          interests: [],
+          email: "",
+          hashedPassword: "",
+          primaryAuthMethod: "credentials",
+        },
+      };
+
+      await optimisticUpdate("create", optimisticComment);
+
+      const response = await fetch(`/api/units/${id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment: comment,
+          isAI: true,
+        }),
+      });
+
+      if (!response.ok) {
+        // エラーが発生した場合は再取得
+        mutateComments();
+        toast.error("コメントの追加に失敗しました");
+      }
+    } catch (error) {
+      console.error("エラーが発生しました:", error);
+      mutateComments();
+      toast.error("コメントの追加に失敗しました");
+    }
+  };
+
+  const toggleCommentExpansion = (commentId: number) => {
+    setExpandedComments((prev) =>
+      prev.includes(commentId)
+        ? prev.filter((id) => id !== commentId)
+        : [...prev, commentId]
+    );
+  };
+
   const unit = unitData.data;
 
   return (
@@ -289,28 +351,32 @@ export default function UnitDetail({
       <Card className="p-6">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-2">{unit.title}</h1>
+            <h1 className="text-2xl font-bold mb-2">{unitData?.data?.title}</h1>
             <Badge variant="outline" className="mb-4">
-              {translateUnitStatus(unit.status)}
+              {unitData?.data?.status
+                ? translateUnitStatus(unitData.data.status as UnitStatus)
+                : ""}
             </Badge>
           </div>
-          {session?.user?.id === unit.userId && (
-            <div className="flex gap-2">
-              <Link href={`/units/${id}/edit`}>
-                <Button variant="outline" size="icon">
-                  <Pencil className="h-4 w-4" />
+          <div className="flex gap-2 items-center">
+            {session?.user?.id === unitData?.data?.userId && (
+              <div className="flex gap-2">
+                <Link href={`/units/${id}/edit`}>
+                  <Button variant="outline" size="icon">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              </Link>
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -381,6 +447,7 @@ export default function UnitDetail({
               <MessageCircle />
               <span>{unit._count.comments}</span>
             </div>
+            <AdviceButton unitId={id} onAddComment={handleAddAIComment} />
           </div>
         </div>
       </Card>
@@ -652,7 +719,27 @@ export default function UnitDetail({
             {comments.map((comment) => (
               <Card key={comment.id} className="p-4">
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="w-full">
+                    <div className="flex items-center gap-2 mb-1">
+                      {comment.user.image && (
+                        <img
+                          src={comment.user.image}
+                          alt={comment.user.name || "ユーザー"}
+                          className="w-6 h-6 rounded-full"
+                        />
+                      )}
+                      <p className="font-medium">
+                        {comment.user.name || "匿名ユーザー"}
+                      </p>
+                      {comment.user.id === "ai-assistant" && (
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-50 text-blue-600 border-blue-200"
+                        >
+                          AIアシスタント
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-500">
                       {format(new Date(comment.createdAt), "yyyy/MM/dd HH:mm", {
                         locale: ja,
@@ -687,13 +774,32 @@ export default function UnitDetail({
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-2 whitespace-pre-wrap">
-                        {comment.comment}
-                      </p>
+                      <div className="mt-2">
+                        <div
+                          className={`whitespace-pre-wrap ${
+                            !expandedComments.includes(comment.id) &&
+                            comment.comment.length > 200
+                              ? "line-clamp-4"
+                              : ""
+                          }`}
+                        >
+                          {comment.comment}
+                        </div>
+                        {comment.comment.length > 200 && (
+                          <button
+                            onClick={() => toggleCommentExpansion(comment.id)}
+                            className="text-blue-500 text-sm mt-1 hover:underline"
+                          >
+                            {expandedComments.includes(comment.id)
+                              ? "折りたたむ"
+                              : "続きを読む"}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                   {session?.user?.id && session.user.id === comment.user.id && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 ml-4">
                       <Button
                         variant="outline"
                         size="sm"
@@ -723,10 +829,6 @@ export default function UnitDetail({
         {pagination && commentPage < pagination.totalPages && (
           <button onClick={handleLoadMoreComments}>もっと見る</button>
         )}
-      </div>
-
-      <div className="mt-6">
-        <AdviceButton unitId={id} />
       </div>
     </div>
   );

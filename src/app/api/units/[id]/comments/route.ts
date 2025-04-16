@@ -267,7 +267,7 @@ export async function POST(
 
     // リクエストボディの取得
     const body = await request.json();
-    const { comment: content } = body;
+    const { comment: content, isAI } = body;
 
     if (!content) {
       return NextResponse.json(
@@ -276,38 +276,92 @@ export async function POST(
       );
     }
 
-    // コメントの作成
-    const comment = await prisma.comment.create({
-      data: {
-        comment: content,
-        unitId: parseInt(id),
-        userId: session.user.id,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    // AIアシスタントのユーザーIDを使用する場合
+    if (isAI) {
+      // AIアシスタントのユーザーが存在するか確認
+      let aiUser = await prisma.user.findUnique({
+        where: { id: "ai-assistant" },
+      });
+
+      // AIアシスタントのユーザーが存在しない場合は作成
+      if (!aiUser) {
+        aiUser = await prisma.user.create({
+          data: {
+            id: "ai-assistant",
+            name: "AIアシスタント",
+            email: "ai-assistant@example.com",
+            image: "/images/ai-assistant.png",
+            primaryAuthMethod: "credentials",
+          },
+        });
+      }
+
+      // コメントの作成
+      const comment = await prisma.comment.create({
+        data: {
+          comment: content,
+          unitId: parseInt(id),
+          userId: "ai-assistant",
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // ユニットのコメント数を更新
-    await prisma.unit.update({
-      where: { id: parseInt(id) },
-      data: {
-        commentsCount: {
-          increment: 1,
+      // ユニットのコメント数を更新
+      await prisma.unit.update({
+        where: { id: parseInt(id) },
+        data: {
+          commentsCount: {
+            increment: 1,
+          },
         },
-      },
-    });
-    // キャッシュの再検証
-    revalidateUnitData(id);
-    revalidateCommentData(comment.id);
+      });
+      // キャッシュの再検証
+      revalidateUnitData(id);
+      revalidateCommentData(comment.id);
 
-    return NextResponse.json({ data: comment });
+      return NextResponse.json({ data: comment });
+    } else {
+      // 通常のユーザーからのコメント作成
+      const comment = await prisma.comment.create({
+        data: {
+          comment: content,
+          unitId: parseInt(id),
+          userId: session.user.id,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
+      });
+
+      // ユニットのコメント数を更新
+      await prisma.unit.update({
+        where: { id: parseInt(id) },
+        data: {
+          commentsCount: {
+            increment: 1,
+          },
+        },
+      });
+      // キャッシュの再検証
+      revalidateUnitData(id);
+      revalidateCommentData(comment.id);
+
+      return NextResponse.json({ data: comment });
+    }
   } catch (error) {
     console.error("コメントの作成中にエラーが発生しました:", error);
     return NextResponse.json(

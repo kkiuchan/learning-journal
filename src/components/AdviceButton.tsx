@@ -1,30 +1,40 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface AdviceButtonProps {
   unitId: string;
-  role?: "expert" | "mentor";
+  onAddComment?: (comment: string) => void;
 }
 
-export function AdviceButton({ unitId, role = "expert" }: AdviceButtonProps) {
+export function AdviceButton({ unitId, onAddComment }: AdviceButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [advice, setAdvice] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAddingComment, setIsAddingComment] = useState(false);
 
   const fetchAdvice = async () => {
-    setIsLoading(true);
-    setAdvice("");
-    setIsGenerating(true);
-
     try {
+      setIsLoading(true);
+      setAdvice("");
+      setIsOpen(true);
+
       const response = await fetch("/api/advice", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ unitId, role }),
+        body: JSON.stringify({ unitId }),
       });
 
       if (!response.ok) {
@@ -32,38 +42,30 @@ export function AdviceButton({ unitId, role = "expert" }: AdviceButtonProps) {
       }
 
       const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
       if (!reader) {
-        throw new Error("ストリームの読み取りに失敗しました");
+        throw new Error("レスポンスの読み取りに失敗しました");
       }
 
+      const decoder = new TextDecoder();
       let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
-
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
-
-        // 最後の行は完全でない可能性があるため、バッファに残す
         buffer = lines.pop() || "";
 
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             try {
-              const data = JSON.parse(line.substring(6));
-
+              const data = JSON.parse(line.slice(6));
               if (
                 data.event === "content" &&
-                data.data.choices?.[0]?.delta?.content
+                data.data.choices[0]?.delta?.content
               ) {
                 setAdvice((prev) => prev + data.data.choices[0].delta.content);
-              } else if (data.event === "done") {
-                // 完了イベントを受信したら生成中フラグをオフにする
-                setIsGenerating(false);
               }
             } catch (e) {
               console.error("Error parsing SSE data:", e);
@@ -71,52 +73,112 @@ export function AdviceButton({ unitId, role = "expert" }: AdviceButtonProps) {
           }
         }
       }
-
-      // バッファに残ったデータを処理
-      if (buffer && buffer.startsWith("data: ")) {
-        try {
-          const data = JSON.parse(buffer.substring(6));
-          if (
-            data.event === "content" &&
-            data.data.choices?.[0]?.delta?.content
-          ) {
-            setAdvice((prev) => prev + data.data.choices[0].delta.content);
-          }
-        } catch (e) {
-          console.error("Error parsing remaining SSE data:", e);
-        }
-      }
     } catch (error) {
       console.error("Error fetching advice:", error);
       toast.error("アドバイスの取得に失敗しました");
     } finally {
       setIsLoading(false);
-      setIsGenerating(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!advice) return;
+
+    try {
+      setIsAddingComment(true);
+
+      // コメントを追加する関数を呼び出す
+      if (onAddComment) {
+        onAddComment(advice);
+        toast.success("アドバイスをコメントとして追加しました");
+        setIsOpen(false);
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("コメントの追加に失敗しました");
+    } finally {
+      setIsAddingComment(false);
     }
   };
 
   return (
-    <div className="space-y-4">
-      <Button onClick={fetchAdvice} disabled={isLoading} className="w-full">
-        {isLoading ? "アドバイスを取得中..." : "アドバイスを取得"}
-      </Button>
-
-      {isGenerating && (
-        <div className="text-center text-sm text-muted-foreground">
-          アドバイスを生成中...
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="default"
+          size="default"
+          onClick={fetchAdvice}
+          disabled={isLoading}
+          className="relative bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              アドバイスを取得中...
+            </>
+          ) : (
+            <>
+              <Sparkles className="mr-2 h-5 w-5" />
+              AIアドバイスを取得
+            </>
+          )}
+          <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+            新機能
+          </span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[90vh] w-[90vw] max-w-[800px] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center">
+            <Sparkles className="mr-2 h-5 w-5 text-blue-500" />
+            学習アドバイス
+          </DialogTitle>
+          <DialogDescription>
+            このアドバイスは、あなたの学習状況に基づいて生成されています。
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4 space-y-4">
+          <div className="prose prose-sm max-w-none whitespace-pre-wrap">
+            {advice ? (
+              <div className="max-h-[60vh] overflow-y-auto rounded-md border p-4 bg-gray-50">
+                {advice.split("\n").map((line, index) => (
+                  <p key={index} className="mb-2">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500">アドバイスを生成中...</p>
+            )}
+          </div>
+          {isLoading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+            </div>
+          )}
         </div>
-      )}
-
-      {advice && (
-        <Card>
-          <CardHeader>
-            <CardTitle>学習アドバイス</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="whitespace-pre-wrap">{advice}</div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        {advice && !isLoading && (
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={handleAddComment}
+              disabled={isAddingComment}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isAddingComment ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  追加中...
+                </>
+              ) : (
+                <>
+                  <MessageSquarePlus className="mr-2 h-4 w-4" />
+                  コメントとして追加
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
