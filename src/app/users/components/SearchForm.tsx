@@ -38,19 +38,22 @@ export function SearchForm() {
   }, [searchInput, searchParams, isComposing]);
 
   return (
-    <div className="w-full max-w-2xl">
-      <Input
-        type="search"
-        placeholder="名前、自己紹介、スキル、興味・関心で検索"
-        className="w-full"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        onCompositionStart={() => setIsComposing(true)}
-        onCompositionEnd={(e) => {
-          setIsComposing(false);
-          setSearchInput((e.target as HTMLInputElement).value);
-        }}
-      />
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1">
+          <Input
+            placeholder="ユーザーを検索..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={(e) => {
+              setIsComposing(false);
+              setSearchInput((e.target as HTMLInputElement).value);
+            }}
+            className="w-full"
+          />
+        </div>
+      </div>
     </div>
   );
 }
