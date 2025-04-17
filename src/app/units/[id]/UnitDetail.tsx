@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useComments } from "@/hooks/useComments";
 import { useLogs } from "@/hooks/useLogs";
 import { Unit } from "@/types";
-import { UnitStatus } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -19,6 +18,7 @@ import {
   Heart,
   Link as LinkIcon,
   MessageCircle,
+  MoreVertical,
   Pencil,
   RefreshCw,
   Trash2,
@@ -27,7 +27,7 @@ import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
@@ -83,6 +83,25 @@ export default function UnitDetail({
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [expandedComments, setExpandedComments] = useState<number[]>([]);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+
+  // メニュー外をクリックしたときにメニューを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId !== null) {
+        const menuRef = menuRefs.current[openMenuId];
+        if (menuRef && !menuRef.contains(event.target as Node)) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
 
   // ローディング中の表示
   if (status === "loading") {
@@ -349,34 +368,65 @@ export default function UnitDetail({
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="p-6">
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className="text-2xl font-bold mb-2">{unitData?.data?.title}</h1>
-            <Badge variant="outline" className="mb-4">
-              {unitData?.data?.status
-                ? translateUnitStatus(unitData.data.status as UnitStatus)
-                : ""}
-            </Badge>
-          </div>
-          <div className="flex gap-2 items-center">
-            {session?.user?.id === unitData?.data?.userId && (
-              <div className="flex gap-2">
-                <Link href={`/units/${id}/edit`}>
-                  <Button variant="outline" size="icon">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl font-bold">{unit.title}</h1>
+              <Badge
+                variant={
+                  unit.status === "COMPLETED"
+                    ? "default"
+                    : unit.status === "IN_PROGRESS"
+                    ? "secondary"
+                    : "outline"
+                }
+                className={
+                  unit.status === "COMPLETED"
+                    ? "bg-green-100 text-green-800 hover:bg-green-200"
+                    : unit.status === "IN_PROGRESS"
+                    ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-100"
+                }
+              >
+                {translateUnitStatus(unit.status)}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                {unit.user.image && (
+                  <img
+                    src={unit.user.image}
+                    alt={unit.user.name || "ユーザー"}
+                    className="w-6 h-6 rounded-full"
+                  />
+                )}
+                <span>{unit.user.name || "ユーザー"}</span>
               </div>
-            )}
+              <span>•</span>
+              <span>
+                {format(new Date(unit.createdAt), "yyyy/MM/dd", {
+                  locale: ja,
+                })}
+              </span>
+            </div>
           </div>
+          {session?.user?.id === unit.userId && (
+            <div className="flex gap-2">
+              <Link href={`/units/${id}/edit`}>
+                <Button variant="outline" size="icon">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -736,7 +786,7 @@ export default function UnitDetail({
                           variant="outline"
                           className="bg-blue-50 text-blue-600 border-blue-200"
                         >
-                          AIアシスタント
+                          AIアドバイス
                         </Badge>
                       )}
                     </div>
@@ -798,27 +848,60 @@ export default function UnitDetail({
                       </div>
                     )}
                   </div>
-                  {session?.user?.id && session.user.id === comment.user.id && (
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setEditingCommentId(comment.id);
-                          setEditingCommentContent(comment.comment);
+                  {session?.user?.id &&
+                    (session.user.id === comment.user.id ||
+                      session.user.id === unit.userId) && (
+                      <div
+                        className="relative"
+                        ref={(el) => {
+                          menuRefs.current[comment.id] = el;
                         }}
                       >
-                        編集
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteComment(comment.id)}
-                      >
-                        削除
-                      </Button>
-                    </div>
-                  )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setOpenMenuId(
+                              openMenuId === comment.id ? null : comment.id
+                            )
+                          }
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                        <div
+                          className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                            openMenuId === comment.id
+                              ? "opacity-100 transform translate-y-0"
+                              : "opacity-0 transform -translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <div className="py-1">
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                              onClick={() => {
+                                setEditingCommentId(comment.id);
+                                setEditingCommentContent(comment.comment);
+                                setOpenMenuId(null);
+                              }}
+                            >
+                              <Pencil className="h-3 w-3" />
+                              編集
+                            </button>
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                              onClick={() => {
+                                handleDeleteComment(comment.id);
+                                setOpenMenuId(null);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </div>
               </Card>
             ))}
