@@ -501,7 +501,6 @@ export default function UnitDetail({
           </div>
         </div>
       </Card>
-
       {/* 学習ログ */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
@@ -808,6 +807,7 @@ export default function UnitDetail({
                           <Button
                             size="sm"
                             onClick={() => handleUpdateComment(comment.id)}
+                            disabled={!editingCommentContent.trim()}
                           >
                             更新
                           </Button>
@@ -848,6 +848,12 @@ export default function UnitDetail({
                       </div>
                     )}
                   </div>
+                  {/* コメントの編集・削除ボタン */}
+                  {/* 
+                    権限の条件:
+                    - コメント作成者: 編集と削除が可能
+                    - ユニット作成者: 削除のみ可能
+                  */}
                   {session?.user?.id &&
                     (session.user.id === comment.user.id ||
                       session.user.id === unit.userId) && (
@@ -877,17 +883,20 @@ export default function UnitDetail({
                           }`}
                         >
                           <div className="py-1">
-                            <button
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
-                              onClick={() => {
-                                setEditingCommentId(comment.id);
-                                setEditingCommentContent(comment.comment);
-                                setOpenMenuId(null);
-                              }}
-                            >
-                              <Pencil className="h-3 w-3" />
-                              編集
-                            </button>
+                            {/* コメント作成者のみ編集可能 */}
+                            {session.user.id === comment.user.id && (
+                              <button
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                onClick={() => {
+                                  setEditingCommentId(comment.id);
+                                  setEditingCommentContent(comment.comment);
+                                  setOpenMenuId(null);
+                                }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                                編集
+                              </button>
+                            )}
                             <button
                               className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
                               onClick={() => {
