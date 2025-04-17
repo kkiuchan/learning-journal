@@ -113,6 +113,11 @@ export type Unit = {
     unitLikes: number;
   };
   userId: string;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
 };
 
 // コメントの型
