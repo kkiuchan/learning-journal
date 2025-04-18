@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/lib/supabaseClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -129,8 +131,13 @@ export function ProfileForm() {
         body: JSON.stringify(values),
       });
 
-      if (!response.ok) throw new Error("プロフィールの更新に失敗しました");
+      const responseData = await response.json();
       toast.success("プロフィールを更新しました");
+
+      // 更新後のユーザーIDを使用してリダイレクト
+      if (responseData.data?.id) {
+        router.push(`/users/${responseData.data.id}`);
+      }
     } catch (error) {
       console.error("プロフィール更新エラー:", error);
       toast.error("プロフィールの更新に失敗しました");
@@ -189,7 +196,7 @@ export function ProfileForm() {
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex-1">
               <FormLabel>名前</FormLabel>
               <FormControl>
                 <Input
@@ -221,49 +228,65 @@ export function ProfileForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="age"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>年齢</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="年齢を入力"
-                  {...field}
-                  value={field.value || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    field.onChange(value ? parseInt(value) : null);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="ageVisible"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">年齢を公開</FormLabel>
+        <div className="flex items-start gap-4">
+          <FormField
+            control={form.control}
+            name="age"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>年齢</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="120"
+                    placeholder="年齢を入力"
+                    {...field}
+                    value={field.value || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = value ? parseInt(value) : null;
+                      if (
+                        numValue === null ||
+                        (numValue >= 0 && numValue <= 120)
+                      ) {
+                        field.onChange(numValue);
+                      }
+                    }}
+                  />
+                </FormControl>
                 <FormDescription>
-                  年齢をプロフィールに表示するかどうか
+                  0〜120歳の範囲で入力してください
                 </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="ageVisible"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <div className="flex pt-6 items-center justify-between space-y-0">
+                  <div>
+                    <FormLabel className="text-base">年齢を公開</FormLabel>
+                    <FormDescription>
+                      年齢をプロフィールに表示するかどうか
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                  </FormControl>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormField
           control={form.control}
