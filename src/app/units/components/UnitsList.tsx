@@ -16,11 +16,17 @@ import { useUnits } from "@/hooks/useUnits";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Heart, MessageCircle } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  MoreVertical,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function UnitsList() {
   const router = useRouter();
@@ -30,6 +36,10 @@ export function UnitsList() {
   // 検索入力の状態を管理
   const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
   const [isComposing, setIsComposing] = useState(false);
+
+  // メニューの表示状態を管理
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const menuRefs = useRef<Record<number, HTMLElement>>({});
 
   // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
@@ -239,24 +249,71 @@ export function UnitsList() {
                       {unit.title}
                     </Link>
                   </CardTitle>
-                  <Badge
-                    variant={
-                      unit.status === "COMPLETED"
-                        ? "default"
-                        : unit.status === "IN_PROGRESS"
-                        ? "secondary"
-                        : "outline"
-                    }
-                    className={
-                      unit.status === "COMPLETED"
-                        ? "bg-green-100 text-green-800 hover:bg-green-200"
-                        : unit.status === "IN_PROGRESS"
-                        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                        : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                    }
-                  >
-                    {translateUnitStatus(unit.status)}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={
+                        unit.status === "COMPLETED"
+                          ? "default"
+                          : unit.status === "IN_PROGRESS"
+                          ? "secondary"
+                          : "outline"
+                      }
+                      className={
+                        unit.status === "COMPLETED"
+                          ? "bg-green-100 text-green-800 hover:bg-green-200"
+                          : unit.status === "IN_PROGRESS"
+                          ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                          : "border-gray-200 text-gray-600 hover:bg-gray-100"
+                      }
+                    >
+                      {translateUnitStatus(unit.status)}
+                    </Badge>
+                    {session?.user?.id === unit.userId && (
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() =>
+                            setOpenMenuId(
+                              openMenuId === unit.id ? null : unit.id
+                            )
+                          }
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                        <div
+                          className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                            openMenuId === unit.id
+                              ? "opacity-100 transform translate-y-0"
+                              : "opacity-0 transform -translate-y-2 pointer-events-none"
+                          }`}
+                        >
+                          <div className="py-1">
+                            <Link href={`/units/${unit.id}/edit`}>
+                              <button
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                onClick={() => setOpenMenuId(null)}
+                              >
+                                <Pencil className="h-3 w-3" />
+                                編集
+                              </button>
+                            </Link>
+                            <button
+                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                              onClick={() => {
+                                handleDelete(unit.id);
+                                setOpenMenuId(null);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                              削除
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
@@ -319,23 +376,6 @@ export function UnitsList() {
                     </div>
                   </div>
                 </div>
-                {session?.user?.id === unit.userId && (
-                  <div className="flex gap-2 mt-4 pt-4 border-t">
-                    <Link href={`/units/${unit.id}/edit`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
-                        編集
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleDelete(unit.id)}
-                    >
-                      削除
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))}
