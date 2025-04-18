@@ -411,20 +411,59 @@ export default function UnitDetail({
             </div>
           </div>
           {session?.user?.id === unit.userId && (
-            <div className="flex gap-2">
-              <Link href={`/units/${id}/edit`}>
-                <Button variant="outline" size="icon">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </Link>
+            <div className="relative">
               <Button
-                variant="destructive"
+                variant="ghost"
                 size="icon"
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenMenuId(
+                    openMenuId === parseInt(id) ? null : parseInt(id)
+                  );
+                }}
               >
-                <Trash2 className="h-4 w-4" />
+                <MoreVertical className="h-4 w-4" />
               </Button>
+              <div
+                ref={(el) => {
+                  if (el) {
+                    menuRefs.current[parseInt(id)] = el;
+                  }
+                }}
+                className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                  openMenuId === parseInt(id)
+                    ? "opacity-100 transform translate-y-0"
+                    : "opacity-0 transform -translate-y-2 pointer-events-none"
+                }`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="py-1">
+                  <Link href={`/units/${id}/edit`}>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      編集
+                    </button>
+                  </Link>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete();
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    削除
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

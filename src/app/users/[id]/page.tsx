@@ -1,10 +1,9 @@
+import { UnitsList } from "@/app/units/components/UnitsList";
 import { authConfig } from "@/auth.config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UnitStatus } from "@/types/unit";
-import { translateUnitStatus } from "@/utils/i18n";
-import { Clock, Heart, MessageCircle } from "lucide-react";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
@@ -243,89 +242,9 @@ export default async function UserPage({ params }: Props) {
             </Link>
           )}
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.units.data.map((unit) => (
-            <Link href={`/units/${unit.id}`} key={unit.id}>
-              <Card className="p-4 hover:bg-accent transition-colors h-full">
-                <div className="flex flex-col h-full">
-                  <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                    {unit.title}
-                  </h3>
 
-                  {/* 学習状況 */}
-                  <div className="mb-2">
-                    <Badge variant="outline">
-                      {translateUnitStatus(unit.status)}
-                    </Badge>
-                  </div>
-
-                  {/* 学習期間 */}
-                  {(unit.startDate || unit.endDate) && (
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
-                      {unit.startDate &&
-                        `開始: ${new Date(
-                          unit.startDate
-                        ).toLocaleDateString()}`}
-                      {unit.startDate && unit.endDate && " 〜 "}
-                      {unit.endDate &&
-                        `終了: ${new Date(unit.endDate).toLocaleDateString()}`}
-                    </p>
-                  )}
-
-                  {/* タグ */}
-                  {unit.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {unit.tags.slice(0, 3).map(({ tag }) => (
-                        <Badge
-                          key={tag.id}
-                          variant="secondary"
-                          className="text-xs"
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
-                      {unit.tags.length > 3 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{unit.tags.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 統計情報 */}
-                  <div className="mt-auto pt-2 text-sm text-muted-foreground">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        <span>
-                          {Math.floor(unit.totalLearningTime / 60)}時間
-                          {unit.totalLearningTime % 60}分
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="h-4 w-4" />
-                        <span>{unit.likesCount}</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center mt-1">
-                      <span>ログ: {unit._count.logs}件</span>
-                      <div className="flex items-center gap-1">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>{unit._count.comments}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        {/* ページネーション情報 */}
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          全{data.units.pagination.total}件中 {data.units.pagination.page}
-          ページ目を表示 （1ページあたり{data.units.pagination.perPage}件）
-        </div>
+        {/* UnitsListコンポーネントを使用 */}
+        <UnitsList userId={id} />
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ interface UseUnitsOptions {
   page?: number;
   searchQuery?: string;
   statusFilter?: string;
+  userId?: string;
 }
 
 interface UnitsResponse {
@@ -18,13 +19,14 @@ interface UnitsResponse {
 }
 
 export function useUnits(options: UseUnitsOptions = {}) {
-  const { page = 1, searchQuery = "", statusFilter = "all" } = options;
+  const { page = 1, searchQuery = "", statusFilter = "all", userId } = options;
 
   const params = new URLSearchParams({
     page: page.toString(),
     limit: "10",
     ...(searchQuery && { query: searchQuery }),
     ...(statusFilter !== "all" && { status: statusFilter }),
+    ...(userId && { userId }),
   });
 
   const { data, error, isLoading, mutate } = useSWR<UnitsResponse>(
