@@ -644,74 +644,98 @@ export default function UnitDetail({
                         </p>
                       </div>
                       {session?.user?.id === String(log.userId) && (
-                        <div className="flex gap-2">
+                        <div className="relative">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="icon"
-                            onClick={() => setEditingLogId(log.id)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="bg-red-600 hover:bg-red-700"
-                            onClick={async () => {
-                              if (
-                                !confirm("このログを削除してもよろしいですか？")
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === log.id ? null : log.id
                               )
-                                return;
-
-                              try {
-                                const response = await fetch(
-                                  `/api/units/${id}/logs/${log.id}`,
-                                  {
-                                    method: "DELETE",
-                                    next: {
-                                      tags: [
-                                        `unit-${id}`,
-                                        "unit",
-                                        "unit-list",
-                                        "log",
-                                        "log-list",
-                                        `log-${log.id}`,
-                                      ],
-                                    },
-                                  }
-                                );
-
-                                if (response.ok) {
-                                  // キャッシュを強制的に更新するために空のデータを返す
-                                  await mutateLogs(
-                                    (current) => {
-                                      // 削除されたログを除外した新しいログ配列を作成
-                                      if (!current) return current;
-                                      return {
-                                        ...current,
-                                        data: current.data.filter(
-                                          (l) => l.id !== log.id
-                                        ),
-                                      };
-                                    },
-                                    {
-                                      revalidate: true, // サーバーからの再検証も実行
-                                      populateCache: true, // キャッシュを更新
-                                    }
-                                  );
-                                } else {
-                                  const data = await response.json();
-                                  console.error(
-                                    "ログの削除に失敗しました:",
-                                    data.error
-                                  );
-                                }
-                              } catch (error) {
-                                console.error("エラーが発生しました:", error);
-                              }
-                            }}
+                            }
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
+
+                          {openMenuId === log.id && (
+                            <div className="absolute right-0 mt-2 min-w-[120px] rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                              <div className="py-1">
+                                <button
+                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                  onClick={() => {
+                                    setEditingLogId(log.id);
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  編集
+                                </button>
+                                <button
+                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                                  onClick={async () => {
+                                    if (
+                                      !confirm(
+                                        "このログを削除してもよろしいですか？"
+                                      )
+                                    )
+                                      return;
+
+                                    try {
+                                      const response = await fetch(
+                                        `/api/units/${id}/logs/${log.id}`,
+                                        {
+                                          method: "DELETE",
+                                          next: {
+                                            tags: [
+                                              `unit-${id}`,
+                                              "unit",
+                                              "unit-list",
+                                              "log",
+                                              "log-list",
+                                              `log-${log.id}`,
+                                            ],
+                                          },
+                                        }
+                                      );
+
+                                      if (response.ok) {
+                                        await mutateLogs(
+                                          (current) => {
+                                            if (!current) return current;
+                                            return {
+                                              ...current,
+                                              data: current.data.filter(
+                                                (l) => l.id !== log.id
+                                              ),
+                                            };
+                                          },
+                                          {
+                                            revalidate: true,
+                                            populateCache: true,
+                                          }
+                                        );
+                                        setOpenMenuId(null);
+                                      } else {
+                                        const data = await response.json();
+                                        console.error(
+                                          "ログの削除に失敗しました:",
+                                          data.error
+                                        );
+                                      }
+                                    } catch (error) {
+                                      console.error(
+                                        "エラーが発生しました:",
+                                        error
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  削除
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
