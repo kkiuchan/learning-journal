@@ -63,6 +63,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unit not found" }, { status: 404 });
     }
 
+    // ユニットの所有者とセッションユーザーが一致するか確認
+    if (unit.userId !== session.user.id) {
+      return NextResponse.json(
+        { error: "You can only get advice for your own units" },
+        { status: 403 }
+      );
+    }
+
     // プロンプトの生成
     const prompt = createPrompt(unit, role);
 

@@ -209,13 +209,20 @@
   }
 }
 
-
-
-@layer base {
-  * {
-    @apply border-border;
+@layer components {
+  .input {
+    @apply bg-background text-foreground;
   }
-  body {
+
+  input {
+    @apply bg-background text-foreground;
+  }
+
+  textarea {
+    @apply bg-background text-foreground;
+  }
+
+  select {
     @apply bg-background text-foreground;
   }
 }

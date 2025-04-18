@@ -104,22 +104,15 @@ export const authConfig: NextAuthOptions = {
     Github({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-      authorization: {
-        params: {
-          scope: "read:user user:email",
-        },
-      },
       profile(profile) {
-        console.log("GitHub Profile - 生データ:", profile);
-        const userProfile = {
+        console.log("GitHub Profile:", profile);
+        return {
           id: profile.id.toString(),
           name: profile.name || profile.login,
-          email: profile.email || `${profile.login}@github.com`,
+          email: profile.email,
           image: profile.avatar_url,
           primaryAuthMethod: "github",
         };
-        console.log("GitHub Profile - 変換後:", userProfile);
-        return userProfile;
       },
     }),
     Discord({

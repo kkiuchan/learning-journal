@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Loading } from "@/components/ui/loading";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   BookOpen,
@@ -21,11 +22,30 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function Header() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingLink, setLoadingLink] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // パスが変更されたらローディング状態をリセット
+  useEffect(() => {
+    setIsLoading(false);
+    setLoadingLink(null);
+  }, [pathname]);
+
+  const handleLinkClick = (href: string) => {
+    // 現在のパスと同じ場合は何もしない
+    if (href === pathname) return;
+
+    setIsLoading(true);
+    setLoadingLink(href);
+  };
 
   const navigationItems = [
     {
@@ -46,105 +66,136 @@ export function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center space-x-2">
-            <BookOpen className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">
-              Learning Journal
-            </span>
-          </Link>
-          <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1"
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.label}</span>
-              </Link>
-            ))}
-          </nav>
+    <>
+      {isLoading && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100]">
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <Loading text="読み込み中..." />
+            <p className="mt-2 text-sm text-gray-600">
+              ページに移動しています...
+            </p>
+          </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[240px] sm:w-[280px]">
-              <nav className="flex flex-col gap-4">
-                {navigationItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
-
-          {session ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
+      )}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center space-x-2"
+              onClick={() => handleLinkClick("/")}
+            >
+              <BookOpen className="h-6 w-6" />
+              <span className="hidden font-bold sm:inline-block">
+                Learning Journal
+              </span>
+            </Link>
+            <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1"
+                  onClick={() => handleLinkClick(item.href)}
                 >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src={session.user?.image || ""}
-                      alt={session.user?.name || ""}
-                    />
-                    <AvatarFallback>
-                      {session.user?.name?.[0] || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuItem asChild>
-                  <Link
-                    href={`/users/${session.user?.id}`}
-                    className="flex items-center"
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[240px] sm:w-[280px]">
+                <nav className="flex flex-col gap-4">
+                  {navigationItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleLinkClick(item.href);
+                      }}
+                      className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+
+            {session ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    <span>プロフィール</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/account" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>設定</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/api/auth/signout" className="flex items-center">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>ログアウト</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button asChild variant="ghost">
-              <Link href="/auth/login" className="flex items-center gap-2">
-                <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">ログイン</span>
-              </Link>
-            </Button>
-          )}
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={session.user?.image || ""}
+                        alt={session.user?.name || ""}
+                      />
+                      <AvatarFallback>
+                        {session.user?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/users/${session.user?.id}`}
+                      onClick={() =>
+                        handleLinkClick(`/users/${session.user?.id}`)
+                      }
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      <span>プロフィール</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/account"
+                      onClick={() => handleLinkClick("/settings")}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>設定</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/api/auth/signout"
+                      onClick={() => handleLinkClick("/api/auth/logout")}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>ログアウト</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild variant="ghost" size="sm">
+                <Link
+                  href="/api/auth/login"
+                  onClick={() => handleLinkClick("/auth/login")}
+                >
+                  <LogIn className="mr-2 h-4 w-4" />
+                  <span>ログイン</span>
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }

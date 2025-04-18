@@ -9,21 +9,36 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface AdviceButtonProps {
   unitId: string;
   onAddComment?: (comment: string) => void;
+  userId?: string;
 }
 
-export function AdviceButton({ unitId, onAddComment }: AdviceButtonProps) {
+export function AdviceButton({
+  unitId,
+  onAddComment,
+  userId,
+}: AdviceButtonProps) {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [advice, setAdvice] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
 
+  // ユニットの所有者とセッションユーザーが一致するか確認
+  const isOwner = session?.user?.id === userId;
+
   const fetchAdvice = async () => {
+    if (!isOwner) {
+      toast.error("自分のユニットでのみAIアドバイスを取得できます");
+      return;
+    }
+
     try {
       setIsLoading(true);
       setAdvice("");
@@ -38,7 +53,8 @@ export function AdviceButton({ unitId, onAddComment }: AdviceButtonProps) {
       });
 
       if (!response.ok) {
-        throw new Error("アドバイスの取得に失敗しました");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "アドバイスの取得に失敗しました");
       }
 
       const reader = response.body?.getReader();
@@ -75,7 +91,11 @@ export function AdviceButton({ unitId, onAddComment }: AdviceButtonProps) {
       }
     } catch (error) {
       console.error("Error fetching advice:", error);
-      toast.error("アドバイスの取得に失敗しました");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "アドバイスの取得に失敗しました"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -108,8 +128,12 @@ export function AdviceButton({ unitId, onAddComment }: AdviceButtonProps) {
           variant="default"
           size="default"
           onClick={fetchAdvice}
-          disabled={isLoading}
-          className="relative bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+          disabled={isLoading || !isOwner}
+          className={`relative ${
+            isOwner
+              ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          } transition-all duration-300`}
         >
           {isLoading ? (
             <>

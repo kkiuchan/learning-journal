@@ -536,7 +536,13 @@ export default function UnitDetail({
               <MessageCircle />
               <span>{unit._count.comments}</span>
             </div>
-            <AdviceButton unitId={id} onAddComment={handleAddAIComment} />
+            {session?.user?.id === unit.userId && (
+              <AdviceButton
+                unitId={id}
+                onAddComment={handleAddAIComment}
+                userId={unit.userId}
+              />
+            )}
           </div>
         </div>
       </Card>
