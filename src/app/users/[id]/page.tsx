@@ -191,9 +191,12 @@ export default async function UserPage({ params }: Props) {
               </p>
             )}
             {user.ageVisible && user.age && (
-              <p className="text-sm text-muted-foreground mb-4">
-                年齢: {user.age}歳
-              </p>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm font-medium text-muted-foreground">
+                  年齢:
+                </span>
+                <span className="text-sm">{user.age}歳</span>
+              </div>
             )}
             {user.skills?.length > 0 && (
               <div className="mb-4">
