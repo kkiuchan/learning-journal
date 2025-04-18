@@ -28,7 +28,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function UnitsList() {
+interface UnitsListProps {
+  userId?: string;
+}
+
+export function UnitsList({ userId }: UnitsListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -39,7 +43,7 @@ export function UnitsList() {
 
   // メニューの表示状態を管理
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-  const menuRefs = useRef<Record<number, HTMLElement>>({});
+  const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
@@ -51,7 +55,24 @@ export function UnitsList() {
     page,
     searchQuery,
     statusFilter,
+    userId,
   });
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (openMenuId !== null) {
+        const menuRef = menuRefs.current[openMenuId];
+        if (menuRef && !menuRef.contains(event.target as Node)) {
+          setOpenMenuId(null);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
 
   // 検索条件を更新する関数
   const updateSearchParams = useCallback(
@@ -191,6 +212,15 @@ export function UnitsList() {
     }
   };
 
+  const handleMenuClick = (unitId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setOpenMenuId(openMenuId === unitId ? null : unitId);
+  };
+
+  const handleActionClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4">
@@ -274,26 +304,31 @@ export function UnitsList() {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() =>
-                            setOpenMenuId(
-                              openMenuId === unit.id ? null : unit.id
-                            )
-                          }
+                          onClick={(e) => handleMenuClick(unit.id, e)}
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                         <div
+                          ref={(el) => {
+                            if (el) {
+                              menuRefs.current[unit.id] = el;
+                            }
+                          }}
                           className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
                             openMenuId === unit.id
                               ? "opacity-100 transform translate-y-0"
                               : "opacity-0 transform -translate-y-2 pointer-events-none"
                           }`}
+                          onClick={handleActionClick}
                         >
                           <div className="py-1">
                             <Link href={`/units/${unit.id}/edit`}>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
-                                onClick={() => setOpenMenuId(null)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMenuClick(unit.id, e);
+                                }}
                               >
                                 <Pencil className="h-3 w-3" />
                                 編集
@@ -301,9 +336,10 @@ export function UnitsList() {
                             </Link>
                             <button
                               className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleDelete(unit.id);
-                                setOpenMenuId(null);
+                                handleMenuClick(unit.id, e);
                               }}
                             >
                               <Trash2 className="h-3 w-3" />
