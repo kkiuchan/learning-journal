@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorMessage } from "@/components/ui/error-message";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,11 +10,13 @@ export function RegisterForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    setAvailableProviders([]);
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -53,7 +56,7 @@ export function RegisterForm() {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-foreground"
         >
           お名前
         </label>
@@ -64,7 +67,7 @@ export function RegisterForm() {
             type="text"
             autoComplete="name"
             required
-            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>
       </div>
@@ -72,7 +75,7 @@ export function RegisterForm() {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-foreground"
         >
           メールアドレス
         </label>
@@ -83,7 +86,7 @@ export function RegisterForm() {
             type="email"
             autoComplete="email"
             required
-            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>
       </div>
@@ -91,7 +94,7 @@ export function RegisterForm() {
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-foreground"
         >
           パスワード
         </label>
@@ -103,9 +106,9 @@ export function RegisterForm() {
             autoComplete="new-password"
             required
             minLength={8}
-            className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             8文字以上のパスワードを設定してください
           </p>
         </div>
@@ -115,7 +118,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring disabled:opacity-50"
         >
           {isLoading ? "登録中..." : "登録"}
         </button>
@@ -124,10 +127,57 @@ export function RegisterForm() {
       <div className="text-sm text-center">
         <Link
           href="/auth/login"
-          className="font-medium text-indigo-600 hover:text-indigo-500"
+          className="font-medium text-primary hover:text-primary/90"
         >
           すでにアカウントをお持ちの方はこちら
         </Link>
+      </div>
+
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-card text-muted-foreground">または</span>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-2">
+          <button
+            type="button"
+            onClick={() => signIn("google", { callbackUrl: "/account" })}
+            className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
+              availableProviders.includes("google")
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input bg-background text-foreground hover:bg-accent"
+            } focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
+          >
+            Googleでアカウント作成
+          </button>
+          <button
+            type="button"
+            onClick={() => signIn("github", { callbackUrl: "/account" })}
+            className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
+              availableProviders.includes("github")
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input bg-background text-foreground hover:bg-accent"
+            } focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
+          >
+            GitHubでアカウント作成
+          </button>
+          <button
+            type="button"
+            onClick={() => signIn("discord", { callbackUrl: "/account" })}
+            className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
+              availableProviders.includes("discord")
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-input bg-background text-foreground hover:bg-accent"
+            } focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2`}
+          >
+            Discordでアカウント作成
+          </button>
+        </div>
       </div>
     </form>
   );
