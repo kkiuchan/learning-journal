@@ -1,14 +1,14 @@
 "use client";
 
-import { Suspense } from "react";
-import { UnitsList } from "./components/UnitsList";
+import { authConfig } from "@/auth.config";
 import { Loading } from "@/components/ui/loading";
 import { getServerSession } from "next-auth";
-import { authConfig } from "@/auth.config";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { UnitsList } from "./components/UnitsList";
 
 export default async function UnitsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authConfig);
 
   if (!session) {
     redirect("/auth/login");
