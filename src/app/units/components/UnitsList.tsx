@@ -247,7 +247,7 @@ export function UnitsList({ userId }: UnitsListProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">すべて</SelectItem>
-              <SelectItem value="NOT_STARTED">未着手</SelectItem>
+              <SelectItem value="PLANNED">計画中</SelectItem>
               <SelectItem value="IN_PROGRESS">進行中</SelectItem>
               <SelectItem value="COMPLETED">完了</SelectItem>
             </SelectContent>

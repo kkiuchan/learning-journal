@@ -1,5 +1,6 @@
 "use client";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Loading } from "@/components/ui/loading";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   BookOpen,
   Home,
@@ -79,17 +86,21 @@ export function Header() {
       )}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center">
             <Link
               href="/"
-              className="flex items-center space-x-2"
+              className="flex items-center"
               onClick={() => handleLinkClick("/")}
             >
-              <BookOpen className="h-6 w-6" />
-              <span className="hidden font-bold sm:inline-block">
-                Learning Journal
-              </span>
+              <img
+                src="/logo.png"
+                alt="Learning Journal"
+                className="h-30 w-auto md:h-40"
+              />
             </Link>
+          </div>
+
+          <div className="flex items-center gap-6">
             <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
               {navigationItems.map((item) => (
                 <Link
@@ -103,17 +114,20 @@ export function Header() {
                 </Link>
               ))}
             </nav>
-          </div>
 
-          <div className="flex items-center gap-4">
+            <ThemeToggle />
+
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[240px] sm:w-[280px]">
-                <nav className="flex flex-col gap-4">
+              <SheetContent side="right" className="w-[240px] sm:w-[280px]">
+                <SheetHeader>
+                  <SheetTitle>メニュー</SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-4 mt-4">
                   {navigationItems.map((item) => (
                     <Link
                       key={item.href}

@@ -1,6 +1,8 @@
 import { Header } from "@/components/layout/Header";
 import { Providers } from "@/components/providers";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { validateEnv } from "@/lib/env";
+import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
@@ -9,6 +11,7 @@ import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
   preload: true,
 });
@@ -90,13 +93,7 @@ export const metadata: Metadata = {
     site: "@learning_journal",
   },
   icons: {
-    icon: [
-      { url: "/favicon.png" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-192x192.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    icon: [{ url: "/favicon.ico" }],
     other: [
       {
         rel: "manifest",
@@ -120,25 +117,22 @@ export function headers() {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
         <script src="/sw-register.js" defer />
-        <link rel="icon" href="/favicon-32x32.png" />
-        <link rel="icon" href="/favicon-16x16.png" sizes="16x16" />
-        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
-      <body
-        className={`${inter.className} min-h-screen bg-background font-sans antialiased`}
-      >
+      <body className={`${inter.variable} ${notoSansJP.variable} font-sans`}>
         <Providers>
-          <Header />
-          <main className="min-h-screen">{children}</main>
-          <Toaster />
+          <ThemeProvider>
+            <Header />
+            <main className="min-h-screen">{children}</main>
+            <Toaster />
+          </ThemeProvider>
         </Providers>
       </body>
     </html>

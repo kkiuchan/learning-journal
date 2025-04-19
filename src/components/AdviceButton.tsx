@@ -239,7 +239,10 @@ export function AdviceButton({
             >
               キャンセル
             </Button>
-            <Button onClick={handleTrialConfirm}>
+            <Button
+              onClick={handleTrialConfirm}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+            >
               <Sparkles className="mr-2 h-4 w-4" />
               今すぐ試す
             </Button>

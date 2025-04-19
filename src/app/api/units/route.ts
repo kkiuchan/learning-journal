@@ -28,7 +28,7 @@ export const revalidate = 60;
  *         name: status
  *         schema:
  *           type: string
- *           enum: [計画中, 進行中, 完了]
+ *           enum: [PLANNED, IN_PROGRESS, COMPLETED]
  *         description: ステータスでフィルタリング
  *       - in: query
  *         name: userId
@@ -103,9 +103,9 @@ export const GET = withApiSecurity(
       const { searchParams } = new URL(req.url);
       const query = searchParams.get("query") || "";
       const status = searchParams.get("status") as
-        | "計画中"
-        | "進行中"
-        | "完了"
+        | "PLANNED"
+        | "IN_PROGRESS"
+        | "COMPLETED"
         | null;
       const userId = searchParams.get("userId");
       const tags = searchParams.get("tags")?.split(",") || [];
@@ -280,8 +280,8 @@ export const GET = withApiSecurity(
  *                 description: 事前学習状態
  *               status:
  *                 type: string
- *                 enum: [計画中, 進行中, 完了]
- *                 default: 計画中
+ *                 enum: [PLANNED, IN_PROGRESS, COMPLETED]
+ *                 default: PLANNED
  *                 description: ステータス
  *               tags:
  *                 type: array
