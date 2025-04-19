@@ -1,5 +1,3 @@
-"use client";
-
 import { authConfig } from "@/auth.config";
 import { Loading } from "@/components/ui/loading";
 import { getServerSession } from "next-auth";
