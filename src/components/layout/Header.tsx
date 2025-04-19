@@ -219,7 +219,7 @@ export function Header() {
             ) : (
               <Button asChild variant="ghost" size="sm">
                 <Link
-                  href="/api/auth/login"
+                  href="/auth/login"
                   onClick={() => handleLinkClick("/auth/login")}
                 >
                   <LogIn className="mr-2 h-4 w-4" />

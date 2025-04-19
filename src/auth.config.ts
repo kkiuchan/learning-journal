@@ -38,22 +38,9 @@ export const authConfig: NextAuthOptions = {
           },
         });
 
-        // 新規ユーザーの場合
+        // ユーザーが存在しない場合はnullを返す
         if (!user) {
-          // パスワードをハッシュ化
-          const hashedPassword = await bcryptjs.hash(credentials.password, 12);
-
-          // 新規ユーザーを作成
-          const newUser = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              name: credentials.email.split("@")[0], // メールアドレスの@より前の部分を名前として使用
-              hashedPassword,
-              primaryAuthMethod: "email",
-            },
-          });
-
-          return newUser;
+          return null;
         }
 
         // パスワード認証ユーザーの場合

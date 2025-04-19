@@ -11,9 +11,9 @@ import { HomeContent } from "./components/HomeContent";
 export default async function Home() {
   const session = await getServerSession(authConfig);
 
-  if (!session?.user) {
-    redirect("/auth/login");
-  }
+  // if (!session?.user) {
+  //   redirect("/auth/login");
+  // }
 
   return (
     <Suspense fallback={<Loading text="読み込み中..." />}>

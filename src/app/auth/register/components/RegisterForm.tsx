@@ -146,7 +146,7 @@ export function RegisterForm() {
         <div className="mt-6 space-y-2">
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/account" })}
+            onClick={() => signIn("google", { callbackUrl: "/" })}
             className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
               availableProviders.includes("google")
                 ? "border-primary bg-primary/10 text-primary"
@@ -157,7 +157,7 @@ export function RegisterForm() {
           </button>
           <button
             type="button"
-            onClick={() => signIn("github", { callbackUrl: "/account" })}
+            onClick={() => signIn("github", { callbackUrl: "/" })}
             className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
               availableProviders.includes("github")
                 ? "border-primary bg-primary/10 text-primary"
@@ -168,7 +168,7 @@ export function RegisterForm() {
           </button>
           <button
             type="button"
-            onClick={() => signIn("discord", { callbackUrl: "/account" })}
+            onClick={() => signIn("discord", { callbackUrl: "/" })}
             className={`w-full flex justify-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
               availableProviders.includes("discord")
                 ? "border-primary bg-primary/10 text-primary"

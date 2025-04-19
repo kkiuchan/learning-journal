@@ -353,9 +353,7 @@ export default function AccountPage() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        onClick={() =>
-                          signIn("google", { callbackUrl: "/account" })
-                        }
+                        onClick={() => signIn("google", { callbackUrl: "/" })}
                       >
                         Googleアカウントを連携
                       </Button>
@@ -367,9 +365,7 @@ export default function AccountPage() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        onClick={() =>
-                          signIn("github", { callbackUrl: "/account" })
-                        }
+                        onClick={() => signIn("github", { callbackUrl: "/" })}
                       >
                         GitHubアカウントを連携
                       </Button>
@@ -381,9 +377,7 @@ export default function AccountPage() {
                         type="button"
                         variant="outline"
                         className="w-full"
-                        onClick={() =>
-                          signIn("discord", { callbackUrl: "/account" })
-                        }
+                        onClick={() => signIn("discord", { callbackUrl: "/" })}
                       >
                         Discordアカウントを連携
                       </Button>
