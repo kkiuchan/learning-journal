@@ -10,6 +10,9 @@ export default function AccountPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+  const [hasGoogle, setHasGoogle] = useState(false);
+  const [hasGithub, setHasGithub] = useState(false);
+  const [hasDiscord, setHasDiscord] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -42,10 +45,12 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h1 className="text-2xl font-bold mb-6">アカウント情報</h1>
+        <div className="bg-card shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold mb-6 text-foreground">
+            アカウント情報
+          </h1>
 
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
@@ -59,27 +64,31 @@ export default function AccountPage() {
                 />
               )}
               <div>
-                <h2 className="text-xl font-semibold">{session?.user?.name}</h2>
-                <p className="text-gray-600">{session?.user?.email}</p>
+                <h2 className="text-xl font-semibold text-foreground">
+                  {session?.user?.name}
+                </h2>
+                <p className="text-muted-foreground">{session?.user?.email}</p>
               </div>
             </div>
 
             <div className="border-t pt-4">
-              <h3 className="text-lg font-medium mb-2">アカウント詳細</h3>
+              <h3 className="text-lg font-medium mb-2 text-foreground">
+                アカウント詳細
+              </h3>
               <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">
+                  <dt className="text-sm font-medium text-muted-foreground">
                     ユーザーID
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  <dd className="mt-1 text-sm text-foreground">
                     {session?.user?.id}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-sm font-medium text-gray-500">
+                  <dt className="text-sm font-medium text-muted-foreground">
                     サブスクリプション状態
                   </dt>
-                  <dd className="mt-1 text-sm text-gray-900">
+                  <dd className="mt-1 text-sm text-foreground">
                     {session?.user?.subscriptionStatus || "未設定"}
                   </dd>
                 </div>
@@ -89,31 +98,29 @@ export default function AccountPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="bg-card shadow rounded-lg p-6">
+            <h2 className="text-lg font-medium text-foreground mb-4">
               認証方法の設定
             </h2>
             <div className="space-y-4">
-              {/* アカウント連携セクション */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-2">
+                <h3 className="text-sm font-medium text-foreground mb-2">
                   アカウント連携
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   外部認証アカウントとメール/パスワード認証を連携できます。連携後は両方の認証方法でログインできるようになります。
                 </p>
 
-                {/* 現在の認証方法の表示 */}
                 <div className="mb-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  <h4 className="text-sm font-medium text-foreground mb-2">
                     現在の認証方法
                   </h4>
                   <div className="space-y-2">
                     {session?.user?.primaryAuthMethod === "email" && (
-                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                      <div className="flex items-center justify-between p-3 bg-card rounded-md border">
                         <div className="flex items-center">
                           <svg
-                            className="h-5 w-5 text-gray-400 mr-2"
+                            className="h-5 w-5 text-muted-foreground mr-2"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -125,7 +132,7 @@ export default function AccountPage() {
                               d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                             />
                           </svg>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-foreground">
                             メール/パスワード認証
                           </span>
                         </div>
@@ -137,12 +144,12 @@ export default function AccountPage() {
                     {session?.user?.accounts?.map((account) => (
                       <div
                         key={account.provider}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                        className="flex items-center justify-between p-3 bg-card rounded-md border"
                       >
                         <div className="flex items-center">
                           {account.provider === "google" && (
                             <svg
-                              className="h-5 w-5 text-gray-400 mr-2"
+                              className="h-5 w-5 text-muted-foreground mr-2"
                               viewBox="0 0 24 24"
                             >
                               <path
@@ -153,7 +160,7 @@ export default function AccountPage() {
                           )}
                           {account.provider === "github" && (
                             <svg
-                              className="h-5 w-5 text-gray-400 mr-2"
+                              className="h-5 w-5 text-muted-foreground mr-2"
                               viewBox="0 0 24 24"
                             >
                               <path
@@ -164,7 +171,7 @@ export default function AccountPage() {
                           )}
                           {account.provider === "discord" && (
                             <svg
-                              className="h-5 w-5 text-gray-400 mr-2"
+                              className="h-5 w-5 text-muted-foreground mr-2"
                               viewBox="0 0 24 24"
                             >
                               <path
@@ -173,7 +180,7 @@ export default function AccountPage() {
                               />
                             </svg>
                           )}
-                          <span className="text-sm text-gray-600 capitalize">
+                          <span className="text-sm text-foreground capitalize">
                             {account.provider}認証
                           </span>
                         </div>
@@ -207,10 +214,9 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* パスワード認証の追加フォーム */}
                 {!hasPassword ? (
                   <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    <h4 className="text-sm font-medium text-foreground mb-2">
                       パスワード認証の追加
                     </h4>
                     <form
@@ -226,7 +232,7 @@ export default function AccountPage() {
                       <div>
                         <label
                           htmlFor="newPassword"
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-sm font-medium text-foreground"
                         >
                           パスワード
                         </label>
@@ -242,7 +248,7 @@ export default function AccountPage() {
                       <div>
                         <label
                           htmlFor="confirmPassword"
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-sm font-medium text-foreground"
                         >
                           パスワード（確認）
                         </label>
@@ -265,7 +271,7 @@ export default function AccountPage() {
                   </div>
                 ) : (
                   <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    <h4 className="text-sm font-medium text-foreground mb-2">
                       パスワードの変更
                     </h4>
                     <form
@@ -281,7 +287,7 @@ export default function AccountPage() {
                       <div>
                         <label
                           htmlFor="currentPassword"
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-sm font-medium text-foreground"
                         >
                           現在のパスワード
                         </label>
@@ -296,7 +302,7 @@ export default function AccountPage() {
                       <div>
                         <label
                           htmlFor="newPassword"
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-sm font-medium text-foreground"
                         >
                           新しいパスワード
                         </label>
@@ -312,7 +318,7 @@ export default function AccountPage() {
                       <div>
                         <label
                           htmlFor="confirmPassword"
-                          className="block text-sm font-medium text-gray-700"
+                          className="block text-sm font-medium text-foreground"
                         >
                           新しいパスワード（確認）
                         </label>
@@ -335,9 +341,8 @@ export default function AccountPage() {
                   </div>
                 )}
 
-                {/* 外部認証の追加 */}
                 <div className="mt-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  <h4 className="text-sm font-medium text-foreground mb-2">
                     外部認証の追加
                   </h4>
                   <div className="space-y-2">

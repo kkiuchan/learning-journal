@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/lib/supabaseClient";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -37,6 +38,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const router = useRouter();
+  const { data: session, update: updateSession } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -132,6 +134,18 @@ export function ProfileForm() {
       });
 
       const responseData = await response.json();
+
+      // セッション情報を更新
+      if (session) {
+        await updateSession({
+          ...session,
+          user: {
+            ...session.user,
+            image: values.image,
+          },
+        });
+      }
+
       toast.success("プロフィールを更新しました");
 
       // 更新後のユーザーIDを使用してリダイレクト

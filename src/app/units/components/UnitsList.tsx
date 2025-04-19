@@ -17,6 +17,7 @@ import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
+  FileText,
   Heart,
   MessageCircle,
   MoreVertical,
@@ -270,8 +271,8 @@ export function UnitsList({ userId }: UnitsListProps) {
           {units.map((unit) => (
             <Card key={unit.id} className="h-full flex flex-col">
               <CardHeader className="pb-2 px-3 sm:px-6">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-base sm:text-xl line-clamp-2">
+                <div className="flex justify-between items-start gap-2">
+                  <CardTitle className="text-base sm:text-xl line-clamp-2 flex-1">
                     <Link
                       href={`/units/${unit.id}`}
                       className="hover:underline"
@@ -279,7 +280,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                       {unit.title}
                     </Link>
                   </CardTitle>
-                  <div className="flex items-center gap-1 sm:gap-2">
+                  <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
                     <Badge
                       variant={
                         unit.status === "COMPLETED"
@@ -288,7 +289,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                           ? "secondary"
                           : "outline"
                       }
-                      className={`text-xs sm:text-sm ${
+                      className={`text-xs sm:text-sm whitespace-nowrap ${
                         unit.status === "COMPLETED"
                           ? "bg-green-100 text-green-800 hover:bg-green-200"
                           : unit.status === "IN_PROGRESS"
@@ -398,18 +399,25 @@ export function UnitsList({ userId }: UnitsListProps) {
                       )}
                     </div>
                     <div className="flex gap-4">
-                      <span>ログ: {unit._count.logs}</span>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <FileText className="h-4 w-4" />
+                        <span>{unit._count.logs}</span>
+                      </div>
                       <button
                         onClick={() => handleLike(unit.id)}
                         className={`flex items-center gap-1 ${
                           unit.isLiked ? "text-red-500" : "text-gray-500"
                         }`}
                       >
-                        <Heart className={unit.isLiked ? "fill-current" : ""} />
+                        <Heart
+                          className={
+                            unit.isLiked ? "h-4 w-4 fill-current" : "h-4 w-4"
+                          }
+                        />
                         <span>{unit._count.unitLikes}</span>
                       </button>
                       <div className="flex items-center gap-1 text-gray-500">
-                        <MessageCircle />
+                        <MessageCircle className="h-4 w-4" />
                         <span>{unit._count.comments}</span>
                       </div>
                     </div>

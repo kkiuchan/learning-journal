@@ -1,4 +1,3 @@
-import { mutateUserList } from "@/app/users/components/UserList";
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
@@ -7,7 +6,6 @@ import { revalidateUserData } from "@/utils/cache";
 import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
-import { mutate } from "swr";
 import { z } from "zod";
 
 /**

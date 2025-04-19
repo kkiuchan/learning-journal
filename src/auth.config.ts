@@ -266,21 +266,35 @@ export const authConfig: NextAuthOptions = {
       }
 
       if (token) {
+        // 最新のユーザー情報を取得
+        const user = await prisma.user.findUnique({
+          where: { id: token.userId as string },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            primaryAuthMethod: true,
+            accounts: {
+              select: {
+                provider: true,
+                providerAccountId: true,
+              },
+            },
+          },
+        });
+
         const newSession = {
           ...session,
           user: {
             ...session.user,
-            id: token.userId as string,
-            primaryAuthMethod: token.primaryAuthMethod as string,
-            name: token.name as string | null,
-            email: token.email as string,
-
-            image: token.picture as string | null,
-            accounts: await prisma.account.findMany({
-              where: {
-                userId: token.userId as string,
-              },
-            }),
+            id: user?.id || (token.userId as string),
+            primaryAuthMethod:
+              user?.primaryAuthMethod || (token.primaryAuthMethod as string),
+            name: user?.name || (token.name as string | null),
+            email: user?.email || (token.email as string),
+            image: user?.image || (token.picture as string | null),
+            accounts: user?.accounts || [],
           },
         };
         console.log("Session Callback - 新しいセッション:", newSession);

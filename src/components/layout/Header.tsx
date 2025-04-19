@@ -32,6 +32,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+// 画像URLの検証関数
+const isValidImageUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  const allowedDomains = [
+    "lh3.googleusercontent.com",
+    "avatars.githubusercontent.com",
+    "localhost",
+    window.location.hostname,
+    "supabase.co",
+  ];
+  try {
+    const urlObj = new URL(url);
+    return allowedDomains.some((domain) => urlObj.hostname.includes(domain));
+  } catch {
+    return false;
+  }
+};
+
 export function Header() {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
@@ -155,7 +173,9 @@ export function Header() {
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage
-                        src={session.user?.image || ""}
+                        src={
+                          session.user?.image || "/images/default-avatar.png"
+                        }
                         alt={session.user?.name || ""}
                       />
                       <AvatarFallback>
