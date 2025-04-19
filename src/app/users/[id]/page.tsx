@@ -168,13 +168,13 @@ export default async function UserPage({ params }: Props) {
   const { user } = data;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="p-6">
-        <div className="flex items-start gap-6">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
+      <Card className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
           <UserAvatar imageUrl={user.image} userName={user.name} size="lg" />
-          <div className="flex-1">
-            <div className="flex justify-between items-start">
-              <h1 className="text-2xl font-bold mb-2">
+          <div className="flex-1 w-full text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-2 sm:gap-0">
+              <h1 className="text-xl sm:text-2xl font-bold mb-2">
                 {user.name || "名前未設定"}
               </h1>
               {currentUserId === user.id && (
@@ -186,27 +186,29 @@ export default async function UserPage({ params }: Props) {
               )}
             </div>
             {user.selfIntroduction && (
-              <p className="text-muted-foreground mb-4">
+              <p className="text-sm sm:text-base text-muted-foreground mb-4">
                 {user.selfIntroduction}
               </p>
             )}
             {user.ageVisible && user.age && (
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-sm font-medium text-muted-foreground">
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-4">
+                <span className="text-xs sm:text-sm font-medium text-muted-foreground">
                   年齢:
                 </span>
-                <span className="text-sm">{user.age}歳</span>
+                <span className="text-xs sm:text-sm">{user.age}歳</span>
               </div>
             )}
             {user.skills?.length > 0 && (
               <div className="mb-4">
-                <h2 className="text-lg font-semibold mb-2">スキル</h2>
-                <div className="flex flex-wrap gap-2">
+                <h2 className="text-base sm:text-lg font-semibold mb-2">
+                  スキル
+                </h2>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-1 sm:gap-2">
                   {user.skills.map((skill: Skill) => (
                     <Badge
                       key={skill.id}
                       variant="secondary"
-                      className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                      className="text-xs sm:text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
                     >
                       {skill.name}
                     </Badge>
@@ -216,13 +218,15 @@ export default async function UserPage({ params }: Props) {
             )}
             {user.interests?.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold mb-2">興味・関心</h2>
-                <div className="flex flex-wrap gap-2">
+                <h2 className="text-base sm:text-lg font-semibold mb-2">
+                  興味・関心
+                </h2>
+                <div className="flex flex-wrap justify-center sm:justify-start gap-1 sm:gap-2">
                   {user.interests.map((interest: Interest) => (
                     <Badge
                       key={interest.id}
                       variant="outline"
-                      className="bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                      className="text-xs sm:text-sm bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
                     >
                       {interest.name}
                     </Badge>
@@ -235,9 +239,9 @@ export default async function UserPage({ params }: Props) {
       </Card>
 
       {/* ユーザーの学習ユニット一覧 */}
-      <div className="mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">学習ユニット一覧</h2>
+      <div className="mt-6 sm:mt-8">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold">学習ユニット一覧</h2>
           <div className="text-xs text-muted-foreground"></div>
           {currentUserId === id && (
             <Link href="/units/new">

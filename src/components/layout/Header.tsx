@@ -85,8 +85,8 @@ export function Header() {
         </div>
       )}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between">
-          <div className="flex items-center">
+        <div className="container flex h-14 items-center justify-between px-2 md:px-4">
+          <div className="flex items-center -ml-2 md:ml-0">
             <Link
               href="/"
               className="flex items-center"
@@ -95,7 +95,7 @@ export function Header() {
               <img
                 src="/logo.png"
                 alt="Learning Journal"
-                className="h-30 w-auto md:h-40"
+                className="h-28 w-auto sm:h-32 md:h-36 lg:h-40"
               />
             </Link>
           </div>

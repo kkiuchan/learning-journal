@@ -266,12 +266,12 @@ export function UnitsList({ userId }: UnitsListProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {units.map((unit) => (
             <Card key={unit.id} className="h-full flex flex-col">
-              <CardHeader className="pb-2">
+              <CardHeader className="pb-2 px-3 sm:px-6">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl line-clamp-2">
+                  <CardTitle className="text-base sm:text-xl line-clamp-2">
                     <Link
                       href={`/units/${unit.id}`}
                       className="hover:underline"
@@ -279,7 +279,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                       {unit.title}
                     </Link>
                   </CardTitle>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <Badge
                       variant={
                         unit.status === "COMPLETED"
@@ -288,13 +288,13 @@ export function UnitsList({ userId }: UnitsListProps) {
                           ? "secondary"
                           : "outline"
                       }
-                      className={
+                      className={`text-xs sm:text-sm ${
                         unit.status === "COMPLETED"
                           ? "bg-green-100 text-green-800 hover:bg-green-200"
                           : unit.status === "IN_PROGRESS"
                           ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
                           : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                      }
+                      }`}
                     >
                       {translateUnitStatus(unit.status)}
                     </Badge>
@@ -314,7 +314,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                               menuRefs.current[unit.id] = el;
                             }
                           }}
-                          className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                          className={`absolute right-0 mt-1 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
                             openMenuId === unit.id
                               ? "opacity-100 transform translate-y-0"
                               : "opacity-0 transform -translate-y-2 pointer-events-none"
@@ -324,7 +324,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                           <div className="py-1">
                             <Link href={`/units/${unit.id}/edit`}>
                               <button
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMenuClick(unit.id, e);
@@ -335,7 +335,7 @@ export function UnitsList({ userId }: UnitsListProps) {
                               </button>
                             </Link>
                             <button
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                              className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDelete(unit.id);
@@ -352,10 +352,10 @@ export function UnitsList({ userId }: UnitsListProps) {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col px-3 sm:px-6">
                 <div className="space-y-2 flex-1">
                   {unit.learningGoal && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
+                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                       {unit.learningGoal}
                     </p>
                   )}
@@ -364,18 +364,21 @@ export function UnitsList({ userId }: UnitsListProps) {
                       <Badge
                         key={tag.id}
                         variant="outline"
-                        className="bg-gray-100"
+                        className="text-xs sm:text-sm bg-gray-100"
                       >
                         {tag.name}
                       </Badge>
                     ))}
                     {unit.tags.length > 3 && (
-                      <Badge variant="outline" className="bg-gray-100">
+                      <Badge
+                        variant="outline"
+                        className="text-xs sm:text-sm bg-gray-100"
+                      >
                         +{unit.tags.length - 3}
                       </Badge>
                     )}
                   </div>
-                  <div className="flex justify-between text-sm text-gray-500 mt-auto">
+                  <div className="flex justify-between text-xs sm:text-sm text-gray-500 mt-auto">
                     <div className="line-clamp-1">
                       {unit.startDate && (
                         <span>

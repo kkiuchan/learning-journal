@@ -366,12 +366,12 @@ export default function UnitDetail({
   const unit = unitData.data;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="p-6">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
+      <Card className="p-4 sm:p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-2xl font-bold">{unit.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">{unit.title}</h1>
               <Badge
                 variant={
                   unit.status === "COMPLETED"
@@ -380,18 +380,18 @@ export default function UnitDetail({
                     ? "secondary"
                     : "outline"
                 }
-                className={
+                className={`text-xs sm:text-sm ${
                   unit.status === "COMPLETED"
                     ? "bg-green-100 text-green-800 hover:bg-green-200"
                     : unit.status === "IN_PROGRESS"
                     ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
                     : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                }
+                }`}
               >
                 {translateUnitStatus(unit.status)}
               </Badge>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
               <div className="flex items-center gap-2">
                 {unit.user.image && (
                   <img
@@ -431,7 +431,7 @@ export default function UnitDetail({
                     menuRefs.current[parseInt(id)] = el;
                   }
                 }}
-                className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                className={`absolute right-0 mt-1 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
                   openMenuId === parseInt(id)
                     ? "opacity-100 transform translate-y-0"
                     : "opacity-0 transform -translate-y-2 pointer-events-none"
@@ -441,7 +441,7 @@ export default function UnitDetail({
                 <div className="py-1">
                   <Link href={`/units/${id}/edit`}>
                     <button
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                      className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenMenuId(null);
@@ -452,7 +452,7 @@ export default function UnitDetail({
                     </button>
                   </Link>
                   <button
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDelete();
@@ -471,36 +471,54 @@ export default function UnitDetail({
         <div className="space-y-4">
           {unit.learningGoal && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">学習目標</h2>
-              <p className="text-muted-foreground">{unit.learningGoal}</p>
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                学習目標
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {unit.learningGoal}
+              </p>
             </div>
           )}
 
           {unit.preLearningState && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">事前の学習状態</h2>
-              <p className="text-muted-foreground">{unit.preLearningState}</p>
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                事前の学習状態
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {unit.preLearningState}
+              </p>
             </div>
           )}
 
           {unit.reflection && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">振り返り</h2>
-              <p className="text-muted-foreground">{unit.reflection}</p>
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                振り返り
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {unit.reflection}
+              </p>
             </div>
           )}
 
           {unit.nextAction && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">次のアクション</h2>
-              <p className="text-muted-foreground">{unit.nextAction}</p>
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                次のアクション
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {unit.nextAction}
+              </p>
             </div>
           )}
 
           {(unit.startDate || unit.endDate) && (
             <div>
-              <h2 className="text-lg font-semibold mb-2">学習期間</h2>
-              <p className="text-muted-foreground">
+              <h2 className="text-base sm:text-lg font-semibold mb-2">
+                学習期間
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
                 {unit.startDate &&
                   `開始: ${format(new Date(unit.startDate), "yyyy/MM/dd", {
                     locale: ja,
@@ -547,9 +565,9 @@ export default function UnitDetail({
         </div>
       </Card>
       {/* 学習ログ */}
-      <div className="mt-8">
+      <div className="mt-6 sm:mt-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">学習ログ</h2>
+          <h2 className="text-xl sm:text-2xl font-bold">学習ログ</h2>
           <div className="flex gap-2">
             {session?.user?.id === unit.userId && (
               <Button onClick={() => setIsCreatingLog(true)}>ログを追加</Button>
@@ -636,8 +654,10 @@ export default function UnitDetail({
                   <div>
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="text-lg font-semibold">{log.title}</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="text-base sm:text-lg font-semibold">
+                          {log.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-500">
                           {format(new Date(log.logDate), "yyyy/MM/dd", {
                             locale: ja,
                           })}
@@ -658,10 +678,10 @@ export default function UnitDetail({
                           </Button>
 
                           {openMenuId === log.id && (
-                            <div className="absolute right-0 mt-2 min-w-[120px] rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                            <div className="absolute right-0 mt-2 min-w-[120px] rounded-md shadow-lg bg-background ring-1 ring-border z-10">
                               <div className="py-1">
                                 <button
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                  className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
                                   onClick={() => {
                                     setEditingLogId(log.id);
                                     setOpenMenuId(null);
@@ -671,7 +691,7 @@ export default function UnitDetail({
                                   編集
                                 </button>
                                 <button
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
+                                  className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                                   onClick={async () => {
                                     if (
                                       !confirm(
@@ -764,19 +784,19 @@ export default function UnitDetail({
                     {Array.isArray(log.resources) &&
                       log.resources.length > 0 && (
                         <div className="space-y-2 mt-3 border-t pt-3">
-                          <h4 className="text-sm font-medium">
+                          <h4 className="text-xs sm:text-sm font-medium">
                             リソース ({log.resources.length}件)
                           </h4>
                           <div className="space-y-2">
                             {log.resources.map((resource) => (
                               <div
                                 key={resource.id}
-                                className="text-sm flex items-start gap-2 bg-gray-50 p-2 rounded"
+                                className="text-xs sm:text-sm flex items-start gap-2 bg-gray-50 p-2 rounded"
                               >
                                 {resource.resourceType === "file" ? (
-                                  <File className="h-4 w-4 mt-0.5 text-blue-500" />
+                                  <File className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 text-blue-500" />
                                 ) : (
-                                  <LinkIcon className="h-4 w-4 mt-0.5 text-blue-500" />
+                                  <LinkIcon className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 text-blue-500" />
                                 )}
                                 <div className="flex-1">
                                   <a
@@ -787,7 +807,7 @@ export default function UnitDetail({
                                   >
                                     {resource.description ||
                                       resource.resourceLink}
-                                    <ExternalLink className="h-3 w-3" />
+                                    <ExternalLink className="h-2 w-2 sm:h-3 sm:w-3" />
                                   </a>
                                   {resource.fileName && (
                                     <span className="text-xs text-gray-500 block">
@@ -809,8 +829,8 @@ export default function UnitDetail({
       </div>
 
       {/* コメント */}
-      <div className="mt-8">
-        <h2 className="text-2xl font-bold mb-4">コメント</h2>
+      <div className="mt-6 sm:mt-8">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4">コメント</h2>
 
         {session?.user && (
           <form onSubmit={handleCreateComment} className="mb-6">
@@ -836,150 +856,151 @@ export default function UnitDetail({
           <div className="space-y-4">
             {comments.map((comment) => (
               <Card key={comment.id} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="w-full">
-                    <div className="flex items-center gap-2 mb-1">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
                       {comment.user.image && (
                         <img
                           src={comment.user.image}
                           alt={comment.user.name || "ユーザー"}
-                          className="w-6 h-6 rounded-full"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
                         />
                       )}
-                      <p className="font-medium">
-                        {comment.user.name || "匿名ユーザー"}
-                      </p>
-                      {comment.user.id === "ai-assistant" && (
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-50 text-blue-600 border-blue-200"
-                        >
-                          AIアドバイス
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-500">
-                      {format(new Date(comment.createdAt), "yyyy/MM/dd HH:mm", {
-                        locale: ja,
-                      })}
-                    </p>
-                    {editingCommentId === comment.id ? (
-                      <div className="mt-2">
-                        <Textarea
-                          value={editingCommentContent}
-                          onChange={(e) =>
-                            setEditingCommentContent(e.target.value)
-                          }
-                          className="mb-2"
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateComment(comment.id)}
-                            disabled={!editingCommentContent.trim()}
-                          >
-                            更新
-                          </Button>
-                          <Button
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                          <span className="font-semibold text-sm sm:text-base truncate">
+                            {comment.user.name || "ユーザー"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(
+                              new Date(comment.createdAt),
+                              "yyyy/MM/dd HH:mm",
+                              {
+                                locale: ja,
+                              }
+                            )}
+                          </span>
+                        </div>
+                        {comment.user.id === "ai-assistant" && (
+                          <Badge
                             variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingCommentId(null);
-                              setEditingCommentContent("");
-                            }}
+                            className="mt-1 text-xs bg-blue-50 text-blue-600 border-blue-200"
                           >
-                            キャンセル
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-2">
-                        <div
-                          className={`whitespace-pre-wrap ${
-                            !expandedComments.includes(comment.id) &&
-                            comment.comment.length > 200
-                              ? "line-clamp-4"
-                              : ""
-                          }`}
-                        >
-                          {comment.comment}
-                        </div>
-                        {comment.comment.length > 200 && (
-                          <button
-                            onClick={() => toggleCommentExpansion(comment.id)}
-                            className="text-blue-500 text-sm mt-1 hover:underline"
-                          >
-                            {expandedComments.includes(comment.id)
-                              ? "折りたたむ"
-                              : "続きを読む"}
-                          </button>
+                            AIアドバイス
+                          </Badge>
                         )}
                       </div>
-                    )}
-                  </div>
-                  {/* コメントの編集・削除ボタン */}
-                  {/* 
-                    権限の条件:
-                    - コメント作成者: 編集と削除が可能
-                    - ユニット作成者: 削除のみ可能
-                  */}
-                  {session?.user?.id &&
-                    (session.user.id === comment.user.id ||
-                      session.user.id === unit.userId) && (
-                      <div
-                        className="relative"
-                        ref={(el) => {
-                          menuRefs.current[comment.id] = el;
-                        }}
-                      >
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() =>
-                            setOpenMenuId(
-                              openMenuId === comment.id ? null : comment.id
-                            )
-                          }
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
+                    </div>
+                    {session?.user?.id &&
+                      (session.user.id === comment.user.id ||
+                        session.user.id === unit.userId) && (
                         <div
-                          className={`absolute right-0 mt-1 bg-white rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
-                            openMenuId === comment.id
-                              ? "opacity-100 transform translate-y-0"
-                              : "opacity-0 transform -translate-y-2 pointer-events-none"
-                          }`}
+                          className="relative ml-2"
+                          ref={(el) => {
+                            menuRefs.current[comment.id] = el;
+                          }}
                         >
-                          <div className="py-1">
-                            {/* コメント作成者のみ編集可能 */}
-                            {session.user.id === comment.user.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === comment.id ? null : comment.id
+                              )
+                            }
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                          <div
+                            className={`absolute right-0 mt-1 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+                              openMenuId === comment.id
+                                ? "opacity-100 transform translate-y-0"
+                                : "opacity-0 transform -translate-y-2 pointer-events-none"
+                            }`}
+                          >
+                            <div className="py-1">
+                              {session.user.id === comment.user.id && (
+                                <button
+                                  className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
+                                  onClick={() => {
+                                    setEditingCommentId(comment.id);
+                                    setEditingCommentContent(comment.comment);
+                                    setOpenMenuId(null);
+                                  }}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                  編集
+                                </button>
+                              )}
                               <button
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+                                className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                                 onClick={() => {
-                                  setEditingCommentId(comment.id);
-                                  setEditingCommentContent(comment.comment);
+                                  handleDeleteComment(comment.id);
                                   setOpenMenuId(null);
                                 }}
                               >
-                                <Pencil className="h-3 w-3" />
-                                編集
+                                <Trash2 className="h-3 w-3" />
+                                削除
                               </button>
-                            )}
-                            <button
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"
-                              onClick={() => {
-                                handleDeleteComment(comment.id);
-                                setOpenMenuId(null);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              削除
-                            </button>
+                            </div>
                           </div>
                         </div>
+                      )}
+                  </div>
+                  {editingCommentId === comment.id ? (
+                    <div className="mt-2">
+                      <Textarea
+                        value={editingCommentContent}
+                        onChange={(e) =>
+                          setEditingCommentContent(e.target.value)
+                        }
+                        className="mb-2"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateComment(comment.id)}
+                          disabled={!editingCommentContent.trim()}
+                        >
+                          更新
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingCommentId(null);
+                            setEditingCommentContent("");
+                          }}
+                        >
+                          キャンセル
+                        </Button>
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    <div className="mt-1">
+                      <div
+                        className={`whitespace-pre-wrap text-sm sm:text-base ${
+                          !expandedComments.includes(comment.id) &&
+                          comment.comment.length > 200
+                            ? "line-clamp-4"
+                            : ""
+                        }`}
+                      >
+                        {comment.comment}
+                      </div>
+                      {comment.comment.length > 200 && (
+                        <button
+                          onClick={() => toggleCommentExpansion(comment.id)}
+                          className="text-xs sm:text-sm text-blue-500 mt-2 hover:underline"
+                        >
+                          {expandedComments.includes(comment.id)
+                            ? "折りたたむ"
+                            : "続きを読む"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </Card>
             ))}

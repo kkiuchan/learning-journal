@@ -102,34 +102,34 @@ export function UserList() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {users.map((user: User) => (
           <Link key={user.id} href={`/users/${user.id}`}>
             <Card className="h-full flex flex-col hover:bg-accent/50 transition-colors">
-              <div className="p-4 space-y-3">
-                <div className="flex items-center gap-3">
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   <UserAvatar
                     imageUrl={isValidImageUrl(user.image) ? user.image : null}
                     userName={user.name}
                     size="sm"
                   />
                   <div>
-                    <h3 className="font-semibold text-lg">
+                    <h3 className="font-semibold text-base sm:text-lg">
                       {user.name || "名前なし"}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       ユニット: {user._count?.units || 0} | ログ:{" "}
                       {user._count?.logs || 0}
                     </p>
                   </div>
                 </div>
                 {user.selfIntroduction && (
-                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                  <p className="line-clamp-2 text-xs sm:text-sm text-muted-foreground">
                     {user.selfIntroduction}
                   </p>
                 )}
                 {user.skills && user.skills.length > 0 && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground">
                       スキル
                     </p>
@@ -147,7 +147,7 @@ export function UserList() {
                   </div>
                 )}
                 {user.interests && user.interests.length > 0 && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground">
                       興味・関心
                     </p>
@@ -171,7 +171,7 @@ export function UserList() {
       </div>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 mt-6">
+        <div className="flex justify-center items-center gap-2 sm:gap-4 mt-4 sm:mt-6">
           <Button
             variant="outline"
             size="sm"
@@ -180,7 +180,7 @@ export function UserList() {
           >
             前へ
           </Button>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-xs sm:text-sm text-muted-foreground">
             {page} / {pagination.totalPages}
           </div>
           <Button

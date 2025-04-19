@@ -130,7 +130,9 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             <Header />
-            <main className="min-h-screen">{children}</main>
+            <main className="min-h-screen px-2 py-4 md:px-4 md:py-8">
+              {children}
+            </main>
             <Toaster />
           </ThemeProvider>
         </Providers>
