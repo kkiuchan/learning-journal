@@ -149,6 +149,8 @@ export type Log = {
   logDate: string;
   createdAt: string;
   updatedAt: string;
+  effectScore?: number;
+  effectType?: string;
   logTags?: {
     tag: {
       id: number;

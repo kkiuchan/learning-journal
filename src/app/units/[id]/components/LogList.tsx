@@ -7,7 +7,7 @@ import { Log } from "@/types/log";
 import { CACHE_TAGS } from "@/utils/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { ExternalLink, File, Link, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, File, Link, Pencil, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 
@@ -139,6 +139,31 @@ export function LogList({ unitId }: LogListProps) {
             </div>
           )}
 
+          <div className="flex flex-wrap gap-4 items-center mb-2">
+            {log.effectScore !== undefined && log.effectScore !== null && (
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-600">効果実感:</span>
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < (log.effectScore as number)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            {log.effectType && (
+              <Badge variant="outline" className="text-sm">
+                {getEffectTypeLabel(log.effectType)}
+              </Badge>
+            )}
+          </div>
+
           <div className="mt-3 border-t pt-3">
             <h4 className="text-sm font-medium">リソース情報</h4>
             <pre className="text-xs bg-gray-100 p-2 mt-1 overflow-auto rounded">
@@ -197,4 +222,14 @@ export function LogList({ unitId }: LogListProps) {
       ))}
     </div>
   );
+}
+
+function getEffectTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    understanding: "理解が深まった",
+    practical: "実際に使えるようになった",
+    application: "応用のアイデアが生まれた",
+    none: "特になかった",
+  };
+  return labels[type] || type;
 }

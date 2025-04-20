@@ -21,6 +21,7 @@ import {
   MoreVertical,
   Pencil,
   RefreshCw,
+  Star,
   Trash2,
 } from "lucide-react";
 import type { Session } from "next-auth";
@@ -84,6 +85,7 @@ export default function UnitDetail({
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [expandedComments, setExpandedComments] = useState<number[]>([]);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [expandedLogs, setExpandedLogs] = useState<number[]>([]);
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // メニュー外をクリックしたときにメニューを閉じる
@@ -360,6 +362,14 @@ export default function UnitDetail({
       prev.includes(commentId)
         ? prev.filter((id) => id !== commentId)
         : [...prev, commentId]
+    );
+  };
+
+  const toggleLogExpansion = (logId: number) => {
+    setExpandedLogs((prev) =>
+      prev.includes(logId)
+        ? prev.filter((id) => id !== logId)
+        : [...prev, logId]
     );
   };
 
@@ -760,13 +770,64 @@ export default function UnitDetail({
                       )}
                     </div>
                     {log.note && (
-                      <div className="mt-2 whitespace-pre-wrap">{log.note}</div>
+                      <div className="mt-2">
+                        <div
+                          className={`whitespace-pre-wrap ${
+                            !expandedLogs.includes(log.id) &&
+                            log.note.length > 200
+                              ? "line-clamp-4"
+                              : ""
+                          }`}
+                        >
+                          {log.note}
+                        </div>
+                        {log.note.length > 200 && (
+                          <button
+                            onClick={() => toggleLogExpansion(log.id)}
+                            className="text-xs text-blue-500 mt-2 hover:underline"
+                          >
+                            {expandedLogs.includes(log.id)
+                              ? "折りたたむ"
+                              : "続きを読む"}
+                          </button>
+                        )}
+                      </div>
                     )}
                     {log.learningTime && (
                       <div className="mt-2 text-sm text-gray-500">
                         学習時間: {log.learningTime}分
                       </div>
                     )}
+
+                    {log.effectScore !== undefined &&
+                      log.effectScore !== null && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-sm text-gray-500">
+                            効果実感:
+                          </span>
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < log.effectScore
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {log.effectType && (
+                      <div className="mt-2">
+                        <Badge variant="outline" className="text-sm">
+                          {getEffectTypeLabel(log.effectType)}
+                        </Badge>
+                      </div>
+                    )}
+
                     {log.logTags && log.logTags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         {log.logTags.map((logTag) => (
@@ -1014,4 +1075,14 @@ export default function UnitDetail({
       </div>
     </div>
   );
+}
+
+function getEffectTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    understanding: "理解が深まった",
+    practical: "実際に使えるようになった",
+    application: "応用のアイデアが生まれた",
+    none: "特になかった",
+  };
+  return labels[type] || type;
 }

@@ -57,6 +57,17 @@ export default function EditLogForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [effectScore, setEffectScore] = useState<number>(log.effectScore || 3);
+  const [effectType, setEffectType] = useState<string>(
+    log.effectType || "understanding"
+  );
+
+  const effectTypes = [
+    { value: "understanding", label: "理解が深まった" },
+    { value: "practical", label: "実際に使えるようになった" },
+    { value: "application", label: "応用のアイデアが生まれた" },
+    { value: "none", label: "特になかった" },
+  ];
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -176,6 +187,8 @@ export default function EditLogForm({
           note,
           logDate,
           tags,
+          effectScore,
+          effectType,
           resources: formattedResources,
         }),
         next: {
@@ -230,16 +243,60 @@ export default function EditLogForm({
         />
       </div>
 
-      <div>
-        <Label htmlFor="learningTime">学習時間（分）</Label>
-        <Input
-          id="learningTime"
-          type="number"
-          value={learningTime}
-          onChange={(e) => setLearningTime(parseInt(e.target.value))}
-          required
-          min="1"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="learningTime">学習時間（分）</Label>
+          <Input
+            id="learningTime"
+            type="number"
+            value={learningTime}
+            onChange={(e) => setLearningTime(parseInt(e.target.value))}
+            required
+            min="1"
+          />
+        </div>
+
+        <div>
+          <Label>効果実感スコア</Label>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((score) => (
+              <button
+                key={score}
+                type="button"
+                onClick={() => setEffectScore(score)}
+                className={`p-1 rounded ${
+                  effectScore === score
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary"
+                }`}
+              >
+                {"⭐".repeat(score)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label>効果のタイプ</Label>
+          <div className="space-y-1">
+            {effectTypes.map((type) => (
+              <label
+                key={type.value}
+                className="flex items-center gap-1 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="effectType"
+                  value={type.value}
+                  checked={effectType === type.value}
+                  onChange={(e) => setEffectType(e.target.value)}
+                  className="form-radio"
+                />
+                {type.label}
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div>

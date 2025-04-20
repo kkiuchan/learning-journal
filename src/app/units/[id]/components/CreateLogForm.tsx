@@ -40,7 +40,16 @@ export default function CreateLogForm({
   const [newResourceLink, setNewResourceLink] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [effectScore, setEffectScore] = useState<number>(3);
+  const [effectType, setEffectType] = useState<string>("understanding");
   const router = useRouter();
+
+  const effectTypes = [
+    { value: "understanding", label: "理解が深まった" },
+    { value: "practical", label: "実際に使えるようになった" },
+    { value: "application", label: "応用のアイデアが生まれた" },
+    { value: "none", label: "特になかった" },
+  ];
 
   const handleAddTag = () => {
     if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -149,6 +158,8 @@ export default function CreateLogForm({
           note,
           logDate,
           tags,
+          effectScore,
+          effectType,
           resources: resources.map((r) => ({
             resourceType: r.resourceType,
             resourceLink: r.resourceLink,
@@ -182,41 +193,86 @@ export default function CreateLogForm({
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          required
+          placeholder="学習内容のタイトル"
         />
       </div>
 
-      <div>
-        <Label htmlFor="learningTime">学習時間（分）</Label>
-        <Input
-          id="learningTime"
-          type="number"
-          value={learningTime}
-          onChange={(e) => setLearningTime(parseInt(e.target.value))}
-          required
-          min="1"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <Label htmlFor="learningTime">学習時間（分）</Label>
+          <Input
+            id="learningTime"
+            type="number"
+            value={learningTime}
+            onChange={(e) => setLearningTime(Number(e.target.value))}
+            min="1"
+          />
+        </div>
+
+        <div>
+          <Label>効果実感スコア</Label>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((score) => (
+              <button
+                key={score}
+                type="button"
+                onClick={() => setEffectScore(score)}
+                className={`p-1 rounded ${
+                  effectScore === score
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary"
+                }`}
+              >
+                {"⭐".repeat(score)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label>効果のタイプ</Label>
+          <div className="space-y-1">
+            {effectTypes.map((type) => (
+              <label
+                key={type.value}
+                className="flex items-center gap-1 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="effectType"
+                  value={type.value}
+                  checked={effectType === type.value}
+                  onChange={(e) => setEffectType(e.target.value)}
+                  className="form-radio"
+                />
+                {type.label}
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div>
-        <Label htmlFor="logDate">日付</Label>
-        <Input
-          id="logDate"
-          type="date"
-          value={logDate}
-          onChange={(e) => setLogDate(e.target.value)}
-          required
-        />
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="logDate">日付</Label>
+          <Input
+            id="logDate"
+            type="date"
+            value={logDate}
+            onChange={(e) => setLogDate(e.target.value)}
+          />
+        </div>
 
-      <div>
-        <Label htmlFor="note">内容</Label>
-        <Textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          required
-        />
+        <div>
+          <Label htmlFor="note">学習内容</Label>
+          <Textarea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="学習内容の詳細"
+            rows={3}
+          />
+        </div>
       </div>
 
       <div>

@@ -89,6 +89,8 @@ model Log {
   learningTime Int?
   note         String?
   logDate      DateTime
+  effectScore  Int?
+  effectType   String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   unit         Unit       @relation(fields: [unitId], references: [id])
