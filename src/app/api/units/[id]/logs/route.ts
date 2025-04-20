@@ -43,6 +43,8 @@ export async function POST(
         learningTime: validatedData.learningTime,
         note: validatedData.note,
         logDate: new Date(validatedData.logDate),
+        effectScore: validatedData.effectScore,
+        effectType: validatedData.effectType,
         ...(validatedData.tags && {
           logTags: {
             create: validatedData.tags.map((tagName) => ({

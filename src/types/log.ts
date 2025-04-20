@@ -7,6 +7,10 @@ export const logRequestSchema = z.object({
   learningTime: z.number().min(0, "学習時間は0以上である必要があります"),
   note: z.string().min(1, "ノートは必須です"),
   logDate: z.string().min(1, "ログ日は必須です"),
+  effectScore: z.number().min(1).max(5).optional(),
+  effectType: z
+    .enum(["understanding", "practical", "application", "none"])
+    .optional(),
   tags: z.array(z.string()).optional(),
   resources: z
     .array(
