@@ -135,35 +135,36 @@ export function Header() {
             </nav>
 
             <ThemeToggle />
-
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[240px] sm:w-[280px]">
-                <SheetHeader>
-                  <SheetTitle>メニュー</SheetTitle>
-                </SheetHeader>
-                <nav className="flex flex-col gap-4 mt-4">
-                  {navigationItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => {
-                        setIsOpen(false);
-                        handleLinkClick(item.href);
-                      }}
-                      className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
+            {session && (
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[240px] sm:w-[280px]">
+                  <SheetHeader>
+                    <SheetTitle>メニュー</SheetTitle>
+                  </SheetHeader>
+                  <nav className="flex flex-col gap-4 mt-4">
+                    {navigationItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => {
+                          setIsOpen(false);
+                          handleLinkClick(item.href);
+                        }}
+                        className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-foreground/80"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </SheetContent>
+              </Sheet>
+            )}
 
             {session ? (
               <DropdownMenu>
