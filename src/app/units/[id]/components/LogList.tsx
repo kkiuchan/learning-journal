@@ -158,7 +158,7 @@ export function LogList({ unitId }: LogListProps) {
                 {log.resources.map((resource) => (
                   <div
                     key={resource.id}
-                    className="text-sm flex items-start gap-2 bg-gray-50 p-2 rounded"
+                    className="text-sm flex items-start gap-2 bg-card p-2 rounded"
                   >
                     {resource.resourceType === "file" ? (
                       <File className="h-4 w-4 mt-0.5 text-blue-500" />

@@ -176,7 +176,7 @@ export function AdviceButton({
           <div className="mt-4 space-y-4">
             <div className="prose prose-sm max-w-none whitespace-pre-wrap">
               {advice ? (
-                <div className="max-h-[60vh] overflow-y-auto rounded-md border p-4 bg-gray-50">
+                <div className="max-h-[60vh] overflow-y-auto rounded-md border p-4 bg-card">
                   {advice.split("\n").map((line, index) => (
                     <p key={index} className="mb-2">
                       {line}
@@ -184,7 +184,7 @@ export function AdviceButton({
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">アドバイスを生成中...</p>
+                <p className="text-muted-foreground">アドバイスを生成中...</p>
               )}
             </div>
             {isLoading && (

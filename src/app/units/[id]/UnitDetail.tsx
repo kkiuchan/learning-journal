@@ -791,7 +791,7 @@ export default function UnitDetail({
                             {log.resources.map((resource) => (
                               <div
                                 key={resource.id}
-                                className="text-xs sm:text-sm flex items-start gap-2 bg-gray-50 p-2 rounded"
+                                className="text-xs sm:text-sm flex items-start gap-2 bg-card p-2 rounded"
                               >
                                 {resource.resourceType === "file" ? (
                                   <File className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 text-blue-500" />
