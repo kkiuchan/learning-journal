@@ -86,10 +86,88 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 300%;
+    height: 200%;
+    z-index: -1;
+  }
+
+  body::before {
+    background: repeating-linear-gradient(
+        75deg,
+        rgba(0, 0, 0, 0.015) 0px,
+        rgba(0, 0, 0, 0.015) 160px,
+        transparent 160px,
+        transparent 480px
+      ),
+      repeating-linear-gradient(
+        75deg,
+        rgba(0, 0, 0, 0.02) 0px,
+        rgba(0, 0, 0, 0.02) 240px,
+        transparent 240px,
+        transparent 720px
+      );
+    animation: slide 120s linear infinite;
+  }
+
+  body::after {
+    background: repeating-linear-gradient(
+      75deg,
+      rgba(0, 0, 0, 0.01) 0px,
+      rgba(0, 0, 0, 0.01) 320px,
+      transparent 320px,
+      transparent 960px
+    );
+    animation: slide 180s linear infinite reverse;
+  }
+
+  @keyframes slide {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(33.33%);
+    }
+  }
+
+  .dark body::before {
+    background: repeating-linear-gradient(
+        75deg,
+        rgba(255, 255, 255, 0.015) 0px,
+        rgba(255, 255, 255, 0.015) 160px,
+        transparent 160px,
+        transparent 480px
+      ),
+      repeating-linear-gradient(
+        75deg,
+        rgba(255, 255, 255, 0.02) 0px,
+        rgba(255, 255, 255, 0.02) 240px,
+        transparent 240px,
+        transparent 720px
+      );
+  }
+
+  .dark body::after {
+    background: repeating-linear-gradient(
+      75deg,
+      rgba(255, 255, 255, 0.01) 0px,
+      rgba(255, 255, 255, 0.01) 320px,
+      transparent 320px,
+      transparent 960px
+    );
   }
 }
 
