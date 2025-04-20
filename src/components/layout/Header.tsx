@@ -120,17 +120,18 @@ export function Header() {
 
           <div className="flex items-center gap-6">
             <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1"
-                  onClick={() => handleLinkClick(item.href)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+              {session &&
+                navigationItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="transition-colors hover:text-foreground/80 text-foreground flex items-center gap-1"
+                    onClick={() => handleLinkClick(item.href)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
             </nav>
 
             <ThemeToggle />
