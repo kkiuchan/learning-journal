@@ -57,11 +57,10 @@ export default function EditLogForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [effectScore, setEffectScore] = useState<number>(log.effectScore || 3);
-  const [effectType, setEffectType] = useState<string>(
+  const [effectScore, setEffectScore] = useState(log.effectScore || 0);
+  const [effectType, setEffectType] = useState(
     log.effectType || "understanding"
   );
-
   const effectTypes = [
     { value: "understanding", label: "理解が深まった" },
     { value: "practical", label: "実際に使えるようになった" },
@@ -187,9 +186,9 @@ export default function EditLogForm({
           note,
           logDate,
           tags,
+          resources: formattedResources,
           effectScore,
           effectType,
-          resources: formattedResources,
         }),
         next: {
           tags: [
@@ -243,19 +242,40 @@ export default function EditLogForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="learningTime">学習時間（分）</Label>
-          <Input
-            id="learningTime"
-            type="number"
-            value={learningTime}
-            onChange={(e) => setLearningTime(parseInt(e.target.value))}
-            required
-            min="1"
-          />
-        </div>
+      <div>
+        <Label htmlFor="learningTime">学習時間（分）</Label>
+        <Input
+          id="learningTime"
+          type="number"
+          value={learningTime}
+          onChange={(e) => setLearningTime(parseInt(e.target.value))}
+          required
+          min="1"
+        />
+      </div>
 
+      <div>
+        <Label htmlFor="logDate">日付</Label>
+        <Input
+          id="logDate"
+          type="date"
+          value={logDate}
+          onChange={(e) => setLogDate(e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="note">内容</Label>
+        <Textarea
+          id="note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>効果実感スコア</Label>
           <div className="flex gap-1">
@@ -297,27 +317,6 @@ export default function EditLogForm({
             ))}
           </div>
         </div>
-      </div>
-
-      <div>
-        <Label htmlFor="logDate">日付</Label>
-        <Input
-          id="logDate"
-          type="date"
-          value={logDate}
-          onChange={(e) => setLogDate(e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="note">内容</Label>
-        <Textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          required
-        />
       </div>
 
       <div>

@@ -108,6 +108,8 @@ export async function PUT(
         learningTime: validatedData.learningTime,
         note: validatedData.note,
         logDate: new Date(validatedData.logDate),
+        effectScore: validatedData.effectScore,
+        effectType: validatedData.effectType,
         logTags: {
           deleteMany: {},
           create: validatedData.tags?.map((tagName) => ({
