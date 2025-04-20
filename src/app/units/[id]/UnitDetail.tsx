@@ -99,9 +99,9 @@ export default function UnitDetail({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [openMenuId]);
 
@@ -692,7 +692,9 @@ export default function UnitDetail({
                               <div className="py-1">
                                 <button
                                   className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    // e.preventDefault();
+                                    e.stopPropagation();
                                     setEditingLogId(log.id);
                                     setOpenMenuId(null);
                                   }}

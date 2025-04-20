@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/lib/supabaseClient";
+import { format } from "date-fns";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -32,7 +33,7 @@ export default function CreateLogForm({
   const [title, setTitle] = useState("");
   const [learningTime, setLearningTime] = useState(0);
   const [note, setNote] = useState("");
-  const [logDate, setLogDate] = useState("");
+  const [logDate, setLogDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [resources, setResources] = useState<Resource[]>([]);
@@ -187,14 +188,26 @@ export default function CreateLogForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <Label htmlFor="title">タイトル</Label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="学習内容のタイトル"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="title">タイトル</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="学習内容のタイトル"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="logDate">日付</Label>
+          <Input
+            id="logDate"
+            type="date"
+            value={logDate}
+            onChange={(e) => setLogDate(e.target.value)}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -252,27 +265,16 @@ export default function CreateLogForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="logDate">日付</Label>
-          <Input
-            id="logDate"
-            type="date"
-            value={logDate}
-            onChange={(e) => setLogDate(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="note">学習内容</Label>
-          <Textarea
-            id="note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="学習内容の詳細"
-            rows={3}
-          />
-        </div>
+      <div>
+        <Label htmlFor="note">学習内容</Label>
+        <Textarea
+          id="note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="学習内容の詳細"
+          rows={5}
+          className="w-full"
+        />
       </div>
 
       <div>
