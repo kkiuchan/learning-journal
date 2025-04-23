@@ -779,11 +779,54 @@ export default function UnitDetail({
                           className={`prose prose-sm max-w-none dark:prose-invert ${
                             !expandedLogs.includes(log.id) &&
                             log.note.length > 200
-                              ? "line-clamp-4"
+                              ? "line-clamp-[8]"
                               : ""
                           }`}
                         >
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              pre: ({ node, ...props }) => (
+                                <div
+                                  className={`${
+                                    !expandedLogs.includes(log.id)
+                                      ? "max-h-[200px] overflow-y-auto"
+                                      : ""
+                                  }`}
+                                >
+                                  <pre {...props} />
+                                </div>
+                              ),
+                              code: ({
+                                node,
+                                inline,
+                                className,
+                                children,
+                                ...props
+                              }) => {
+                                const match = /language-(\w+)/.exec(
+                                  className || ""
+                                );
+                                return !inline && match ? (
+                                  <div
+                                    className={`${
+                                      !expandedLogs.includes(log.id)
+                                        ? "max-h-[200px] overflow-y-auto"
+                                        : ""
+                                    }`}
+                                  >
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                  </div>
+                                ) : (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
                             {log.note}
                           </ReactMarkdown>
                         </div>
