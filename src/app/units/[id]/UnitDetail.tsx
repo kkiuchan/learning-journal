@@ -29,6 +29,8 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
@@ -774,14 +776,16 @@ export default function UnitDetail({
                     {log.note && (
                       <div className="mt-2">
                         <div
-                          className={`whitespace-pre-wrap ${
+                          className={`prose prose-sm max-w-none dark:prose-invert ${
                             !expandedLogs.includes(log.id) &&
                             log.note.length > 200
                               ? "line-clamp-4"
                               : ""
                           }`}
                         >
-                          {log.note}
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {log.note}
+                          </ReactMarkdown>
                         </div>
                         {log.note.length > 200 && (
                           <button

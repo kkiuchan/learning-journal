@@ -89,11 +89,15 @@ export function HomeContent({ session }: { session: any }) {
       </div>
 
       <div className="text-center mt-8 sm:mt-12">
-        <Button size="lg" onClick={() => handleLinkClick("/units/new")}>
-          <Link href="/units/new" prefetch={true}>
+        <Link
+          href="/units/new"
+          prefetch={true}
+          onClick={() => handleLinkClick("/units/new")}
+        >
+          <Button size="lg" className="w-full sm:w-auto">
             学習を始める
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -22,6 +22,35 @@ export default {
         sans: ["var(--font-noto-sans-jp)", "sans-serif"],
         inter: ["var(--font-inter)", "sans-serif"],
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: "none",
+            color: "inherit",
+            a: {
+              color: "#3b82f6",
+              "&:hover": {
+                color: "#2563eb",
+              },
+            },
+            code: {
+              color: "#ef4444",
+              "&::before": {
+                content: '"`"',
+              },
+              "&::after": {
+                content: '"`"',
+              },
+            },
+            "code::before": {
+              content: '""',
+            },
+            "code::after": {
+              content: '""',
+            },
+          },
+        },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -93,5 +122,9 @@ export default {
       },
     },
   },
-  plugins: [animate, require("tailwindcss-animate")],
+  plugins: [
+    animate,
+    require("tailwindcss-animate"),
+    require("@tailwindcss/typography"),
+  ],
 };

@@ -17,7 +17,7 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
         </div>
         <div className="mt-8 bg-card py-8 px-4 shadow sm:rounded-lg sm:px-10 border">
           {children}
-          {footer && (
+          {/* {footer && (
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -31,7 +31,7 @@ export function AuthCard({ title, children, footer }: AuthCardProps) {
               </div>
               <div className="mt-6">{footer}</div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

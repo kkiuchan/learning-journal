@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { storage } from "@/lib/supabaseClient";
 import { format } from "date-fns";
-import { X } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface CreateLogFormProps {
   unitId: string;
@@ -43,6 +45,7 @@ export default function CreateLogForm({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [effectScore, setEffectScore] = useState<number>(3);
   const [effectType, setEffectType] = useState<string>("understanding");
+  const [showPreview, setShowPreview] = useState(false);
   const router = useRouter();
 
   const effectTypes = [
@@ -266,15 +269,47 @@ export default function CreateLogForm({
       </div>
 
       <div>
-        <Label htmlFor="note">学習内容</Label>
-        <Textarea
-          id="note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="学習内容の詳細"
-          rows={5}
-          className="w-full"
-        />
+        <div className="flex justify-between items-center mb-2">
+          <Label htmlFor="note">学習内容</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+            className="flex items-center gap-1"
+          >
+            {showPreview ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                エディタを表示
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                プレビュー
+              </>
+            )}
+          </Button>
+        </div>
+        {showPreview ? (
+          <div className="min-h-[200px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {note || "プレビューする内容がありません"}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <Textarea
+            id="note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="学習内容の詳細（Markdown形式で記述できます）"
+            rows={8}
+            className="w-full font-mono"
+          />
+        )}
+        <p className="text-xs text-muted-foreground mt-2">
+          Markdown記法が使用できます（見出し、リスト、コードブロックなど）
+        </p>
       </div>
 
       <div>
