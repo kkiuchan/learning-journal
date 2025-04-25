@@ -36,6 +36,25 @@ import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
 import EditLogForm from "./components/EditLogForm";
 
+// 画像URLの検証関数
+const isValidImageUrl = (url: string | null): boolean => {
+  if (!url) return false;
+  const allowedDomains = [
+    "lh3.googleusercontent.com",
+    "avatars.githubusercontent.com",
+    "localhost",
+    window.location.hostname,
+    "supabase.co",
+  ];
+  try {
+    const urlObj = new URL(url);
+    return allowedDomains.some((domain) => urlObj.hostname.includes(domain));
+  } catch {
+    // 相対パスの場合は許可（プロジェクトディレクトリ内の画像）
+    return url.startsWith("/");
+  }
+};
+
 // グローバルWindow型を拡張
 declare global {
   interface Window {
@@ -799,15 +818,15 @@ export default function UnitDetail({
                               ),
                               code: ({
                                 node,
-                                inline,
                                 className,
                                 children,
                                 ...props
-                              }) => {
+                              }: any) => {
                                 const match = /language-(\w+)/.exec(
                                   className || ""
                                 );
-                                return !inline && match ? (
+                                const isInline = !match;
+                                return !isInline ? (
                                   <div
                                     className={`${
                                       !expandedLogs.includes(log.id)
@@ -859,7 +878,7 @@ export default function UnitDetail({
                               <Star
                                 key={i}
                                 className={`h-4 w-4 ${
-                                  i < log.effectScore
+                                  i < (log.effectScore ?? 0)
                                     ? "fill-yellow-400 text-yellow-400"
                                     : "text-gray-300"
                                 }`}
@@ -969,13 +988,14 @@ export default function UnitDetail({
                 <div className="flex flex-col gap-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      {comment.user.image && (
-                        <img
-                          src={comment.user.image}
-                          alt={comment.user.name || "ユーザー"}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
-                        />
-                      )}
+                      {comment.user.image &&
+                        isValidImageUrl(comment.user.image) && (
+                          <img
+                            src={comment.user.image}
+                            alt={comment.user.name || "ユーザー"}
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                          />
+                        )}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
                           <span className="font-semibold text-sm sm:text-base truncate">

@@ -76,7 +76,8 @@ export function UserList() {
       const urlObj = new URL(url);
       return allowedDomains.some((domain) => urlObj.hostname.includes(domain));
     } catch {
-      return false;
+      // 相対パスの場合は許可（プロジェクトディレクトリ内の画像）
+      return url.startsWith("/");
     }
   };
 
