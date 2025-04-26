@@ -132,8 +132,8 @@ export default function EditUnitPage({
       });
 
       if (response.ok) {
-        router.push(`/units/${unit.id}`);
         await revalidateUnitDataAction(unit.id);
+        router.push(`/units/${unit.id}`);
       } else {
         const error = await response.json();
         console.error("ユニットの更新に失敗しました:", error);
