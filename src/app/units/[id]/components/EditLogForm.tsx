@@ -34,6 +34,7 @@ export default function EditLogForm({
   onCancel,
   onUpdate,
 }: EditLogFormProps) {
+  const [isComposing, setIsComposing] = useState(false);
   const [title, setTitle] = useState(log.title);
   const [learningTime, setLearningTime] = useState(log.learningTime);
   const [note, setNote] = useState(log.note);
@@ -364,6 +365,14 @@ export default function EditLogForm({
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
+            onCompositionStart={() => setIsComposing(true)} // IME入力開始
+            onCompositionEnd={() => setIsComposing(false)} // IME入力確定
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isComposing) {
+                e.preventDefault();
+                handleAddTag();
+              }
+            }}
           />
           <Button type="button" onClick={handleAddTag}>
             追加

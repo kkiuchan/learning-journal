@@ -32,6 +32,7 @@ export default function CreateLogForm({
   onCancel,
   onSuccess,
 }: CreateLogFormProps) {
+  const [isComposing, setIsComposing] = useState(false);
   const [title, setTitle] = useState("");
   const [learningTime, setLearningTime] = useState(0);
   const [note, setNote] = useState("");
@@ -319,6 +320,14 @@ export default function CreateLogForm({
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
+            onCompositionStart={() => setIsComposing(true)} // IME入力開始
+            onCompositionEnd={() => setIsComposing(false)} // IME入力確定
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !isComposing) {
+                e.preventDefault();
+                handleAddTag();
+              }
+            }}
           />
           <Button type="button" onClick={handleAddTag}>
             追加

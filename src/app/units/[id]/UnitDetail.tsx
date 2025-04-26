@@ -411,13 +411,19 @@ export default function UnitDetail({
                     ? "secondary"
                     : "outline"
                 }
-                className={`text-xs sm:text-sm ${
-                  unit.status === "COMPLETED"
-                    ? "bg-green-100 text-green-800 hover:bg-green-200"
-                    : unit.status === "IN_PROGRESS"
-                    ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                }`}
+                className={`
+                  text-xs sm:text-sm
+                  px-2 py-0.5 sm:px-3 sm:py-1
+                  ${
+                    unit.status === "COMPLETED"
+                      ? "bg-green-100 text-green-800 hover:bg-green-200"
+                      : unit.status === "IN_PROGRESS"
+                      ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                      : "border-gray-200 text-gray-600 hover:bg-gray-100"
+                  }
+                  whitespace-nowrap
+                  min-w-0
+                `}
               >
                 {translateUnitStatus(unit.status)}
               </Badge>

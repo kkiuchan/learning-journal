@@ -45,6 +45,7 @@ export default function EditUnitPage({
   const router = useRouter();
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const [unit, setUnit] = useState<Unit | null>(null);
   const [title, setTitle] = useState("");
   const [learningGoal, setLearningGoal] = useState("");
@@ -245,8 +246,10 @@ export default function EditUnitPage({
                   value={newTag}
                   onChange={(e) => setNewTag(e.target.value)}
                   placeholder="新しいタグを入力"
+                  onCompositionStart={() => setIsComposing(true)} // IME入力開始
+                  onCompositionEnd={() => setIsComposing(false)} // IME入力確定
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" && !isComposing) {
                       e.preventDefault();
                       handleAddTag();
                     }
