@@ -412,8 +412,9 @@ export default function UnitDetail({
                     : "outline"
                 }
                 className={`
-                  text-xs sm:text-sm
-                  px-2 py-0.5 sm:px-3 sm:py-1
+                  text-[10px] sm:text-xs
+                  px-1 py-0
+                  rounded-[3px]
                   ${
                     unit.status === "COMPLETED"
                       ? "bg-green-100 text-green-800 hover:bg-green-200"
@@ -423,6 +424,8 @@ export default function UnitDetail({
                   }
                   whitespace-nowrap
                   min-w-0
+                  h-5
+                  leading-none
                 `}
               >
                 {translateUnitStatus(unit.status)}

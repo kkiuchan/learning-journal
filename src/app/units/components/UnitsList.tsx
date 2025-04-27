@@ -289,13 +289,22 @@ export function UnitsList({ userId }: UnitsListProps) {
                           ? "secondary"
                           : "outline"
                       }
-                      className={`text-xs sm:text-sm whitespace-nowrap ${
-                        unit.status === "COMPLETED"
-                          ? "bg-green-100 text-green-800 hover:bg-green-200"
-                          : unit.status === "IN_PROGRESS"
-                          ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                          : "border-gray-200 text-gray-600 hover:bg-gray-100"
-                      }`}
+                      className={`
+                        text-[10px] sm:text-xs
+                        px-1 py-0
+                        rounded-[3px]
+                        ${
+                          unit.status === "COMPLETED"
+                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                            : unit.status === "IN_PROGRESS"
+                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                            : "border-gray-200 text-gray-600 hover:bg-gray-100"
+                        }
+                        whitespace-nowrap
+                        min-w-0
+                        h-5
+                        leading-none
+                      `}
                     >
                       {translateUnitStatus(unit.status)}
                     </Badge>
