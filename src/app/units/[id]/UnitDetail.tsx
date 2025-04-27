@@ -807,7 +807,7 @@ export default function UnitDetail({
                           className={`prose prose-sm max-w-none dark:prose-invert ${
                             !expandedLogs.includes(log.id) &&
                             log.note.length > 200
-                              ? "line-clamp-[8]"
+                              ? "line-clamp-[4]"
                               : ""
                           }`}
                         >
@@ -818,7 +818,7 @@ export default function UnitDetail({
                                 <div
                                   className={`${
                                     !expandedLogs.includes(log.id)
-                                      ? "max-h-[200px] overflow-y-auto"
+                                      ? "max-h-[150px] overflow-y-auto"
                                       : ""
                                   }`}
                                 >
