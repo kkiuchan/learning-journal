@@ -69,11 +69,7 @@ export async function generateMetadata({
       url: `/units/${id}`,
       images: [
         {
-          url: `/api/og?title=${encodeURIComponent(
-            unit.title
-          )}&username=${encodeURIComponent(userName)}&tags=${encodeURIComponent(
-            tagString
-          )}`,
+          url: "https://learning-journal-theta.vercel.app/logo.png",
           width: 1200,
           height: 630,
           alt: unit.title,
@@ -89,13 +85,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: unit.title,
       description: learningGoal,
-      images: [
-        `/api/og?title=${encodeURIComponent(
-          unit.title
-        )}&username=${encodeURIComponent(userName)}&tags=${encodeURIComponent(
-          tagString
-        )}`,
-      ],
+      images: ["https://learning-journal-theta.vercel.app/logo.png"],
     },
   };
 }
