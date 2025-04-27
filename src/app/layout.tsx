@@ -76,7 +76,7 @@ export const metadata: Metadata = {
       "学習の記録と振り返りができる学習管理アプリ。目標設定から進捗管理、振り返りまでをサポートし、他のユーザーと学びを共有できます。",
     images: [
       {
-        url: "/og-image.png", // ルートの公開ディレクトリに配置するOG画像
+        url: "/logo.png", // ルートの公開ディレクトリに配置するOG画像
         width: 1200,
         height: 630,
         alt: "Learning Journal",
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
     title: "Learning Journal - 自分の学習を記録・共有できるアプリ",
     description:
       "学習の記録と振り返りができる学習管理アプリ。目標設定から進捗管理、振り返りまでをサポートし、他のユーザーと学びを共有できます。",
-    images: ["/og-image.png"],
+    images: ["/logo.png"],
     creator: "@learning_journal",
     site: "@learning_journal",
   },
