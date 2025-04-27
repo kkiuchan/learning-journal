@@ -45,9 +45,11 @@ export async function middleware(req: NextRequest) {
   const userAgent = req.headers.get("user-agent") || "";
   const isBot = botUserAgents.some((bot) => userAgent.includes(bot));
   const isUnitsDetail = /^\/units\/[0-9]+$/.test(pathname);
+  const isUsersDetail = /^\/users\/[0-9]+$/.test(pathname);
+  const isTopPage = pathname === "/";
 
-  // botが/units/:idにアクセスした場合は認証スキップ
-  if (isBot && isUnitsDetail) {
+  // botが対象ページにアクセスした場合は認証スキップ
+  if (isBot && (isUnitsDetail || isUsersDetail || isTopPage)) {
     console.log(
       `[Edge] Bot detected (${userAgent}) - skipping auth for ${pathname}`
     );
