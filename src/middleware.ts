@@ -45,7 +45,7 @@ export async function middleware(req: NextRequest) {
   const userAgent = req.headers.get("user-agent") || "";
   const isBot = botUserAgents.some((bot) => userAgent.includes(bot));
   const isUnitsDetail = /^\/units\/[0-9]+$/.test(pathname);
-  const isUsersDetail = /^\/users\/[0-9]+$/.test(pathname);
+  const isUsersDetail = /^\/users\/[^/]+$/.test(pathname);
   const isTopPage = pathname === "/";
 
   // botが対象ページにアクセスした場合は認証スキップ
