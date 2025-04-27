@@ -26,6 +26,35 @@ export async function middleware(req: NextRequest) {
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   );
 
+  // --- 追加: bot判定 ---
+  const botUserAgents = [
+    "Twitterbot",
+    "facebookexternalhit",
+    "Slackbot",
+    "Discordbot",
+    "LinkedInBot",
+    "Googlebot",
+    "Bingbot",
+    "Applebot",
+    "Yeti",
+    "Yahoo! Slurp",
+    "DuckDuckBot",
+    "facebot",
+    "ia_archiver",
+  ];
+  const userAgent = req.headers.get("user-agent") || "";
+  const isBot = botUserAgents.some((bot) => userAgent.includes(bot));
+  const isUnitsDetail = /^\/units\/[0-9]+$/.test(pathname);
+
+  // botが/units/:idにアクセスした場合は認証スキップ
+  if (isBot && isUnitsDetail) {
+    console.log(
+      `[Edge] Bot detected (${userAgent}) - skipping auth for ${pathname}`
+    );
+    return NextResponse.next();
+  }
+  // --- ここまで追加 ---
+
   console.log(`[Edge] Checking path: ${pathname}`);
   console.log(`[Edge] Is public path: ${isPublicPath}`);
   console.log(`[Edge] NEXTAUTH_URL: ${process.env.NEXTAUTH_URL}`);
