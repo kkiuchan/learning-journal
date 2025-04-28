@@ -138,7 +138,7 @@ export function AdviceButton({
         <DialogTrigger asChild>
           <Button
             variant="default"
-            size="default"
+            size="sm"
             onClick={handleAdviceClick}
             disabled={isLoading || !isOwner}
             className={`relative ${
@@ -149,17 +149,17 @@ export function AdviceButton({
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                アドバイスを取得中...
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                生成中...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                AIアドバイスを取得
+                <Sparkles className="mr-1 h-4 w-4" />
+                AIアドバイス
               </>
             )}
-            <span className="absolute -top-3 -right-3 bg-yellow-400 text-black text-xs font-bold px-2 py-0.5 rounded-full">
-              無料トライアル
+            <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+              無料
             </span>
           </Button>
         </DialogTrigger>
