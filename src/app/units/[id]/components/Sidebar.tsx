@@ -4,7 +4,7 @@ import {
   Copy,
   Heart,
   MessageCircle,
-  MoreVertical,
+  MoreHorizontal,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -133,15 +133,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="w-8 h-8"
               onClick={(e) => {
                 e.stopPropagation();
                 setOpenMenuId(
                   openMenuId === parseInt(id) ? null : parseInt(id)
                 );
               }}
+              title="メニュー"
             >
-              <MoreVertical className="h-5 w-5" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
             <div
               ref={(el) => {

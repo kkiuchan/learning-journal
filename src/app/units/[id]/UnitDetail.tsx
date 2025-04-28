@@ -22,6 +22,7 @@ import {
   MoreHorizontal,
   Pencil,
   RefreshCw,
+  Share2,
   Star,
   Trash2,
 } from "lucide-react";
@@ -515,7 +516,7 @@ export default function UnitDetail({
                   }}
                   title="シェア"
                 >
-                  <Copy className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" />
                 </Button>
                 <div
                   ref={(el) => {
