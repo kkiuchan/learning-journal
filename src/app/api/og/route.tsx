@@ -56,40 +56,43 @@ export async function GET(req: NextRequest) {
               zIndex: 1,
             }}
           >
-            {/* ヘッダー部分 */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                marginBottom: "32px",
-                background: "linear-gradient(135deg, #3B5998, #40B3A2)",
-                padding: "12px 24px",
-                borderRadius: "16px",
-                boxShadow: "0 4px 12px rgba(59, 89, 152, 0.1)",
-                width: "360px",
-              }}
-            >
-              <img
-                src={`${process.env.NEXT_PUBLIC_APP_URL}/logo.png`}
-                width={40}
-                height={40}
-                alt="Learning Journal"
+            {/* ヘッダー部分のラッパー */}
+            <div style={{ display: "flex" }}>
+              {/* ヘッダー部分 */}
+              <div
                 style={{
-                  objectFit: "contain",
-                  filter: "brightness(0) invert(1)",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 24,
-                  fontWeight: "bold",
-                  color: "#ffffff",
-                  letterSpacing: "-0.02em",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  marginBottom: "32px",
+                  background: "linear-gradient(135deg, #3B5998, #40B3A2)",
+                  padding: "12px 24px",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 12px rgba(59, 89, 152, 0.1)",
+                  width: "360px",
                 }}
               >
-                Learning Journal
-              </span>
+                <img
+                  src={`${process.env.NEXT_PUBLIC_APP_URL}/logo.png`}
+                  width={40}
+                  height={40}
+                  alt="Learning Journal"
+                  style={{
+                    objectFit: "contain",
+                    filter: "brightness(0) invert(1)",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 24,
+                    fontWeight: "bold",
+                    color: "#ffffff",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
+                  Learning Journal
+                </span>
+              </div>
             </div>
 
             {/* メインコンテンツ */}
