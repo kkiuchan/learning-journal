@@ -20,6 +20,11 @@ export async function generateMetadata({
   const title = unit.title;
   const description = unit.learningGoal || "Learning Journalで学習を記録・共有";
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/units/${params.id}`;
+  const ogImageUrl = `${
+    process.env.NEXT_PUBLIC_APP_URL
+  }/api/og?title=${encodeURIComponent(title)}&username=${encodeURIComponent(
+    unit.user.name || "ユーザー"
+  )}&tags=${encodeURIComponent(unit.tags?.join(",") || "")}`;
 
   return {
     title: `${title} | Learning Journal`,
@@ -34,7 +39,7 @@ export async function generateMetadata({
       authors: unit.user.name ? [unit.user.name] : undefined,
       images: [
         {
-          url: `/units/${params.id}/opengraph-image`,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: title,
@@ -46,7 +51,7 @@ export async function generateMetadata({
       title: `${title} | Learning Journal`,
       description,
       creator: unit.user.name || undefined,
-      images: [`/units/${params.id}/opengraph-image`],
+      images: [ogImageUrl],
     },
     alternates: {
       canonical: url,
