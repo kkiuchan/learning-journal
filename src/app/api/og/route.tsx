@@ -27,57 +27,126 @@ export async function GET(req: NextRequest) {
             width: "100%",
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#fff",
-            padding: "40px",
+            backgroundColor: "#ffffff",
+            fontFamily: "sans-serif",
+            background: "linear-gradient(to bottom right, #ffffff, #f0f7f6)",
           }}
         >
+          {/* 装飾的な要素 */}
           <div
             style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: "400px",
+              height: "400px",
+              background: "linear-gradient(45deg, #40B3A2, #3B5998)",
+              borderRadius: "0 0 0 100%",
+              opacity: 0.1,
+            }}
+          />
+
+          <div
+            style={{
+              padding: "40px",
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
-              width: "100%",
+              height: "100%",
+              position: "relative",
+              zIndex: 1,
             }}
           >
-            <h1
-              style={{
-                fontSize: "60px",
-                fontWeight: 700,
-                color: "#1a1a1a",
-                lineHeight: 1.2,
-                margin: "0 0 20px",
-              }}
-            >
-              {title}
-            </h1>
+            {/* ヘッダー部分 */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                marginBottom: "20px",
+                gap: "16px",
+                marginBottom: "32px",
+                background: "linear-gradient(135deg, #3B5998, #40B3A2)",
+                padding: "12px 24px",
+                borderRadius: "16px",
+                boxShadow: "0 4px 12px rgba(59, 89, 152, 0.1)",
+                width: "360px",
               }}
             >
+              <img
+                src={`${process.env.NEXT_PUBLIC_APP_URL}/logo.png`}
+                width={40}
+                height={40}
+                alt="Learning Journal"
+                style={{
+                  objectFit: "contain",
+                  filter: "brightness(0) invert(1)",
+                }}
+              />
               <span
                 style={{
-                  fontSize: "32px",
-                  color: "#666",
+                  fontSize: 24,
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                  letterSpacing: "-0.02em",
                 }}
               >
-                by {username}
+                Learning Journal
               </span>
             </div>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+
+            {/* メインコンテンツ */}
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                gap: "24px",
+                maxWidth: "90%",
+              }}
+            >
+              <h1
+                style={{
+                  fontSize: title.length > 30 ? 40 : 48,
+                  fontWeight: "bold",
+                  color: "#3B5998",
+                  margin: 0,
+                  lineHeight: 1.4,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {title}
+              </h1>
+              <div
+                style={{
+                  fontSize: 24,
+                  color: "#40B3A2",
+                  margin: 0,
+                  lineHeight: 1.6,
+                  opacity: 0.9,
+                }}
+              >
+                {username}
+              </div>
+            </div>
+
+            {/* フッター部分 */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "12px",
+                marginTop: "32px",
+              }}
+            >
               {tags.map((tag, i) => (
                 <div
                   key={i}
                   style={{
-                    backgroundColor: "#f0f0f0",
+                    background: "linear-gradient(135deg, #3B5998, #40B3A2)",
                     padding: "8px 16px",
-                    borderRadius: "20px",
-                    fontSize: "24px",
-                    color: "#666",
+                    borderRadius: "8px",
+                    color: "#ffffff",
+                    fontSize: "18px",
+                    opacity: 0.9,
                   }}
                 >
                   {tag}
@@ -88,8 +157,7 @@ export async function GET(req: NextRequest) {
         </div>
       ),
       {
-        width: 1200,
-        height: 630,
+        ...size,
       }
     );
   } catch (e) {
