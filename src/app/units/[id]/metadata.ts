@@ -24,7 +24,7 @@ export async function generateMetadata({
     process.env.NEXT_PUBLIC_APP_URL
   }/api/og?title=${encodeURIComponent(title)}&username=${encodeURIComponent(
     unit.user.name || "ユーザー"
-  )}&tags=${encodeURIComponent(unit.tags?.join(",") || "")}`;
+  )}&tags=${encodeURIComponent(unit.tags?.join(",") || "")}&t=${Date.now()}`;
 
   return {
     title: `${title} | Learning Journal`,

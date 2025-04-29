@@ -45,7 +45,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-card shadow rounded-lg p-6">
           <h1 className="text-2xl font-bold mb-6 text-foreground">
