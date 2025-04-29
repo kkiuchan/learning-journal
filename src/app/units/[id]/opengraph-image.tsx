@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
@@ -23,17 +22,11 @@ async function fetchFont() {
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
-  const unit = await prisma.unit.findUnique({
-    where: { id: parseInt(params.id) },
-    include: {
-      user: {
-        select: {
-          name: true,
-          image: true,
-        },
-      },
-    },
-  });
+  // APIを使用してユニット情報を取得
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/units/${params.id}`
+  );
+  const { data: unit } = await response.json();
 
   const font = await fetchFont();
 

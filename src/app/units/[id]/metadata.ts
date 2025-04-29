@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
 
 export async function generateMetadata({
@@ -6,17 +5,10 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const unit = await prisma.unit.findUnique({
-    where: { id: parseInt(params.id) },
-    include: {
-      user: {
-        select: {
-          name: true,
-          image: true,
-        },
-      },
-    },
-  });
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/units/${params.id}`
+  );
+  const { data: unit } = await response.json();
 
   if (!unit) {
     return {
