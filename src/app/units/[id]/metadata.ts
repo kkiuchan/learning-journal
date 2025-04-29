@@ -3,89 +3,61 @@ import { Metadata } from "next";
 
 export async function generateMetadata({
   params,
-  parent,
 }: {
-  params: Promise<{ id: string }>;
-  parent: Promise<Metadata>;
+  params: { id: string };
 }): Promise<Metadata> {
-  const { id } = await params;
-
-  // ユニット情報をデータベースから取得
   const unit = await prisma.unit.findUnique({
-    where: { id: parseInt(id) },
+    where: { id: parseInt(params.id) },
     include: {
       user: {
         select: {
           name: true,
-        },
-      },
-      unitTags: {
-        include: {
-          tag: true,
+          image: true,
         },
       },
     },
   });
 
-  // ユニットが存在しない場合はデフォルト値を使用
   if (!unit) {
     return {
-      title: "ユニットが見つかりません",
-      description:
-        "指定されたユニットは存在しないか、削除された可能性があります。",
+      title: "Unit not found",
+      description: "指定されたユニットは存在しません",
     };
   }
 
-  // タグの処理
-  const tags = unit.unitTags.map((ut) => ut.tag.name);
-  const tagString = tags.length > 0 ? tags.join(", ") : "学習ユニット";
+  const title = unit.title;
+  const description = unit.learningGoal || "Learning Journalで学習を記録・共有";
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/units/${params.id}`;
 
-  // 親のmetadataを取得
-  const parentMetadata = await parent;
-  // 配列であることを確認して処理
-  const previousImages = parentMetadata.openGraph?.images
-    ? Array.isArray(parentMetadata.openGraph.images)
-      ? parentMetadata.openGraph.images
-      : [parentMetadata.openGraph.images]
-    : [];
-
-  // ユーザー名（nullの場合は「ゲスト」にする）
-  const userName = unit.user.name || "ゲスト";
-
-  // 学習目標の安全な取得
-  const learningGoal =
-    unit.learningGoal || `${userName}さんの学習ユニット "${unit.title}"`;
-
-  // メタデータを設定
   return {
-    title: unit.title,
-    description: learningGoal,
-    keywords: [...tags, "学習記録", "学習管理"],
-    authors: [{ name: userName }],
+    title: `${title} | Learning Journal`,
+    description,
     openGraph: {
-      title: `${unit.title} | Learning Journal`,
-      description: learningGoal,
+      title: `${title} | Learning Journal`,
+      description,
       type: "article",
-      url: `/units/${id}`,
+      url,
+      siteName: "Learning Journal",
+      locale: "ja_JP",
+      authors: unit.user.name ? [unit.user.name] : undefined,
       images: [
         {
-          url: "https://learning-journal-theta.vercel.app/logo.png",
+          url: `/units/${params.id}/opengraph-image`,
           width: 1200,
           height: 630,
-          alt: unit.title,
+          alt: title,
         },
-        ...previousImages,
       ],
-      publishedTime: unit.createdAt.toISOString(),
-      modifiedTime: unit.updatedAt.toISOString(),
-      authors: [userName],
-      tags,
     },
     twitter: {
       card: "summary_large_image",
-      title: unit.title,
-      description: learningGoal,
-      images: ["https://learning-journal-theta.vercel.app/logo.png"],
+      title: `${title} | Learning Journal`,
+      description,
+      creator: unit.user.name || undefined,
+      images: [`/units/${params.id}/opengraph-image`],
+    },
+    alternates: {
+      canonical: url,
     },
   };
 }

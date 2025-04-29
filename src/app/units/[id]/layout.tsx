@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
+import { generateMetadata } from "./metadata";
 
-export const metadata: Metadata = {
-  manifest: "/manifest.json",
-};
+export { generateMetadata };
 
 export default function UnitDetailLayout({
   children,
