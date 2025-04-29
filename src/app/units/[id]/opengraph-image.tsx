@@ -73,7 +73,9 @@ export default async function Image({ params }: { params: { id: string } }) {
   const title =
     unit.title.length > 30 ? unit.title.slice(0, 60) + "..." : unit.title;
   const titleFontSize = unit.title.length > 30 ? 40 : 48;
-  const userImageSrc = unit.user.image || "/images/default-avatar.png";
+  const userImageSrc =
+    unit.user.image ||
+    `${process.env.NEXT_PUBLIC_APP_URL}/images/default-avatar.png`;
 
   return new ImageResponse(
     (
@@ -100,7 +102,7 @@ export default async function Image({ params }: { params: { id: string } }) {
           }}
         >
           <img
-            src="/logo.png"
+            src={`${process.env.NEXT_PUBLIC_APP_URL}/logo.png`}
             width={48}
             height={48}
             alt="Learning Journal"
