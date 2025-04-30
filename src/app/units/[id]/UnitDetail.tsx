@@ -155,6 +155,11 @@ export default function UnitDetail({
     };
   }, [openMenuId]);
 
+  // 状態の追加
+  const [isDeletingUnit, setIsDeletingUnit] = useState(false);
+  const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
+  const [deletingCommentIds, setDeletingCommentIds] = useState<number[]>([]);
+
   // ローディング中の表示
   if (status === "loading") {
     return <Loading text="認証情報を確認中..." />;
@@ -182,7 +187,9 @@ export default function UnitDetail({
 
   const handleDelete = async () => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
+    if (isDeletingUnit) return;
 
+    setIsDeletingUnit(true);
     try {
       const response = await fetch(`/api/units/${id}`, {
         method: "DELETE",
@@ -194,9 +201,13 @@ export default function UnitDetail({
       } else {
         const data = await response.json();
         console.error("ユニットの削除に失敗しました:", data.error);
+        alert("ユニットの削除に失敗しました");
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
+      alert("エラーが発生しました");
+    } finally {
+      setIsDeletingUnit(false);
     }
   };
 
@@ -253,7 +264,9 @@ export default function UnitDetail({
 
   const handleDeleteComment = async (commentId: number) => {
     if (!confirm("このコメントを削除してもよろしいですか？")) return;
+    if (deletingCommentIds.includes(commentId)) return;
 
+    setDeletingCommentIds((prev) => [...prev, commentId]);
     try {
       // 楽観的更新
       await optimisticUpdate("delete", undefined, commentId);
@@ -267,10 +280,14 @@ export default function UnitDetail({
         mutateComments();
         const data = await response.json();
         console.error("コメントの削除に失敗しました:", data.error);
+        alert("コメントの削除に失敗しました");
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
       mutateComments();
+      alert("エラーが発生しました");
+    } finally {
+      setDeletingCommentIds((prev) => prev.filter((id) => id !== commentId));
     }
   };
 
@@ -427,6 +444,54 @@ export default function UnitDetail({
     const commentSection = document.getElementById("comments-section");
     if (commentSection) {
       commentSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleLogDelete = async (logId: number) => {
+    if (!confirm("このログを削除してもよろしいですか？")) return;
+    if (deletingLogIds.includes(logId)) return;
+
+    setDeletingLogIds((prev) => [...prev, logId]);
+    try {
+      const response = await fetch(`/api/units/${id}/logs/${logId}`, {
+        method: "DELETE",
+        next: {
+          tags: [
+            `unit-${id}`,
+            "unit",
+            "unit-list",
+            "log",
+            "log-list",
+            `log-${logId}`,
+          ],
+        },
+      });
+
+      if (response.ok) {
+        await mutateLogs(
+          (current) => {
+            if (!current) return current;
+            return {
+              ...current,
+              data: current.data.filter((l) => l.id !== logId),
+            };
+          },
+          {
+            revalidate: true,
+            populateCache: true,
+          }
+        );
+        setOpenMenuId(null);
+      } else {
+        const data = await response.json();
+        console.error("ログの削除に失敗しました:", data.error);
+        alert("ログの削除に失敗しました");
+      }
+    } catch (error) {
+      console.error("エラーが発生しました:", error);
+      alert("エラーが発生しました");
+    } finally {
+      setDeletingLogIds((prev) => prev.filter((id) => id !== logId));
     }
   };
 
@@ -657,9 +722,10 @@ export default function UnitDetail({
                           handleDelete();
                           setOpenMenuId(null);
                         }}
+                        disabled={isDeletingUnit}
                       >
                         <Trash2 className="h-3 w-3" />
-                        削除
+                        {isDeletingUnit ? "削除中..." : "削除"}
                       </button>
                     </div>
                   </div>
@@ -910,65 +976,14 @@ export default function UnitDetail({
                                   <button
                                     className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                                     onClick={async () => {
-                                      if (
-                                        !confirm(
-                                          "このログを削除してもよろしいですか？"
-                                        )
-                                      )
-                                        return;
-
-                                      try {
-                                        const response = await fetch(
-                                          `/api/units/${id}/logs/${log.id}`,
-                                          {
-                                            method: "DELETE",
-                                            next: {
-                                              tags: [
-                                                `unit-${id}`,
-                                                "unit",
-                                                "unit-list",
-                                                "log",
-                                                "log-list",
-                                                `log-${log.id}`,
-                                              ],
-                                            },
-                                          }
-                                        );
-
-                                        if (response.ok) {
-                                          await mutateLogs(
-                                            (current) => {
-                                              if (!current) return current;
-                                              return {
-                                                ...current,
-                                                data: current.data.filter(
-                                                  (l) => l.id !== log.id
-                                                ),
-                                              };
-                                            },
-                                            {
-                                              revalidate: true,
-                                              populateCache: true,
-                                            }
-                                          );
-                                          setOpenMenuId(null);
-                                        } else {
-                                          const data = await response.json();
-                                          console.error(
-                                            "ログの削除に失敗しました:",
-                                            data.error
-                                          );
-                                        }
-                                      } catch (error) {
-                                        console.error(
-                                          "エラーが発生しました:",
-                                          error
-                                        );
-                                      }
+                                      handleLogDelete(log.id);
                                     }}
+                                    disabled={deletingLogIds.includes(log.id)}
                                   >
                                     <Trash2 className="h-3 w-3" />
-                                    削除
+                                    {deletingLogIds.includes(log.id)
+                                      ? "削除中..."
+                                      : "削除"}
                                   </button>
                                 </div>
                               </div>
@@ -1253,9 +1268,14 @@ export default function UnitDetail({
                                     handleDeleteComment(comment.id);
                                     setOpenMenuId(null);
                                   }}
+                                  disabled={deletingCommentIds.includes(
+                                    comment.id
+                                  )}
                                 >
                                   <Trash2 className="h-3 w-3" />
-                                  削除
+                                  {deletingCommentIds.includes(comment.id)
+                                    ? "削除中..."
+                                    : "削除"}
                                 </button>
                               </div>
                             </div>

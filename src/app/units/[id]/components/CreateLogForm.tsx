@@ -33,6 +33,7 @@ export default function CreateLogForm({
   onSuccess,
 }: CreateLogFormProps) {
   const [isComposing, setIsComposing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [learningTime, setLearningTime] = useState(0);
   const [note, setNote] = useState("");
@@ -151,6 +152,9 @@ export default function CreateLogForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       const response = await fetch(`/api/units/${unitId}/logs`, {
         method: "POST",
@@ -187,6 +191,8 @@ export default function CreateLogForm({
     } catch (error) {
       console.error("Error creating log:", error);
       alert("ログの作成中にエラーが発生しました");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -200,6 +206,7 @@ export default function CreateLogForm({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="学習内容のタイトル"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -210,6 +217,7 @@ export default function CreateLogForm({
             type="date"
             value={logDate}
             onChange={(e) => setLogDate(e.target.value)}
+            disabled={isSubmitting}
           />
         </div>
       </div>
@@ -223,6 +231,7 @@ export default function CreateLogForm({
             value={learningTime}
             onChange={(e) => setLearningTime(Number(e.target.value))}
             min="1"
+            disabled={isSubmitting}
           />
         </div>
 
@@ -234,6 +243,7 @@ export default function CreateLogForm({
                 key={score}
                 type="button"
                 onClick={() => setEffectScore(score)}
+                disabled={isSubmitting}
                 className={`p-1 rounded ${
                   effectScore === score
                     ? "bg-primary text-primary-foreground"
@@ -261,6 +271,7 @@ export default function CreateLogForm({
                   checked={effectType === type.value}
                   onChange={(e) => setEffectType(e.target.value)}
                   className="form-radio"
+                  disabled={isSubmitting}
                 />
                 {type.label}
               </label>
@@ -306,6 +317,7 @@ export default function CreateLogForm({
             placeholder="学習内容の詳細（Markdown形式で記述できます）"
             rows={8}
             className="w-full font-mono"
+            disabled={isSubmitting}
           />
         )}
         <p className="text-xs text-muted-foreground mt-2">
@@ -320,8 +332,9 @@ export default function CreateLogForm({
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
-            onCompositionStart={() => setIsComposing(true)} // IME入力開始
-            onCompositionEnd={() => setIsComposing(false)} // IME入力確定
+            disabled={isSubmitting}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !isComposing) {
                 e.preventDefault();
@@ -329,7 +342,7 @@ export default function CreateLogForm({
               }
             }}
           />
-          <Button type="button" onClick={handleAddTag}>
+          <Button type="button" onClick={handleAddTag} disabled={isSubmitting}>
             追加
           </Button>
         </div>
@@ -344,6 +357,7 @@ export default function CreateLogForm({
                 type="button"
                 onClick={() => handleRemoveTag(tag)}
                 className="text-muted-foreground hover:text-foreground"
+                disabled={isSubmitting}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -364,6 +378,7 @@ export default function CreateLogForm({
                     handleUpdateResource(index, "description", e.target.value)
                   }
                   placeholder="参考資料のタイトル"
+                  disabled={isSubmitting}
                 />
                 {resource.resourceType === "file" ? (
                   <div className="flex items-center gap-2">
@@ -390,6 +405,7 @@ export default function CreateLogForm({
                       )
                     }
                     placeholder="https://example.com"
+                    disabled={isSubmitting}
                   />
                 )}
               </div>
@@ -397,6 +413,7 @@ export default function CreateLogForm({
                 type="button"
                 variant="destructive"
                 onClick={() => handleRemoveResource(index)}
+                disabled={isSubmitting}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -413,6 +430,7 @@ export default function CreateLogForm({
                   value={newResourceTitle}
                   onChange={(e) => setNewResourceTitle(e.target.value)}
                   placeholder="参考資料のタイトル"
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="flex gap-4">
@@ -425,12 +443,15 @@ export default function CreateLogForm({
                       onChange={(e) => setNewResourceLink(e.target.value)}
                       placeholder="https://example.com"
                       className="flex-1"
+                      disabled={isSubmitting}
                     />
                     <Button
                       type="button"
                       onClick={handleAddResource}
                       disabled={
-                        !newResourceTitle.trim() || !newResourceLink.trim()
+                        isSubmitting ||
+                        !newResourceTitle.trim() ||
+                        !newResourceLink.trim()
                       }
                     >
                       追加
@@ -445,7 +466,7 @@ export default function CreateLogForm({
                         type="file"
                         onChange={handleFileInputChange}
                         className="flex-1"
-                        disabled={uploadingFile}
+                        disabled={uploadingFile || isSubmitting}
                       />
                     </div>
                     {selectedFile && (
@@ -456,7 +477,7 @@ export default function CreateLogForm({
                         <Button
                           type="button"
                           onClick={handleUploadButtonClick}
-                          disabled={uploadingFile}
+                          disabled={uploadingFile || isSubmitting}
                         >
                           {uploadingFile ? "アップロード中..." : "アップロード"}
                         </Button>
@@ -471,10 +492,17 @@ export default function CreateLogForm({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           キャンセル
         </Button>
-        <Button type="submit">作成</Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "作成中..." : "作成"}
+        </Button>
       </div>
     </form>
   );

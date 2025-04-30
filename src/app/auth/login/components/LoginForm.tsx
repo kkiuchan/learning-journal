@@ -71,6 +71,7 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             required
+            disabled={isLoading}
             className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>
@@ -90,6 +91,7 @@ export function LoginForm() {
             type="password"
             autoComplete="current-password"
             required
+            disabled={isLoading}
             className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>

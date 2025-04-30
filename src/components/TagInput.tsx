@@ -1,24 +1,26 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { X } from "lucide-react";
 import { KeyboardEvent, useState } from "react";
 
-interface TagInputProps {
+export interface TagInputProps {
+  placeholder?: string;
   tags: string[];
   setTags: (tags: string[]) => void;
-  placeholder?: string;
   maxTags?: number;
+  disabled?: boolean;
 }
 
 export function TagInput({
+  placeholder = "タグを入力...",
   tags,
   setTags,
-  placeholder = "タグを入力",
   maxTags = 10,
+  disabled = false,
 }: TagInputProps) {
   const [input, setInput] = useState("");
+  const [isComposing, setIsComposing] = useState(false);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
@@ -42,34 +44,40 @@ export function TagInput({
     setInput("");
   };
 
-  const removeTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag));
+  const handleRemoveTag = (index: number) => {
+    setTags(tags.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="w-full space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <Badge key={tag} variant="secondary" className="text-sm py-1 px-2">
-            {tag}
-            <button
-              type="button"
-              className="ml-1 hover:text-destructive"
-              onClick={() => removeTag(tag)}
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
-      </div>
-      <Input
-        type="text"
-        placeholder={placeholder}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={handleKeyDown}
-        disabled={tags.length >= maxTags}
-      />
+    <div className="flex flex-wrap gap-2">
+      {tags.map((tag, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-1 bg-secondary px-2 py-1 rounded text-sm"
+        >
+          <span>{tag}</span>
+          <button
+            type="button"
+            onClick={() => handleRemoveTag(index)}
+            className="text-muted-foreground hover:text-foreground"
+            disabled={disabled}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      ))}
+      {tags.length < maxTags && (
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={() => setIsComposing(true)}
+          onCompositionEnd={() => setIsComposing(false)}
+          disabled={disabled}
+          className="w-32"
+        />
+      )}
     </div>
   );
 }

@@ -243,6 +243,7 @@ export default function EditLogForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
 
@@ -255,6 +256,7 @@ export default function EditLogForm({
           onChange={(e) => setLearningTime(parseInt(e.target.value))}
           required
           min="1"
+          disabled={isSubmitting}
         />
       </div>
 
@@ -266,6 +268,7 @@ export default function EditLogForm({
           value={logDate}
           onChange={(e) => setLogDate(e.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
 
@@ -307,6 +310,7 @@ export default function EditLogForm({
             rows={8}
             className="w-full font-mono"
             required
+            disabled={isSubmitting}
           />
         )}
         <p className="text-xs text-muted-foreground mt-2">
@@ -323,6 +327,7 @@ export default function EditLogForm({
                 key={score}
                 type="button"
                 onClick={() => setEffectScore(score)}
+                disabled={isSubmitting}
                 className={`p-1 rounded ${
                   effectScore === score
                     ? "bg-primary text-primary-foreground"
@@ -350,6 +355,7 @@ export default function EditLogForm({
                   checked={effectType === type.value}
                   onChange={(e) => setEffectType(e.target.value)}
                   className="form-radio"
+                  disabled={isSubmitting}
                 />
                 {type.label}
               </label>
@@ -365,8 +371,9 @@ export default function EditLogForm({
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
-            onCompositionStart={() => setIsComposing(true)} // IME入力開始
-            onCompositionEnd={() => setIsComposing(false)} // IME入力確定
+            disabled={isSubmitting}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !isComposing) {
                 e.preventDefault();
@@ -374,7 +381,11 @@ export default function EditLogForm({
               }
             }}
           />
-          <Button type="button" onClick={handleAddTag}>
+          <Button
+            type="button"
+            onClick={handleAddTag}
+            disabled={isSubmitting || !newTag.trim()}
+          >
             追加
           </Button>
         </div>
@@ -389,6 +400,7 @@ export default function EditLogForm({
                 type="button"
                 onClick={() => handleRemoveTag(tag)}
                 className="text-muted-foreground hover:text-foreground"
+                disabled={isSubmitting}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -516,7 +528,12 @@ export default function EditLogForm({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           キャンセル
         </Button>
         <Button type="submit" disabled={isSubmitting}>

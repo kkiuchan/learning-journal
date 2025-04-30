@@ -67,6 +67,7 @@ export function RegisterForm() {
             type="text"
             autoComplete="name"
             required
+            disabled={isLoading}
             className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>
@@ -86,6 +87,7 @@ export function RegisterForm() {
             type="email"
             autoComplete="email"
             required
+            disabled={isLoading}
             className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
         </div>
@@ -106,6 +108,7 @@ export function RegisterForm() {
             autoComplete="new-password"
             required
             minLength={8}
+            disabled={isLoading}
             className="appearance-none block w-full px-3 py-2 border border-input rounded-md shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input sm:text-sm bg-background"
           />
           <p className="mt-1 text-sm text-muted-foreground">

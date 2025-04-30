@@ -217,6 +217,7 @@ export function ProfileForm() {
                   placeholder="名前を入力"
                   {...field}
                   value={field.value || ""}
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormMessage />
@@ -235,6 +236,7 @@ export function ProfileForm() {
                   placeholder="自己紹介を入力"
                   {...field}
                   value={field.value || ""}
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormMessage />
@@ -257,6 +259,7 @@ export function ProfileForm() {
                     placeholder="年齢を入力"
                     {...field}
                     value={field.value || ""}
+                    disabled={isLoading}
                     onChange={(e) => {
                       const value = e.target.value;
                       const numValue = value ? parseInt(value) : null;
@@ -294,6 +297,7 @@ export function ProfileForm() {
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       className="data-[state=checked]:bg-blue-600"
+                      disabled={isLoading}
                     />
                   </FormControl>
                 </div>
@@ -314,6 +318,7 @@ export function ProfileForm() {
                   tags={field.value}
                   setTags={field.onChange}
                   maxTags={10}
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormDescription>最大10個まで登録できます</FormDescription>
@@ -334,6 +339,7 @@ export function ProfileForm() {
                   tags={field.value}
                   setTags={field.onChange}
                   maxTags={10}
+                  disabled={isLoading}
                 />
               </FormControl>
               <FormDescription>最大10個まで登録できます</FormDescription>
