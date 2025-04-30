@@ -1,10 +1,12 @@
 import { Metadata } from "next";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string };
-}): Promise<Metadata> {
+type Props = {
+  params: {
+    id: string;
+  };
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL}/api/units/${params.id}`
   );
