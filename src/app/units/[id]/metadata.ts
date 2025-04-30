@@ -1,14 +1,19 @@
 import { Metadata } from "next";
 
 type Props = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
+  const { id } = await params;
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/units/${params.id}`
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/units/${id}`
   );
   const { data: unit } = await response.json();
 
@@ -21,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = unit.title;
   const description = unit.learningGoal || "Learning Journalで学習を記録・共有";
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/units/${params.id}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/units/${id}`;
   const ogImageUrl = `${
     process.env.NEXT_PUBLIC_APP_URL
   }/api/og?title=${encodeURIComponent(title)}&username=${encodeURIComponent(
