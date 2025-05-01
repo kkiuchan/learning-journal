@@ -38,6 +38,7 @@ import useSWR from "swr";
 import CreateLogForm from "./components/CreateLogForm";
 import EditLogForm from "./components/EditLogForm";
 import Sidebar from "./components/Sidebar";
+import { TableOfContents } from "./components/TableOfContents";
 
 // 画像URLの検証関数
 const isValidImageUrl = (url: string | null): boolean => {
@@ -918,7 +919,11 @@ export default function UnitDetail({
           ) : (
             <div className="space-y-4">
               {logs.map((log) => (
-                <Card key={log.id} className="p-4">
+                <Card
+                  key={log.id}
+                  id={`log-${log.id}`}
+                  className="p-4 scroll-mt-24"
+                >
                   {editingLogId === log.id ? (
                     <EditLogForm
                       log={log}
@@ -1347,6 +1352,9 @@ export default function UnitDetail({
           )}
         </div>
       </main>
+
+      {/* 目次コンポーネント */}
+      {logs && <TableOfContents logs={logs} />}
     </div>
   );
 }
