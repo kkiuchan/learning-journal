@@ -18,7 +18,9 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
   });
   const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const dragRef = useRef<HTMLDivElement>(null);
+  const initialMousePosition = useRef<{ x: number; y: number } | null>(null);
+  const initialElementPosition = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -45,6 +47,66 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
     return () => observer.disconnect();
   }, [logs]);
 
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!initialMousePosition.current || !initialElementPosition.current)
+        return;
+
+      const deltaX = e.clientX - initialMousePosition.current.x;
+      const deltaY = e.clientY - initialMousePosition.current.y;
+
+      const newX = initialElementPosition.current.x + deltaX;
+      const newY = initialElementPosition.current.y + deltaY;
+
+      // 画面内に収まるように制限
+      const maxX = window.innerWidth - (dragRef.current?.offsetWidth || 0);
+      const maxY = window.innerHeight - (dragRef.current?.offsetHeight || 0);
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      initialMousePosition.current = null;
+      initialElementPosition.current = null;
+      localStorage.setItem("tocPosition", JSON.stringify(position));
+      document.body.style.userSelect = "";
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, position]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!dragRef.current) return;
+
+    // 右クリックは無視
+    if (e.button !== 0) return;
+
+    setIsDragging(true);
+    document.body.style.userSelect = "none";
+
+    initialMousePosition.current = {
+      x: e.clientX,
+      y: e.clientY,
+    };
+
+    initialElementPosition.current = {
+      x: position.x,
+      y: position.y,
+    };
+  };
+
   const scrollToLog = (logId: number) => {
     const element = document.getElementById(`log-${logId}`);
     if (element) {
@@ -61,43 +123,6 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
         setIsExpanded(false);
       }
     }
-  };
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    dragOffset.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-    setIsDragging(true);
-
-    // ドラッグ中のゴースト画像を透明にする
-    const img = new Image();
-    img.src =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-    e.dataTransfer.setDragImage(img, 0, 0);
-  };
-
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!e.clientX || !e.clientY) return;
-
-    const newPosition = {
-      x: e.clientX - dragOffset.current.x,
-      y: e.clientY - dragOffset.current.y,
-    };
-
-    // 画面内に収まるように位置を制限
-    const maxX = window.innerWidth - e.currentTarget.offsetWidth;
-    const maxY = window.innerHeight - e.currentTarget.offsetHeight;
-    newPosition.x = Math.max(0, Math.min(newPosition.x, maxX));
-    newPosition.y = Math.max(0, Math.min(newPosition.y, maxY));
-
-    setPosition(newPosition);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    localStorage.setItem("tocPosition", JSON.stringify(position));
   };
 
   if (logs.length === 0) return null;
@@ -154,6 +179,7 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
   // デスクトップ表示用のコンポーネント
   const DesktopView = () => (
     <div
+      ref={dragRef}
       className={cn(
         "fixed z-50 w-64 rounded-lg border bg-card p-4 shadow-sm transition-shadow select-none hidden lg:block",
         isDragging && "shadow-lg cursor-grabbing opacity-90"
@@ -163,12 +189,11 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
         top: `${position.y}px`,
         cursor: isDragging ? "grabbing" : "grab",
       }}
-      draggable="true"
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div
+        className="flex items-center justify-between mb-4"
+        onMouseDown={handleMouseDown}
+      >
         <h3 className="font-bold">学習ログ一覧</h3>
         <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
       </div>
