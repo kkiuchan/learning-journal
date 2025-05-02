@@ -2,20 +2,22 @@
 
 import { Button } from "@/components/ui/button";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { BookOpen, Brain, Clock, LineChart } from "lucide-react";
+import { BookOpen, Brain, Clock, LineChart, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export function HeroSection() {
   const { data: session } = useSession();
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [showChallenges, setShowChallenges] = useState(false);
   const [scrollAmount, setScrollAmount] = useState(0);
   const SCROLL_THRESHOLD = 100; // スクロールのしきい値（ピクセル）
   const lastTouchY = useRef<number | null>(null);
+  const [isLoading, setIsLoading] = useState<string | null>(null);
 
   const { scrollY } = useScroll({
     target: containerRef,
@@ -161,6 +163,22 @@ export function HeroSection() {
     },
   };
 
+  const handleNavigation = async (path: string) => {
+    try {
+      setIsLoading(path);
+      // 少し遅延を入れて、ローディング状態を確実に表示
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await router.push(path);
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
+  };
+
+  // ボタンコンポーネントの共通スタイル
+  const buttonBaseClass =
+    "relative overflow-hidden transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]";
+  const buttonLoadingClass = "cursor-not-allowed opacity-80";
+
   return (
     <section
       ref={containerRef}
@@ -245,59 +263,101 @@ export function HeroSection() {
               {session ? (
                 <>
                   <Button
-                    asChild
+                    onClick={() => handleNavigation("/units")}
                     size="lg"
-                    className="relative overflow-hidden group"
+                    className={`${buttonBaseClass} group ${
+                      isLoading === "/units" ? buttonLoadingClass : ""
+                    }`}
+                    disabled={isLoading !== null}
                   >
-                    <Link href="/units">
-                      <motion.span
-                        className="absolute inset-0 bg-primary/20"
-                        animate={{
-                          scale: [1, 1.5],
-                          opacity: [0.5, 0],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          repeatDelay: 1,
-                        }}
-                      />
+                    <div className="flex items-center gap-2">
+                      {isLoading === "/units" && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
                       学習を始める
-                    </Link>
+                    </div>
+                    <motion.span
+                      className="absolute inset-0 bg-primary/20"
+                      animate={{
+                        scale: [1, 1.5],
+                        opacity: [0.5, 0],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatDelay: 1,
+                      }}
+                    />
                   </Button>
-                  <Button variant="outline" size="lg" asChild>
-                    <Link href={`/users/${session.user.id}`}>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() =>
+                      handleNavigation(`/users/${session.user.id}`)
+                    }
+                    className={`${buttonBaseClass} ${
+                      isLoading === `/users/${session.user.id}`
+                        ? buttonLoadingClass
+                        : ""
+                    }`}
+                    disabled={isLoading !== null}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isLoading === `/users/${session.user.id}` && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
                       プロフィールへ
-                    </Link>
+                    </div>
                   </Button>
                 </>
               ) : (
                 <>
                   <Button
-                    asChild
+                    onClick={() => handleNavigation("/auth/login")}
                     size="lg"
-                    className="relative overflow-hidden group"
+                    className={`${buttonBaseClass} group ${
+                      isLoading === "/auth/login" ? buttonLoadingClass : ""
+                    }`}
+                    disabled={isLoading !== null}
                   >
-                    <Link href="/auth/login">
-                      <motion.span
-                        className="absolute inset-0 bg-primary/20"
-                        animate={{
-                          scale: [1, 1.5],
-                          opacity: [0.5, 0],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          repeatDelay: 1,
-                        }}
-                      />
+                    <div className="flex items-center gap-2">
+                      {isLoading === "/auth/login" && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
                       無料で始める
-                    </Link>
+                    </div>
+                    <motion.span
+                      className="absolute inset-0 bg-primary/20"
+                      animate={{
+                        scale: [1, 1.5],
+                        opacity: [0.5, 0],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        repeatDelay: 1,
+                      }}
+                    />
                   </Button>
-                  <Button variant="outline" size="lg" asChild>
-                    <Link href="/users/cm9pij88r0000bogga3i0qogr">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() =>
+                      handleNavigation("/users/cm9pij88r0000bogga3i0qogr")
+                    }
+                    className={`${buttonBaseClass} ${
+                      isLoading === "/users/cm9pij88r0000bogga3i0qogr"
+                        ? buttonLoadingClass
+                        : ""
+                    }`}
+                    disabled={isLoading !== null}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isLoading === "/users/cm9pij88r0000bogga3i0qogr" && (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      )}
                       デモを見る
-                    </Link>
+                    </div>
                   </Button>
                 </>
               )}
