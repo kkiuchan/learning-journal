@@ -1,4 +1,5 @@
 import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/cache";
@@ -94,85 +95,44 @@ export async function POST(
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id } = await params;
-    const unit = await prisma.unit.findUnique({
-      where: { id: parseInt(id) },
+
+    // セッションの取得（オプショナル）
+    const session = await getServerSession(authConfig);
+    const currentUserId = session?.user?.id;
+
+    const logs = await prisma.log.findMany({
+      where: {
+        unitId: parseInt(id),
+      },
+      orderBy: {
+        logDate: "desc",
+      },
+      include: {
+        logTags: {
+          include: {
+            tag: true,
+          },
+        },
+        resources: true,
+      },
     });
 
-    if (!unit) {
-      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
-    }
+    // レスポンスの整形
+    const formattedLogs = logs.map((log) => ({
+      ...log,
+      tags: log.logTags.map((logTag) => logTag.tag),
+      logTags: undefined,
+    }));
 
-    if (!unit.displayFlag && unit.userId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    // クエリパラメータの取得
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const skip = (page - 1) * limit;
-
-    const [logs, total] = await Promise.all([
-      prisma.log.findMany({
-        where: {
-          unitId: parseInt(id),
-        },
-        orderBy: {
-          logDate: "desc",
-        },
-        skip,
-        take: limit,
-        include: {
-          logTags: {
-            include: {
-              tag: true,
-            },
-          },
-          resources: true,
-        },
-      }),
-      prisma.log.count({
-        where: {
-          unitId: parseInt(id),
-        },
-      }),
-    ]);
-
-    // レスポンスの構築
-    const response = {
-      data: logs,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-
-    // キャッシュヘッダーの設定
-    const responseObj = NextResponse.json(response);
-    responseObj.headers.set(
-      "Cache-Control",
-      "public, s-maxage=10, stale-while-revalidate=59"
-    );
-
-    return responseObj;
+    return createApiResponse(formattedLogs);
   } catch (error) {
-    console.error("Error fetching logs:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("ログ取得エラー:", error);
+    return createErrorResponse("ログの取得中にエラーが発生しました", 500);
   }
 }

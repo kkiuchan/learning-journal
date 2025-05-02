@@ -87,5 +87,5 @@ export default async function UnitPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <UnitDetail params={Promise.resolve({ id })} />;
+  return <UnitDetail id={id} />;
 }

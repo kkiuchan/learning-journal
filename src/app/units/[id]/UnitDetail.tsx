@@ -30,7 +30,7 @@ import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -66,13 +66,7 @@ declare global {
   }
 }
 
-export default function UnitDetail({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  // Hooksはすべてトップレベルで宣言
-  const { id } = use(params);
+export default function UnitDetail({ id }: { id: string }) {
   const router = useRouter();
   const { data: session, status } = useSession() as {
     data: Session | null;
@@ -85,7 +79,21 @@ export default function UnitDetail({
     error: unitError,
     mutate: mutateUnit,
     isLoading,
-  } = useSWR<{ data: Unit } | undefined>(`/api/units/${id}`, undefined);
+  } = useSWR<{ data: Unit } | undefined>(
+    `/api/units/${id}`,
+    async (url: string) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch unit");
+        }
+        return response.json();
+      } catch (error) {
+        console.error("Error fetching unit:", error);
+        return undefined;
+      }
+    }
+  );
 
   // SWRを使用してログを取得
   const { logs, isLoading: logsLoading, mutate: mutateLogs } = useLogs(id);
@@ -158,23 +166,19 @@ export default function UnitDetail({
 
   // 状態の追加
   const [isDeletingUnit, setIsDeletingUnit] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
   const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
   const [deletingCommentIds, setDeletingCommentIds] = useState<number[]>([]);
 
+  useEffect(() => {
+    if (isDeleted) {
+      router.push("/units");
+    }
+  }, [isDeleted, router]);
+
   // ローディング中の表示
-  if (status === "loading") {
-    return <Loading text="認証情報を確認中..." />;
-  }
-
-  // 未認証の場合はリダイレクト
-  if (status === "unauthenticated") {
-    router.push("/auth/login");
-    return null;
-  }
-
-  // ユニットのローディング中の表示
-  if (isLoading || !unitData) {
-    return <Loading />;
+  if (status === "loading" || isLoading) {
+    return <Loading text="読み込み中..." />;
   }
 
   // エラーの表示
@@ -185,6 +189,17 @@ export default function UnitDetail({
       </div>
     );
   }
+
+  // データが存在しない場合
+  if (!unitData?.data) {
+    return (
+      <div className="rounded-lg bg-destructive/15 p-4 text-destructive">
+        ユニットが見つかりません
+      </div>
+    );
+  }
+
+  const unit = unitData.data;
 
   const handleDelete = async () => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
@@ -198,7 +213,7 @@ export default function UnitDetail({
       });
 
       if (response.ok) {
-        router.push("/units");
+        setIsDeleted(true);
       } else {
         const data = await response.json();
         console.error("ユニットの削除に失敗しました:", data.error);
@@ -329,6 +344,21 @@ export default function UnitDetail({
 
   const handleLike = async () => {
     if (!unitData?.data) return;
+
+    // 非ログインユーザーの場合、ログインを促す
+    if (!session?.user) {
+      toast.error(
+        <div className="flex flex-col gap-2">
+          <p>いいねするにはログインが必要です</p>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/auth/login" className="text-sm">
+              ログインする
+            </Link>
+          </Button>
+        </div>
+      );
+      return;
+    }
 
     const unit = unitData.data;
 
@@ -495,8 +525,6 @@ export default function UnitDetail({
       setDeletingLogIds((prev) => prev.filter((id) => id !== logId));
     }
   };
-
-  const unit = unitData.data;
 
   return (
     <div className="relative min-h-screen">

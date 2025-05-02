@@ -4,6 +4,12 @@ import { NextResponse } from "next/server";
 
 // 認証が不要なパス
 const publicPaths = [
+  "/",
+  "/demo",
+  "/units", // ユニット一覧
+  "/units/:path*", // ユニット詳細
+  "/users", // ユーザー一覧
+  "/users/:path*", // ユーザー詳細
   "/auth/login",
   "/auth/signin",
   "/auth/register",
@@ -21,10 +27,22 @@ const publicPaths = [
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // APIルートの場合は処理をスキップ
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
+  // 詳細ページのパターンマッチング
+  const isUnitDetail = /^\/units\/[0-9]+$/.test(pathname);
+  const isUserDetail = /^\/users\/[^/]+$/.test(pathname);
+
   // パスチェックを最適化
-  const isPublicPath = publicPaths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
-  );
+  const isPublicPath =
+    publicPaths.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`)
+    ) ||
+    isUnitDetail ||
+    isUserDetail;
 
   // --- 追加: bot判定 ---
   const botUserAgents = [
@@ -44,12 +62,10 @@ export async function middleware(req: NextRequest) {
   ];
   const userAgent = req.headers.get("user-agent") || "";
   const isBot = botUserAgents.some((bot) => userAgent.includes(bot));
-  const isUnitsDetail = /^\/units\/[0-9]+$/.test(pathname);
-  const isUsersDetail = /^\/users\/[^/]+$/.test(pathname);
   const isTopPage = pathname === "/";
 
   // botが対象ページにアクセスした場合は認証スキップ
-  if (isBot && (isUnitsDetail || isUsersDetail || isTopPage)) {
+  if (isBot && (isUnitDetail || isUserDetail || isTopPage)) {
     console.log(
       `[Edge] Bot detected (${userAgent}) - skipping auth for ${pathname}`
     );
@@ -63,6 +79,7 @@ export async function middleware(req: NextRequest) {
   console.log(`[Edge] Has NEXTAUTH_SECRET: ${!!process.env.NEXTAUTH_SECRET}`);
 
   if (isPublicPath) {
+    console.log(`[Edge] Access granted to public path: ${pathname}`);
     return NextResponse.next();
   }
 
@@ -110,10 +127,16 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|.*\\.png$|favicon.ico|sw.js|sw-register.js|manifest.json|offline.html).*)",
     "/admin/:path*",
     "/dashboard/:path*",
     "/account/:path*",
-    "/units/:path*",
+    {
+      source:
+        "/((?!api/|_next/|.*\\.|favicon.ico|sw.js|sw-register.js|manifest.json|offline.html).*)",
+      missing: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "purpose", value: "prefetch" },
+      ],
+    },
   ],
 };

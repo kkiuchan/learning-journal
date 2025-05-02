@@ -363,7 +363,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensurePrismaConnected();
-  // この関数にセキュリティ対策を直接実装します
   try {
     const { id } = await params;
 
@@ -437,7 +436,6 @@ export async function GET(
       ...restUnit,
       tags: unitTags.map((unitTag) => unitTag.tag),
       isLiked: Array.isArray(unitLikes) && unitLikes.length > 0,
-      // ログにタグ情報を追加
       logs: unit.logs.map((log) => ({
         ...log,
         tags: log.logTags.map((logTag) => logTag.tag),
