@@ -15,6 +15,7 @@ export function HeroSection() {
   const [showChallenges, setShowChallenges] = useState(false);
   const [scrollAmount, setScrollAmount] = useState(0);
   const SCROLL_THRESHOLD = 100; // スクロールのしきい値（ピクセル）
+  const lastTouchY = useRef<number | null>(null);
 
   const { scrollY } = useScroll({
     target: containerRef,
@@ -68,12 +69,45 @@ export function HeroSection() {
       }
     };
 
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!showChallenges) {
+        lastTouchY.current = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!showChallenges && lastTouchY.current !== null) {
+        const currentY = e.touches[0].clientY;
+        const deltaY = Math.abs(currentY - lastTouchY.current);
+
+        // 累積スクロール量を計算
+        accumulatedScroll += deltaY;
+        setScrollAmount(accumulatedScroll);
+
+        // しきい値を超えたら課題を表示
+        if (accumulatedScroll >= SCROLL_THRESHOLD) {
+          setShowChallenges(true);
+        }
+
+        lastTouchY.current = currentY;
+      }
+    };
+
     if (!showChallenges) {
+      // マウスホイールのイベントリスナー
       window.addEventListener("wheel", handleWheel, { passive: false });
+
+      // タッチイベントのリスナー
+      window.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      window.addEventListener("touchmove", handleTouchMove, { passive: true });
     }
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
     };
   }, [showChallenges]);
 
