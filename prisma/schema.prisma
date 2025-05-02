@@ -62,6 +62,7 @@ model Unit {
   preLearningState String?
   reflection       String?
   nextAction       String?
+  achievementLevel Int?       @default(0)
   startDate        DateTime?
   endDate          DateTime?
   displayFlag      Boolean    @default(true)

@@ -8,6 +8,11 @@ export const unitStatusMessages: Record<UnitStatus, string> = {
 } as const;
 
 // ユニットステータスの翻訳関数
-export const translateUnitStatus = (status: UnitStatus): string => {
-  return unitStatusMessages[status];
-};
+export function translateUnitStatus(status: string): string {
+  const translations: Record<string, string> = {
+    PLANNED: "計画中",
+    IN_PROGRESS: "進行中",
+    COMPLETED: "完了",
+  };
+  return translations[status] || status;
+}

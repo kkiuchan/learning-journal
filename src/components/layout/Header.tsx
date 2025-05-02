@@ -20,6 +20,7 @@ import {
 import {
   BookOpen,
   Home,
+  LayoutDashboard,
   LogIn,
   LogOut,
   Menu,
@@ -77,6 +78,11 @@ export function Header() {
       href: "/",
       icon: Home,
       label: "ホーム",
+    },
+    {
+      href: "/dashboard",
+      icon: LayoutDashboard,
+      label: "ダッシュボード",
     },
     {
       href: "/units",

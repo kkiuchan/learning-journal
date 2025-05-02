@@ -5,10 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useComments } from "@/hooks/useComments";
 import { useLogs } from "@/hooks/useLogs";
 import { Unit } from "@/types";
+import { getEffectTypeLabel } from "@/utils/effect";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -79,21 +81,62 @@ export default function UnitDetail({ id }: { id: string }) {
     error: unitError,
     mutate: mutateUnit,
     isLoading,
-  } = useSWR<{ data: Unit } | undefined>(
-    `/api/units/${id}`,
+  } = useSWR<{ data: Unit }>(
+    id && !isNaN(parseInt(id)) ? `/api/units/${id}` : null,
     async (url: string) => {
       try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
+
         if (!response.ok) {
-          throw new Error("Failed to fetch unit");
+          if (response.status === 404) {
+            throw new Error("ユニットが見つかりません");
+          }
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error ||
+              `ユニットの取得に失敗しました: ${response.status}`
+          );
         }
-        return response.json();
+
+        const data = await response.json();
+        if (!data || !data.data) {
+          throw new Error("サーバーからデータを取得できませんでした");
+        }
+
+        return data;
       } catch (error) {
-        console.error("Error fetching unit:", error);
-        return undefined;
+        console.error("ユニット取得エラー:", error);
+        if (error instanceof Error) {
+          throw error;
+        }
+        throw new Error("ユニットの取得中にエラーが発生しました");
       }
+    },
+    {
+      revalidateOnFocus: false,
+      errorRetryCount: 2,
+      dedupingInterval: 5000,
+      keepPreviousData: true,
+      onError: (error) => {
+        console.error("SWRエラー:", error);
+      },
     }
   );
+
+  // IDが無効な場合
+  if (id && isNaN(parseInt(id))) {
+    return (
+      <div className="rounded-lg bg-destructive/15 p-4 text-destructive">
+        <p className="font-medium">無効なユニットID</p>
+        <p className="text-sm mt-1">指定されたユニットIDが無効です。</p>
+      </div>
+    );
+  }
 
   // SWRを使用してログを取得
   const { logs, isLoading: logsLoading, mutate: mutateLogs } = useLogs(id);
@@ -185,7 +228,12 @@ export default function UnitDetail({ id }: { id: string }) {
   if (unitError) {
     return (
       <div className="rounded-lg bg-destructive/15 p-4 text-destructive">
-        ユニットの読み込みに失敗しました
+        <p className="font-medium mb-1">エラーが発生しました</p>
+        <p className="text-sm">
+          {unitError instanceof Error
+            ? unitError.message
+            : "ユニットの読み込みに失敗しました"}
+        </p>
       </div>
     );
   }
@@ -194,7 +242,10 @@ export default function UnitDetail({ id }: { id: string }) {
   if (!unitData?.data) {
     return (
       <div className="rounded-lg bg-destructive/15 p-4 text-destructive">
-        ユニットが見つかりません
+        <p className="font-medium">ユニットが見つかりません</p>
+        <p className="text-sm mt-1">
+          指定されたユニットは存在しないか、削除された可能性があります。
+        </p>
       </div>
     );
   }
@@ -370,10 +421,14 @@ export default function UnitDetail({ id }: { id: string }) {
           ...unit,
           isLiked: !unit.isLiked,
           _count: {
-            ...unit._count,
-            unitLikes: unit.isLiked
-              ? unit._count.unitLikes - 1
-              : unit._count.unitLikes + 1,
+            ...(unit._count || { logs: 0, comments: 0, unitLikes: 0 }),
+            unitLikes: unit._count?.unitLikes
+              ? unit.isLiked
+                ? unit._count.unitLikes - 1
+                : unit._count.unitLikes + 1
+              : unit.isLiked
+              ? 0
+              : 1,
           },
         },
       },
@@ -526,6 +581,31 @@ export default function UnitDetail({ id }: { id: string }) {
     }
   };
 
+  const handleAchievementUpdate = async (value: number) => {
+    try {
+      const response = await fetch(`/api/units/${id}/achievement`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ achievementLevel: value }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "達成度の更新に失敗しました");
+      }
+
+      await mutateUnit();
+      toast.success("達成度を更新しました");
+    } catch (error) {
+      console.error("Error updating achievement level:", error);
+      toast.error(
+        error instanceof Error ? error.message : "達成度の更新に失敗しました"
+      );
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       <Sidebar
@@ -540,7 +620,7 @@ export default function UnitDetail({ id }: { id: string }) {
         handleDelete={handleDelete}
         menuRefs={menuRefs}
         currentUrl={currentUrl}
-        commentCount={unit._count.comments}
+        commentCount={unit._count?.comments ?? 0}
         onCommentClick={handleCommentClick}
         className="fixed left-[clamp(-50px,calc(50%-640px-64px),200px)] top-[calc(50%+100px)] -translate-y-1/2 hidden lg:flex"
       />
@@ -580,14 +660,14 @@ export default function UnitDetail({ id }: { id: string }) {
               </div>
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <div className="flex items-center gap-2">
-                  {unit.user.image && (
+                  {unit.user?.image && (
                     <img
                       src={unit.user.image}
-                      alt={unit.user.name || "ユーザー"}
+                      alt={unit.user?.name || "ユーザー"}
                       className="w-6 h-6 rounded-full"
                     />
                   )}
-                  <span>{unit.user.name || "ユーザー"}</span>
+                  <span>{unit.user?.name || "ユーザー"}</span>
                 </div>
                 <span>•</span>
                 <span>
@@ -775,6 +855,67 @@ export default function UnitDetail({ id }: { id: string }) {
               </div>
             )}
 
+            {session?.user?.id === unit.userId && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-base sm:text-lg font-semibold">達成度</h2>
+                  <span className="text-sm font-medium">
+                    {unit.achievementLevel || 0}%
+                  </span>
+                </div>
+                <Slider
+                  value={[unit.achievementLevel || 0]}
+                  onValueChange={async ([value]) => {
+                    // 楽観的更新
+                    mutateUnit(
+                      {
+                        data: {
+                          ...unit,
+                          achievementLevel: value,
+                        },
+                      },
+                      false
+                    );
+
+                    try {
+                      const response = await fetch(
+                        `/api/units/${id}/achievement`,
+                        {
+                          method: "PATCH",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ achievementLevel: value }),
+                        }
+                      );
+
+                      if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(
+                          errorData.error || "達成度の更新に失敗しました"
+                        );
+                      }
+
+                      await mutateUnit();
+                      toast.success("達成度を更新しました");
+                    } catch (error) {
+                      // エラー時は元の値に戻す
+                      mutateUnit();
+                      console.error("Error updating achievement level:", error);
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "達成度の更新に失敗しました"
+                      );
+                    }
+                  }}
+                  max={100}
+                  step={5}
+                  className="w-full transition-all duration-300 ease-in-out"
+                />
+              </div>
+            )}
+
             {unit.preLearningState && (
               <div>
                 <h2 className="text-base sm:text-lg font-semibold mb-2">
@@ -828,11 +969,11 @@ export default function UnitDetail({ id }: { id: string }) {
             )}
 
             <div className="flex flex-wrap gap-2">
-              {unit.tags.map((tag) => (
-                <Badge key={tag.id} variant="outline">
-                  {tag.name}
+              {unit.unitTags?.map((unitTag) => (
+                <Badge key={unitTag.tag.id} variant="outline">
+                  {unitTag.tag.name}
                 </Badge>
-              ))}
+              )) ?? null}
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-4 mt-4">
@@ -847,7 +988,7 @@ export default function UnitDetail({ id }: { id: string }) {
                 <Heart
                   className={`h-4 w-4 ${unit.isLiked ? "fill-current" : ""}`}
                 />
-                <span className="text-sm">{unit._count.unitLikes}</span>
+                <span className="text-sm">{unit._count?.unitLikes ?? 0}</span>
               </button>
               {/* コメントボタン（小画面のみ） */}
               <button
@@ -856,7 +997,7 @@ export default function UnitDetail({ id }: { id: string }) {
                 title="コメント"
               >
                 <MessageCircle className="h-4 w-4" />
-                <span className="text-sm">{unit._count.comments}</span>
+                <span className="text-sm">{unit._count?.comments ?? 0}</span>
               </button>
               {/* AIアドバイスボタン */}
               {session?.user?.id === unit.userId && (
@@ -866,7 +1007,6 @@ export default function UnitDetail({ id }: { id: string }) {
                   userId={unit.userId}
                 />
               )}
-              {/* 右寄せのメニューボタン */}
             </div>
           </div>
         </Card>

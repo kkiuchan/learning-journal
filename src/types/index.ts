@@ -101,13 +101,16 @@ export type Unit = {
   endDate: string | null;
   displayFlag: boolean;
   createdAt: string;
+  achievementLevel: number;
   totalLearningTime: number;
   isLiked: boolean;
-  tags: {
-    id: number;
-    name: string;
+  unitTags: {
+    tag: {
+      id: number;
+      name: string;
+    };
   }[];
-  _count: {
+  _count?: {
     logs: number;
     comments: number;
     unitLikes: number;

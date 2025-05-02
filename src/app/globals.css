@@ -91,18 +91,20 @@
   body {
     @apply bg-background text-foreground;
     position: relative;
+    min-height: 100vh;
     overflow-x: hidden;
   }
 
   body::before,
   body::after {
     content: "";
-    position: absolute;
+    position: fixed;
     top: -50%;
     left: -100%;
     width: 300%;
     height: 200%;
     z-index: -1;
+    pointer-events: none;
   }
 
   body::before {

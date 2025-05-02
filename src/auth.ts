@@ -1,6 +1,6 @@
 // export const runtime = "edge";
 
-import NextAuth from "next-auth";
+import NextAuth, { getServerSession } from "next-auth";
 import { authConfig } from "./auth.config";
 
 // 開発環境と本番環境で適切なシークレットを使用
@@ -18,3 +18,8 @@ export const handler = NextAuth({
 
 export const GET = handler;
 export const POST = handler;
+
+export async function auth() {
+  const session = await getServerSession(authConfig);
+  return session;
+}

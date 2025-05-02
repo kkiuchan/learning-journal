@@ -1,4 +1,6 @@
+import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
 import { Providers } from "@/components/providers";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { validateEnv } from "@/lib/env";
@@ -126,13 +128,18 @@ export default function RootLayout({
         <script src="/sw-register.js" defer />
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${inter.variable} ${notoSansJP.variable} font-sans`}>
+      <body
+        className={`${inter.variable} ${notoSansJP.variable} font-sans min-h-screen flex flex-col overflow-x-hidden relative`}
+      >
         <Providers>
           <ThemeProvider>
-            <Header />
-            <main className="min-h-screen px-2 py-4 md:px-4 md:py-8">
-              {children}
-            </main>
+            <div className="flex flex-col flex-1">
+              <Header />
+              <main className="flex-1 flex flex-col">
+                <AnimatedLayout>{children}</AnimatedLayout>
+              </main>
+              <Footer />
+            </div>
             <Toaster />
           </ThemeProvider>
         </Providers>

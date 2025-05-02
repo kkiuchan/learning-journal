@@ -10,7 +10,7 @@ export type UnitStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED";
 export type UnitDisplayFlag = boolean;
 
 // ユニットの基本型
-export type BaseUnit = {
+export interface BaseUnit {
   id: number;
   userId: string;
   title: string;
@@ -18,21 +18,17 @@ export type BaseUnit = {
   preLearningState: string | null;
   reflection: string | null;
   nextAction: string | null;
+  achievementLevel: number | null;
+  startDate: Date | null;
+  endDate: Date | null;
   status: UnitStatus;
   displayFlag: boolean;
-  tags: {
-    id: number;
-    name: string;
-  }[];
-  isLiked: boolean;
-};
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 // データベースモデル用のUnit型
 export type DbUnit = BaseUnit & {
-  startDate: Date | null;
-  endDate: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
   user: {
     id: string;
     name: string | null;
@@ -47,18 +43,31 @@ export type DbUnit = BaseUnit & {
 };
 
 // APIレスポンス用のUnit型
-export type ApiUnit = Omit<BaseUnit, "id"> & {
-  id: number;
+export interface ApiUnit
+  extends Omit<BaseUnit, "startDate" | "endDate" | "createdAt" | "updatedAt"> {
   startDate: string | null;
   endDate: string | null;
   createdAt: string;
-  totalLearningTime: number;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+  tags: {
+    tag: {
+      id: number;
+      name: string;
+    };
+  }[];
   _count: {
     logs: number;
-    comments: number;
     unitLikes: number;
+    comments: number;
   };
-};
+  isLiked: boolean;
+  totalLearningTime?: number;
+}
 
 // フォーム用のUnit型
 export type UnitForm = Omit<BaseUnit, "id" | "userId" | "tags" | "isLiked"> & {
@@ -82,14 +91,16 @@ export const convertDbUnitToApiUnit = (dbUnit: DbUnit): ApiUnit => {
     status: dbUnit.status,
     displayFlag: dbUnit.displayFlag,
     createdAt: dbUnit.createdAt.toISOString(),
-    totalLearningTime: dbUnit._count.totalLearningTime,
-    isLiked: dbUnit.isLiked,
-    tags: dbUnit.tags,
+    updatedAt: dbUnit.updatedAt.toISOString(),
+    user: dbUnit.user,
+    tags: dbUnit.tags.map((tag) => ({ tag })),
     _count: {
       logs: dbUnit._count.logs,
-      comments: dbUnit._count.comments,
       unitLikes: dbUnit._count.unitLikes,
+      comments: dbUnit._count.comments,
     },
+    isLiked: dbUnit.isLiked,
+    totalLearningTime: dbUnit._count.totalLearningTime,
   };
 };
 
@@ -109,7 +120,8 @@ export const convertApiUnitToDbUnit = (
     status: apiUnit.status,
     displayFlag: apiUnit.displayFlag,
     createdAt: new Date(apiUnit.createdAt),
-    tags: apiUnit.tags,
+    user: apiUnit.user,
+    tags: apiUnit.tags.map((tag) => tag.tag),
     _count: {
       logs: apiUnit._count.logs,
       unitLikes: apiUnit._count.unitLikes,
@@ -119,3 +131,54 @@ export const convertApiUnitToDbUnit = (
     isLiked: apiUnit.isLiked,
   };
 };
+
+export interface Unit {
+  id: number;
+  userId: string;
+  title: string;
+  learningGoal: string | null;
+  preLearningState: string | null;
+  reflection: string | null;
+  nextAction: string | null;
+  achievementLevel: number | null;
+  startDate: Date | null;
+  endDate: Date | null;
+  status: UnitStatus;
+  displayFlag: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
+  unitTags: {
+    tag: {
+      id: number;
+      name: string;
+    };
+  }[];
+  _count: {
+    logs: number;
+    unitLikes: number;
+    comments: number;
+  };
+  isLiked: boolean;
+}
+
+export interface CreateUnitInput {
+  title: string;
+  learningGoal?: string;
+  preLearningState?: string;
+  reflection?: string;
+  nextAction?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: UnitStatus;
+  tags?: string[];
+  displayFlag?: boolean;
+}
+
+export interface UpdateUnitInput extends Partial<CreateUnitInput> {
+  achievementLevel?: number;
+}

@@ -1,91 +1,91 @@
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import UnitDetail from "./UnitDetail";
 
-// メタデータの生成
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
+interface Props {
+  params: { id: string };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const id = await params.id;
+  const numericId = parseInt(id);
+
+  // IDが無効な場合のエラーハンドリング
+  if (isNaN(numericId)) {
+    return {
+      title: "ユニットが見つかりません",
+      description: "指定されたユニットは存在しません。",
+    };
+  }
 
   try {
     const unit = await prisma.unit.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: numericId },
       include: {
-        user: { select: { name: true } },
-        unitTags: { include: { tag: true } },
+        user: {
+          select: { name: true },
+        },
       },
     });
 
     if (!unit) {
       return {
         title: "ユニットが見つかりません",
-        description:
-          "指定されたユニットは存在しないか、削除された可能性があります。",
-        manifest: "/manifest.json",
+        description: "指定されたユニットは存在しません。",
       };
     }
 
-    const tags = unit.unitTags.map((ut) => ut.tag.name);
-    const tagString = tags.length > 0 ? tags.join(", ") : "学習ユニット";
-    const learningGoal =
-      unit.learningGoal || `${unit.user.name || "ユーザー"}さんの学習ユニット`;
+    const { title, learningGoal } = unit;
     const userName = unit.user.name || "ユーザー";
 
     return {
-      title: unit.title,
-      description: learningGoal,
-      keywords: [...tags, "学習記録", "学習管理"],
-      manifest: "/manifest.json",
+      title: `${title} | Learning Journal`,
+      description: learningGoal || "学習ユニットの詳細ページです。",
       openGraph: {
-        title: `${unit.title} | Learning Journal`,
-        description: learningGoal,
+        title: title,
+        description: learningGoal || `${userName}さんの学習ユニット`,
         type: "article",
         url: `/units/${id}`,
         images: [
           {
             url: `/api/og?title=${encodeURIComponent(
-              unit.title
-            )}&username=${encodeURIComponent(
-              userName
-            )}&tags=${encodeURIComponent(tagString)}`,
+              title
+            )}&description=${encodeURIComponent(learningGoal || "")}`,
             width: 1200,
             height: 630,
-            alt: unit.title,
+            alt: title,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: unit.title,
-        description: learningGoal,
+        title: title,
+        description: learningGoal || `${userName}さんの学習ユニット`,
         images: [
           `/api/og?title=${encodeURIComponent(
-            unit.title
-          )}&username=${encodeURIComponent(userName)}&tags=${encodeURIComponent(
-            tagString
-          )}`,
+            title
+          )}&description=${encodeURIComponent(learningGoal || "")}`,
         ],
       },
     };
   } catch (error) {
-    console.error("メタデータ生成中にエラー:", error);
+    console.error("Error fetching unit metadata:", error);
     return {
-      title: "Learning Journal - ユニット詳細",
-      description: "学習ユニットの詳細情報",
-      manifest: "/manifest.json",
+      title: "エラー",
+      description: "ユニット情報の取得中にエラーが発生しました。",
     };
   }
 }
 
 // ページコンポーネント
-export default async function UnitPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default async function UnitPage({ params }: Props) {
+  const id = await params.id;
+  const numericId = parseInt(id);
+
+  if (isNaN(numericId)) {
+    notFound();
+  }
+
   return <UnitDetail id={id} />;
 }

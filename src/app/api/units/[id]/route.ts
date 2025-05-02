@@ -360,19 +360,21 @@ export async function DELETE(
  */
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  await ensurePrismaConnected();
   try {
-    const { id } = await params;
+    const { id } = await Promise.resolve(params);
+    const numericId = parseInt(id);
+    await ensurePrismaConnected();
 
-    // セッションの取得（いいねの状態チェック用）
+    if (isNaN(numericId)) {
+      return createErrorResponse("無効なユニットIDです", 400);
+    }
+
     const session = await getServerSession(authConfig);
-    const currentUserId = session?.user?.id;
 
-    // ユニットの取得
     const unit = await prisma.unit.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: numericId },
       include: {
         user: {
           select: {
@@ -386,43 +388,12 @@ export async function GET(
             tag: true,
           },
         },
-        logs: {
-          orderBy: { logDate: "desc" },
-          include: {
-            logTags: {
-              include: {
-                tag: true,
-              },
-            },
-            resources: true,
-          },
-        },
-        comments: {
-          orderBy: { createdAt: "desc" },
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                image: true,
-              },
-            },
-          },
-        },
         _count: {
           select: {
-            logs: true,
             unitLikes: true,
             comments: true,
           },
         },
-        unitLikes: currentUserId
-          ? {
-              where: {
-                userId: currentUserId,
-              },
-            }
-          : undefined,
       },
     });
 
@@ -430,36 +401,29 @@ export async function GET(
       return createErrorResponse("ユニットが見つかりません", 404);
     }
 
-    // レスポンスの整形
-    const { unitTags, unitLikes, ...restUnit } = unit;
-    const formattedUnit = {
-      ...restUnit,
-      tags: unitTags.map((unitTag) => unitTag.tag),
-      isLiked: Array.isArray(unitLikes) && unitLikes.length > 0,
-      logs: unit.logs.map((log) => ({
-        ...log,
-        tags: log.logTags.map((logTag) => logTag.tag),
-        logTags: undefined,
-      })),
-    };
+    // いいね状態の確認
+    let isLiked = false;
+    if (session?.user?.id) {
+      const like = await prisma.unitLike.findFirst({
+        where: {
+          AND: [{ unitId: numericId }, { userId: session.user.id }],
+        },
+      });
+      isLiked = !!like;
+    }
 
-    // キャッシュヘッダーの設定
-    const response = createApiResponse(formattedUnit);
-    const headers = new Headers(response.headers);
-    headers.set(
-      "Cache-Control",
-      "public, s-maxage=60, stale-while-revalidate=300"
-    );
-
-    // レスポンスの生成
-    return new NextResponse(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
+    return createApiResponse({
+      ...unit,
+      isLiked,
     });
   } catch (error) {
     console.error("ユニット取得エラー:", error);
-    return createErrorResponse("ユニットの取得中にエラーが発生しました", 500);
+    return createErrorResponse(
+      error instanceof Error
+        ? error.message
+        : "ユニットの取得中にエラーが発生しました",
+      500
+    );
   }
 }
 
