@@ -1,4 +1,6 @@
+import { authConfig } from "@/auth.config";
 import { Metadata } from "next";
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -6,41 +8,50 @@ export const metadata: Metadata = {
   description: "Learning Journalのサイトマップです。",
 };
 
-const siteMap = {
-  メイン: [
-    { label: "ホーム", href: "/" },
-    { label: "ダッシュボード", href: "/dashboard" },
-    { label: "学習ユニット", href: "/units" },
-    { label: "学習ログ", href: "/logs" },
-  ],
-  アカウント: [
-    { label: "プロフィール", href: "/profile" },
-    { label: "設定", href: "/settings" },
-    { label: "通知", href: "/notifications" },
-  ],
-  コミュニティ: [
-    { label: "フォーラム", href: "/forum" },
-    { label: "メンバー", href: "/members" },
-    { label: "イベント", href: "/events" },
-  ],
-  サポート: [
-    { label: "ヘルプセンター", href: "/help" },
-    { label: "よくある質問", href: "/faq" },
-    { label: "お問い合わせ", href: "/contact" },
-  ],
-  法的情報: [
-    { label: "利用規約", href: "/terms" },
-    { label: "プライバシーポリシー", href: "/privacy" },
-    { label: "特定商取引法に基づく表記", href: "/legal" },
-  ],
-  その他: [
-    { label: "会社概要", href: "/company" },
-    { label: "採用情報", href: "/careers" },
-    { label: "ブログ", href: "/blog" },
-  ],
+type SiteMapLink = {
+  label: string;
+  href: string;
+  target?: string;
 };
 
-export default function SitemapPage() {
+type SiteMapSection = {
+  [key: string]: SiteMapLink[];
+};
+
+export default async function SitemapPage() {
+  const session = await getServerSession(authConfig);
+
+  const siteMap: SiteMapSection = {
+    メイン: [
+      { label: "ホーム", href: "/" },
+      { label: "ダッシュボード", href: "/dashboard" },
+      { label: "学習ユニット", href: "/units" },
+      { label: "学習ログ", href: "/logs" },
+    ],
+    アプリケーション: [
+      { label: "機能紹介", href: "/features" },
+      { label: "使い方ガイド", href: "/guide" },
+      { label: "プライバシーポリシー", href: "/privacy" },
+      { label: "利用規約", href: "/terms" },
+    ],
+    アカウント: [
+      { label: "ログイン", href: "/auth/login" },
+      {
+        label: "プロフィール",
+        href: session?.user?.id ? `/users/${session.user.id}` : "/auth/login",
+      },
+      { label: "設定", href: "/settings" },
+    ],
+    リソース: [
+      {
+        label: "ソースコード",
+        href: "https://github.com/kkiuchan/learning-journal",
+        target: "_blank",
+      },
+      { label: "サイトマップ", href: "/sitemap" },
+    ],
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">サイトマップ</h1>
@@ -54,6 +65,7 @@ export default function SitemapPage() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    target={link.target}
                     className="text-muted-foreground hover:text-primary hover:underline"
                   >
                     {link.label}

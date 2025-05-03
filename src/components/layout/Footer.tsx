@@ -4,40 +4,42 @@ import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-const footerLinks = {
-  product: {
-    title: "プロダクト",
+type FooterLink = {
+  label: string;
+  href: string;
+  target?: string;
+};
+
+type FooterSection = {
+  title: string;
+  items: FooterLink[];
+};
+
+const footerLinks: Record<string, FooterSection> = {
+  app: {
+    title: "アプリケーション",
     items: [
       { label: "機能紹介", href: "/features" },
       { label: "使い方ガイド", href: "/guide" },
-      { label: "料金プラン", href: "/pricing" },
-      { label: "よくある質問", href: "/faq" },
-    ],
-  },
-  company: {
-    title: "会社情報",
-    items: [
-      { label: "運営会社", href: "/company" },
       { label: "プライバシーポリシー", href: "/privacy" },
       { label: "利用規約", href: "/terms" },
-      { label: "お問い合わせ", href: "/contact" },
     ],
   },
   resources: {
     title: "リソース",
     items: [
-      { label: "ブログ", href: "/blog" },
-      { label: "開発ロードマップ", href: "/roadmap" },
-      { label: "ステータス", href: "/status" },
-      { label: "API ドキュメント", href: "/api-docs" },
+      {
+        label: "ソースコード",
+        href: "https://github.com/kkiuchan/learning-journal",
+        target: "_blank",
+      },
+      { label: "サイトマップ", href: "/sitemap" },
     ],
   },
 };
 
 const socialLinks = [
-  { icon: "twitter", href: "https://twitter.com/learning_journal" },
-  { icon: "github", href: "https://github.com/learning-journal" },
-  { icon: "discord", href: "https://discord.gg/learning-journal" },
+  { icon: "github", href: "https://github.com/kkiuchan/learning-journal" },
 ];
 
 export function Footer() {
@@ -45,7 +47,7 @@ export function Footer() {
     <footer className="w-full border-t bg-background shrink-0">
       <div className="container mx-auto px-4 py-8 md:px-8">
         {/* メインフッターコンテンツ */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {/* ブランドセクション */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
@@ -87,6 +89,7 @@ export function Footer() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      target={item.target}
                       className="text-sm text-muted-foreground hover:text-primary hover:underline"
                     >
                       {item.label}
@@ -102,20 +105,8 @@ export function Footer() {
         <div className="mt-8 border-t pt-8">
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Learning Journal. All rights
-              reserved.
+              © {new Date().getFullYear()} Learning Journal
             </p>
-            <div className="flex space-x-4">
-              <Button variant="link" size="sm" asChild>
-                <Link href="/privacy">プライバシー</Link>
-              </Button>
-              <Button variant="link" size="sm" asChild>
-                <Link href="/terms">利用規約</Link>
-              </Button>
-              <Button variant="link" size="sm" asChild>
-                <Link href="/sitemap">サイトマップ</Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>
