@@ -1,10 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 
-export default function VerifyNoticePage() {
+function VerifyNoticeContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const [isResending, setIsResending] = useState(false);
@@ -78,5 +78,13 @@ export default function VerifyNoticePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyNoticePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyNoticeContent />
+    </Suspense>
   );
 }
