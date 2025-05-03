@@ -59,11 +59,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}&text=${encodeURIComponent(unit.title + " | Learning Journal")}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow transition-colors duration-200"
-            title="Twitterでシェア"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-black hover:bg-gray-900 text-white shadow transition-colors duration-200"
+            title="Xでシェア"
           >
             <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M24 4.557a9.93 9.93 0 0 1-2.828.775 4.932 4.932 0 0 0 2.165-2.724c-.951.564-2.005.974-3.127 1.195A4.92 4.92 0 0 0 16.616 3c-2.73 0-4.942 2.21-4.942 4.932 0 .386.045.763.127 1.124C7.728 8.807 4.1 6.884 1.671 3.965c-.423.722-.666 1.561-.666 2.475 0 1.708.87 3.216 2.188 4.099a4.904 4.904 0 0 1-2.237-.616c-.054 1.997 1.397 3.872 3.448 4.29a4.936 4.936 0 0 1-2.224.084c.627 1.956 2.444 3.377 4.6 3.417A9.867 9.867 0 0 1 0 21.543a13.94 13.94 0 0 0 7.548 2.209c9.057 0 14.009-7.496 14.009-13.986 0-.213-.005-.425-.014-.636A9.936 9.936 0 0 0 24 4.557z" />
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </a>
           <a
@@ -85,11 +85,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 text-white shadow transition-colors duration-200"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-[#00B900] hover:bg-[#00a000] text-white shadow transition-colors duration-200"
             title="LINEでシェア"
           >
-            <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.615 3.184C17.413 1.13 14.03.06 10.5.06c-3.53 0-6.913 1.07-9.115 3.124C.49 5.13-.001 7.13.001 9.184c.002 2.053.491 4.053 1.384 6.06.893 2.007 2.23 3.87 3.98 5.37.13.11.29.17.46.17.09 0 .18-.02.26-.05l2.77-1.13c.19-.08.41-.03.54.12.37.41.77.8 1.2 1.16.09.08.21.13.33.13.04 0 .09-.01.13-.02.13-.04.24-.13.3-.25l.7-1.52c.07-.15.02-.33-.12-.42-.36-.25-.7-.53-1.01-.83-.13-.13-.16-.33-.07-.48.09-.15.27-.21.43-.14l2.13.87c.08.03.17.05.26.05.09 0 .18-.02.26-.05 1.75-1.5 3.09-3.36 3.98-5.37.89-2.01 1.38-4.01 1.38-6.06.01-2.05-.48-4.05-1.38-6.06z" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"></path>
             </svg>
           </a>
           <button
@@ -113,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <Heart className={`w-4 h-4 ${unit.isLiked ? "fill-current" : ""}`} />
           <span className="absolute -right-4 top-1/2 -translate-y-1/2 text-xs font-bold">
-            {unit._count.unitLikes}
+            {unit._count?.unitLikes ?? 0}
           </span>
         </button>
         {/* コメントボタン */}
@@ -133,13 +133,10 @@ const Sidebar: React.FC<SidebarProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenMenuId(
-                  openMenuId === parseInt(id) ? null : parseInt(id)
-                );
-              }}
-              title="メニュー"
+              className="h-8 w-8"
+              onClick={() =>
+                setOpenMenuId(openMenuId === parseInt(id) ? null : parseInt(id))
+              }
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
@@ -149,21 +146,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                   menuRefs.current[parseInt(id)] = el;
                 }
               }}
-              className={`absolute left-10 top-0 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[120px] ${
+              className={`absolute right-0 top-full mt-1 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[160px] ${
                 openMenuId === parseInt(id)
                   ? "opacity-100 transform translate-y-0"
                   : "opacity-0 transform -translate-y-2 pointer-events-none"
               }`}
-              onClick={(e) => e.stopPropagation()}
             >
               <div className="py-1">
                 <Link href={`/units/${id}/edit`}>
                   <button
                     className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId(null);
-                    }}
+                    onClick={() => setOpenMenuId(null)}
                   >
                     <Pencil className="h-3 w-3" />
                     編集
@@ -171,8 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </Link>
                 <button
                   className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onClick={() => {
                     handleDelete();
                     setOpenMenuId(null);
                   }}
