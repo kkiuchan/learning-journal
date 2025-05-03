@@ -179,6 +179,11 @@ export async function GET(
     if (!query || query === "*") {
       const [users, total] = await Promise.all([
         prisma.user.findMany({
+          where: {
+            emailVerified: {
+              not: null,
+            },
+          },
           skip: (page - 1) * limit,
           take: limit,
           orderBy: {
@@ -217,7 +222,13 @@ export async function GET(
             },
           },
         }),
-        prisma.user.count(),
+        prisma.user.count({
+          where: {
+            emailVerified: {
+              not: null,
+            },
+          },
+        }),
       ]);
 
       const totalPages = Math.ceil(total / limit);
@@ -251,6 +262,9 @@ export async function GET(
     // 検索クエリがある場合は検索を実行
     const users = await prisma.user.findMany({
       where: {
+        emailVerified: {
+          not: null,
+        },
         OR: [
           { name: { contains: query, mode: "insensitive" } },
           { selfIntroduction: { contains: query, mode: "insensitive" } },
@@ -316,6 +330,9 @@ export async function GET(
 
     const total = await prisma.user.count({
       where: {
+        emailVerified: {
+          not: null,
+        },
         OR: [
           { name: { contains: query, mode: "insensitive" } },
           { selfIntroduction: { contains: query, mode: "insensitive" } },

@@ -246,8 +246,13 @@ export async function GET(
     const currentUserId = session?.user?.id;
 
     // ユーザー基本情報の取得
-    const user = await prisma.user.findUnique({
-      where: { id: id },
+    const user = await prisma.user.findFirst({
+      where: {
+        id: id,
+        emailVerified: {
+          not: null,
+        },
+      },
       select: {
         id: true,
         name: true,
