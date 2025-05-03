@@ -14,8 +14,11 @@ export const metadata: Metadata = {
   description: "学習の進捗状況や統計情報を確認できます。",
 };
 
+export const revalidate = 0; // キャッシュを無効化
+
 async function getDashboardData(userId: string) {
   const today = new Date();
+  today.setHours(today.getHours() + 9); // JSTに調整
   const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
   const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
@@ -138,6 +141,7 @@ async function getDashboardData(userId: string) {
 
   // 学習時間の推移データを取得（直近7日間）
   const sevenDaysAgo = new Date();
+  sevenDaysAgo.setHours(sevenDaysAgo.getHours() + 9); // JSTに調整
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
   sevenDaysAgo.setHours(0, 0, 0, 0);
 
@@ -156,6 +160,7 @@ async function getDashboardData(userId: string) {
 
   const progressData = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
+    date.setHours(date.getHours() + 9); // JSTに調整
     date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
 
@@ -165,7 +170,7 @@ async function getDashboardData(userId: string) {
 
     return {
       name: `${date.getMonth() + 1}/${date.getDate()}`,
-      hours: (log?._sum.learningTime || 0) / 60, // 分から時間に変換
+      hours: (log?._sum.learningTime || 0) / 60,
     };
   }).reverse();
 
