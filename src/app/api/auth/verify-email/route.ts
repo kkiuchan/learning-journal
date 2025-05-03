@@ -119,7 +119,12 @@ export async function GET(request: Request) {
 
     // 使用済みトークンを削除
     await prisma.verificationToken.delete({
-      where: { token: verificationToken.token },
+      where: {
+        identifier_token: {
+          identifier: verificationToken.identifier,
+          token: verificationToken.token,
+        },
+      },
     });
 
     return NextResponse.json({ message: "メールアドレスの確認が完了しました" });
