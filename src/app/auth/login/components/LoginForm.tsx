@@ -1,28 +1,30 @@
 "use client";
 
-import { ErrorMessage } from "@/components/ui/error-message";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [showResendButton, setShowResendButton] = useState(false);
+  const [resendEmail, setResendEmail] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
+    setError("");
     setIsLoading(true);
     setAvailableProviders([]);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
     try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+
       const result = await signIn("credentials", {
         email,
         password,
@@ -32,22 +34,63 @@ export function LoginForm() {
       if (result?.error) {
         try {
           const errorData = JSON.parse(result.error);
-          if (errorData.availableProviders) {
-            setAvailableProviders(errorData.availableProviders);
+
+          if (errorData.type === "email_verification") {
+            setError(errorData.message);
+            setShowResendButton(true);
+            setResendEmail(email);
+            return;
+          }
+
+          if (errorData.type === "oauth") {
             setError(
-              "このメールアドレスは外部認証で登録されています。以下の方法でログインしてください。"
+              `このメールアドレスは外部認証で登録されています。以下のプロバイダーでログインしてください: ${errorData.availableProviders.join(
+                ", "
+              )}`
             );
-          } else {
-            setError("メールアドレスまたはパスワードが正しくありません。");
+            return;
           }
         } catch {
-          setError("メールアドレスまたはパスワードが正しくありません。");
+          setError("メールアドレスまたはパスワードが正しくありません");
         }
-      } else {
-        router.push("/account");
+        return;
       }
-    } catch {
-      setError("ログイン中にエラーが発生しました。");
+
+      router.push("/dashboard");
+    } catch (error) {
+      setError("ログイン中にエラーが発生しました");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!resendEmail) return;
+
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: resendEmail }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      toast.success("確認メールを再送信しました");
+      setShowResendButton(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "確認メールの送信に失敗しました"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +98,21 @@ export function LoginForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      {error && <ErrorMessage message={error} />}
+      {error && (
+        <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">
+          {error}
+          {showResendButton && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              className="block mt-2 text-primary hover:underline"
+              disabled={isLoading}
+            >
+              確認メールを再送信する
+            </button>
+          )}
+        </div>
+      )}
 
       <div>
         <label

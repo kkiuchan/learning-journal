@@ -127,6 +127,9 @@ const nextConfig = {
     // APIルートのタイムアウトを60秒に設定
     apiTimeout: 60000,
   },
+  async redirects() {
+    return [];
+  },
 };
 
 module.exports = nextConfig;

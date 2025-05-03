@@ -14,36 +14,42 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
-    setAvailableProviders([]);
-
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
+    setError(null);
 
     try {
+      const formData = new FormData(e.currentTarget);
+      const email = formData.get("email") as string;
+      const name = formData.get("name") as string;
+      const password = formData.get("password") as string;
+
+      console.log("送信データ:", { email, name }); // パスワードはログに出さない
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, name, password }),
       });
 
       const data = await response.json();
+      console.log("レスポンス:", data);
 
       if (!response.ok) {
-        throw new Error(data.error || "登録中にエラーが発生しました");
+        throw new Error(data.error || "エラーが発生しました");
       }
 
-      // 登録成功後、ログインページにリダイレクト
-      router.push("/auth/login?registered=true");
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "登録中にエラーが発生しました"
+      console.log(
+        "登録成功、リダイレクト先:",
+        `/auth/verify-notice?email=${encodeURIComponent(email)}`
       );
+
+      // リダイレクトを強制的に実行
+      window.location.href = `/auth/verify-notice?email=${encodeURIComponent(email)}`;
+    } catch (error) {
+      console.error("登録エラー:", error);
+      setError(error instanceof Error ? error.message : "エラーが発生しました");
     } finally {
       setIsLoading(false);
     }

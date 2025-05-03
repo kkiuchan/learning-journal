@@ -45,6 +45,16 @@ export const authConfig: NextAuthOptions = {
 
         // パスワード認証ユーザーの場合
         if (user.hashedPassword) {
+          // メール認証が必要な場合のチェック
+          if (user.primaryAuthMethod === "email" && !user.emailVerified) {
+            throw new Error(
+              JSON.stringify({
+                type: "email_verification",
+                message: "メールアドレスの確認が必要です",
+              })
+            );
+          }
+
           const isValid = await bcryptjs.compare(
             credentials.password,
             user.hashedPassword
@@ -60,7 +70,12 @@ export const authConfig: NextAuthOptions = {
           const availableProviders = user.accounts.map(
             (account) => account.provider
           );
-          throw new Error(JSON.stringify({ availableProviders }));
+          throw new Error(
+            JSON.stringify({
+              type: "oauth",
+              availableProviders,
+            })
+          );
         }
 
         return null;
