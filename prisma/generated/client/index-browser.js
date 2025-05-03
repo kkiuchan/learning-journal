@@ -137,6 +137,16 @@ exports.Prisma.UserScalarFieldEnum = {
   selfIntroduction: 'selfIntroduction'
 };
 
+exports.Prisma.UserProviderScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  providerId: 'providerId',
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.UnitScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -248,8 +258,7 @@ exports.Prisma.SessionScalarFieldEnum = {
 exports.Prisma.VerificationTokenScalarFieldEnum = {
   identifier: 'identifier',
   token: 'token',
-  expires: 'expires',
-  createdAt: 'createdAt'
+  expires: 'expires'
 };
 
 exports.Prisma.ErrorLogScalarFieldEnum = {
@@ -260,16 +269,6 @@ exports.Prisma.ErrorLogScalarFieldEnum = {
   url: 'url',
   userAgent: 'userAgent',
   timestamp: 'timestamp',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.VerificationRequestScalarFieldEnum = {
-  id: 'id',
-  email: 'email',
-  token: 'token',
-  name: 'name',
-  expires: 'expires',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -292,6 +291,7 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  UserProvider: 'UserProvider',
   Unit: 'Unit',
   Log: 'Log',
   Resource: 'Resource',
@@ -305,8 +305,7 @@ exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
-  ErrorLog: 'ErrorLog',
-  VerificationRequest: 'VerificationRequest'
+  ErrorLog: 'ErrorLog'
 };
 
 /**

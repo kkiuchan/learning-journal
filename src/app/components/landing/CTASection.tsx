@@ -24,7 +24,7 @@ export function CTASection() {
     } catch (error) {
       console.error("Navigation error:", error);
     } finally {
-      setIsLoading(null);
+      //   setIsLoading(null);
     }
   };
 
@@ -83,13 +83,28 @@ export function CTASection() {
                 size="lg"
                 onClick={() => handleNavigation("/dashboard")}
                 disabled={isLoading !== null}
+                className="relative overflow-hidden group hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
               >
-                {isLoading === "/dashboard" ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <ArrowRight className="w-4 h-4 mr-2" />
-                )}
-                ダッシュボードへ
+                <motion.div
+                  className="absolute inset-0 bg-primary/10"
+                  initial={{ scale: 1, opacity: 0 }}
+                  whileHover={{
+                    scale: 1.5,
+                    opacity: 0.5,
+                    transition: { duration: 0.5 },
+                  }}
+                />
+                <motion.div
+                  className="relative z-10 flex items-center"
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {isLoading === "/dashboard" ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                  )}
+                  ダッシュボードへ
+                </motion.div>
               </Button>
             )}
           </div>

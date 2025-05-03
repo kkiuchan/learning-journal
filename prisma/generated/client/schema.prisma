@@ -1,8 +1,8 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "rhel-openssl-3.0.x"]
-  engineType    = "binary"
-  output        = "./generated/client"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  engineType      = "library"
+  output          = "./generated/client"
 }
 
 datasource db {
@@ -37,7 +37,21 @@ model User {
   units              Unit[]
   unitLikes          UnitLike[]
   userInterests      UserInterest[]
+  providers          UserProvider[]
   userSkills         UserSkill[]
+}
+
+model UserProvider {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  provider     String
+  providerId   String
+  accessToken  String?
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerId])
 }
 
 model Unit {
@@ -194,12 +208,10 @@ model Session {
 
 model VerificationToken {
   identifier String
-  token      String   @unique
+  token      String
   expires    DateTime
-  createdAt  DateTime @default(now())
 
-  @@unique([identifier, token])
-  @@index([expires])
+  @@id([identifier, token])
 }
 
 model ErrorLog {
@@ -212,18 +224,4 @@ model ErrorLog {
   timestamp DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-// 仮登録ユーザー情報
-model VerificationRequest {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  token     String   @unique
-  name      String?
-  expires   DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([token])
-  @@index([email])
 }

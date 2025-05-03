@@ -3,7 +3,7 @@
  * Client
 **/
 
-import * as runtime from './runtime/binary.js';
+import * as runtime from './runtime/library.js';
 import $Types = runtime.Types // general types
 import $Public = runtime.Types.Public
 import $Utils = runtime.Types.Utils
@@ -18,6 +18,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  * 
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
+/**
+ * Model UserProvider
+ * 
+ */
+export type UserProvider = $Result.DefaultSelection<Prisma.$UserProviderPayload>
 /**
  * Model Unit
  * 
@@ -88,11 +93,6 @@ export type VerificationToken = $Result.DefaultSelection<Prisma.$VerificationTok
  * 
  */
 export type ErrorLog = $Result.DefaultSelection<Prisma.$ErrorLogPayload>
-/**
- * Model VerificationRequest
- * 
- */
-export type VerificationRequest = $Result.DefaultSelection<Prisma.$VerificationRequestPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -131,7 +131,7 @@ export class PrismaClient<
    */
 
   constructor(optionsArg ?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>);
-  $on<V extends (U | 'beforeExit')>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : V extends 'beforeExit' ? () => $Utils.JsPromise<void> : Prisma.LogEvent) => void): PrismaClient;
+  $on<V extends U>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): PrismaClient;
 
   /**
    * Connect with the database
@@ -228,6 +228,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userProvider`: Exposes CRUD operations for the **UserProvider** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserProviders
+    * const userProviders = await prisma.userProvider.findMany()
+    * ```
+    */
+  get userProvider(): Prisma.UserProviderDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.unit`: Exposes CRUD operations for the **Unit** model.
@@ -368,16 +378,6 @@ export class PrismaClient<
     * ```
     */
   get errorLog(): Prisma.ErrorLogDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.verificationRequest`: Exposes CRUD operations for the **VerificationRequest** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more VerificationRequests
-    * const verificationRequests = await prisma.verificationRequest.findMany()
-    * ```
-    */
-  get verificationRequest(): Prisma.VerificationRequestDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -819,6 +819,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    UserProvider: 'UserProvider',
     Unit: 'Unit',
     Log: 'Log',
     Resource: 'Resource',
@@ -832,8 +833,7 @@ export namespace Prisma {
     Account: 'Account',
     Session: 'Session',
     VerificationToken: 'VerificationToken',
-    ErrorLog: 'ErrorLog',
-    VerificationRequest: 'VerificationRequest'
+    ErrorLog: 'ErrorLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -852,7 +852,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "unit" | "log" | "resource" | "tag" | "unitTag" | "logTag" | "userSkill" | "userInterest" | "unitLike" | "comment" | "account" | "session" | "verificationToken" | "errorLog" | "verificationRequest"
+      modelProps: "user" | "userProvider" | "unit" | "log" | "resource" | "tag" | "unitTag" | "logTag" | "userSkill" | "userInterest" | "unitLike" | "comment" | "account" | "session" | "verificationToken" | "errorLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -927,6 +927,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      UserProvider: {
+        payload: Prisma.$UserProviderPayload<ExtArgs>
+        fields: Prisma.UserProviderFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserProviderFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserProviderFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          findFirst: {
+            args: Prisma.UserProviderFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserProviderFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          findMany: {
+            args: Prisma.UserProviderFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>[]
+          }
+          create: {
+            args: Prisma.UserProviderCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          createMany: {
+            args: Prisma.UserProviderCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserProviderCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>[]
+          }
+          delete: {
+            args: Prisma.UserProviderDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          update: {
+            args: Prisma.UserProviderUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          deleteMany: {
+            args: Prisma.UserProviderDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserProviderUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserProviderUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>[]
+          }
+          upsert: {
+            args: Prisma.UserProviderUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserProviderPayload>
+          }
+          aggregate: {
+            args: Prisma.UserProviderAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserProvider>
+          }
+          groupBy: {
+            args: Prisma.UserProviderGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserProviderGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserProviderCountArgs<ExtArgs>
+            result: $Utils.Optional<UserProviderCountAggregateOutputType> | number
           }
         }
       }
@@ -1966,80 +2040,6 @@ export namespace Prisma {
           }
         }
       }
-      VerificationRequest: {
-        payload: Prisma.$VerificationRequestPayload<ExtArgs>
-        fields: Prisma.VerificationRequestFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.VerificationRequestFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.VerificationRequestFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          findFirst: {
-            args: Prisma.VerificationRequestFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.VerificationRequestFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          findMany: {
-            args: Prisma.VerificationRequestFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>[]
-          }
-          create: {
-            args: Prisma.VerificationRequestCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          createMany: {
-            args: Prisma.VerificationRequestCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.VerificationRequestCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>[]
-          }
-          delete: {
-            args: Prisma.VerificationRequestDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          update: {
-            args: Prisma.VerificationRequestUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          deleteMany: {
-            args: Prisma.VerificationRequestDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.VerificationRequestUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.VerificationRequestUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>[]
-          }
-          upsert: {
-            args: Prisma.VerificationRequestUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$VerificationRequestPayload>
-          }
-          aggregate: {
-            args: Prisma.VerificationRequestAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateVerificationRequest>
-          }
-          groupBy: {
-            args: Prisma.VerificationRequestGroupByArgs<ExtArgs>
-            result: $Utils.Optional<VerificationRequestGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.VerificationRequestCountArgs<ExtArgs>
-            result: $Utils.Optional<VerificationRequestCountAggregateOutputType> | number
-          }
-        }
-      }
     }
   } & {
     other: {
@@ -2108,6 +2108,10 @@ export namespace Prisma {
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
     /**
+     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
+     */
+    adapter?: runtime.SqlDriverAdapterFactory | null
+    /**
      * Global configuration for omitting model fields by default.
      * 
      * @example
@@ -2125,6 +2129,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    userProvider?: UserProviderOmit
     unit?: UnitOmit
     log?: LogOmit
     resource?: ResourceOmit
@@ -2139,7 +2144,6 @@ export namespace Prisma {
     session?: SessionOmit
     verificationToken?: VerificationTokenOmit
     errorLog?: ErrorLogOmit
-    verificationRequest?: VerificationRequestOmit
   }
 
   /* Types for Logging */
@@ -2241,6 +2245,7 @@ export namespace Prisma {
     units: number
     unitLikes: number
     userInterests: number
+    providers: number
     userSkills: number
   }
 
@@ -2252,6 +2257,7 @@ export namespace Prisma {
     units?: boolean | UserCountOutputTypeCountUnitsArgs
     unitLikes?: boolean | UserCountOutputTypeCountUnitLikesArgs
     userInterests?: boolean | UserCountOutputTypeCountUserInterestsArgs
+    providers?: boolean | UserCountOutputTypeCountProvidersArgs
     userSkills?: boolean | UserCountOutputTypeCountUserSkillsArgs
   }
 
@@ -2313,6 +2319,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountUserInterestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserInterestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountProvidersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserProviderWhereInput
   }
 
   /**
@@ -2784,6 +2797,7 @@ export namespace Prisma {
     units?: boolean | User$unitsArgs<ExtArgs>
     unitLikes?: boolean | User$unitLikesArgs<ExtArgs>
     userInterests?: boolean | User$userInterestsArgs<ExtArgs>
+    providers?: boolean | User$providersArgs<ExtArgs>
     userSkills?: boolean | User$userSkillsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -2857,6 +2871,7 @@ export namespace Prisma {
     units?: boolean | User$unitsArgs<ExtArgs>
     unitLikes?: boolean | User$unitLikesArgs<ExtArgs>
     userInterests?: boolean | User$userInterestsArgs<ExtArgs>
+    providers?: boolean | User$providersArgs<ExtArgs>
     userSkills?: boolean | User$userSkillsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
@@ -2873,6 +2888,7 @@ export namespace Prisma {
       units: Prisma.$UnitPayload<ExtArgs>[]
       unitLikes: Prisma.$UnitLikePayload<ExtArgs>[]
       userInterests: Prisma.$UserInterestPayload<ExtArgs>[]
+      providers: Prisma.$UserProviderPayload<ExtArgs>[]
       userSkills: Prisma.$UserSkillPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -3294,6 +3310,7 @@ export namespace Prisma {
     units<T extends User$unitsArgs<ExtArgs> = {}>(args?: Subset<T, User$unitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UnitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     unitLikes<T extends User$unitLikesArgs<ExtArgs> = {}>(args?: Subset<T, User$unitLikesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UnitLikePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     userInterests<T extends User$userInterestsArgs<ExtArgs> = {}>(args?: Subset<T, User$userInterestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserInterestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    providers<T extends User$providersArgs<ExtArgs> = {}>(args?: Subset<T, User$providersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     userSkills<T extends User$userSkillsArgs<ExtArgs> = {}>(args?: Subset<T, User$userSkillsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserSkillPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -3897,6 +3914,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.providers
+   */
+  export type User$providersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    where?: UserProviderWhereInput
+    orderBy?: UserProviderOrderByWithRelationInput | UserProviderOrderByWithRelationInput[]
+    cursor?: UserProviderWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserProviderScalarFieldEnum | UserProviderScalarFieldEnum[]
+  }
+
+  /**
    * User.userSkills
    */
   export type User$userSkillsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3936,6 +3977,1124 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UserProvider
+   */
+
+  export type AggregateUserProvider = {
+    _count: UserProviderCountAggregateOutputType | null
+    _avg: UserProviderAvgAggregateOutputType | null
+    _sum: UserProviderSumAggregateOutputType | null
+    _min: UserProviderMinAggregateOutputType | null
+    _max: UserProviderMaxAggregateOutputType | null
+  }
+
+  export type UserProviderAvgAggregateOutputType = {
+    id: number | null
+  }
+
+  export type UserProviderSumAggregateOutputType = {
+    id: number | null
+  }
+
+  export type UserProviderMinAggregateOutputType = {
+    id: number | null
+    userId: string | null
+    provider: string | null
+    providerId: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    createdAt: Date | null
+  }
+
+  export type UserProviderMaxAggregateOutputType = {
+    id: number | null
+    userId: string | null
+    provider: string | null
+    providerId: string | null
+    accessToken: string | null
+    refreshToken: string | null
+    createdAt: Date | null
+  }
+
+  export type UserProviderCountAggregateOutputType = {
+    id: number
+    userId: number
+    provider: number
+    providerId: number
+    accessToken: number
+    refreshToken: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type UserProviderAvgAggregateInputType = {
+    id?: true
+  }
+
+  export type UserProviderSumAggregateInputType = {
+    id?: true
+  }
+
+  export type UserProviderMinAggregateInputType = {
+    id?: true
+    userId?: true
+    provider?: true
+    providerId?: true
+    accessToken?: true
+    refreshToken?: true
+    createdAt?: true
+  }
+
+  export type UserProviderMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    provider?: true
+    providerId?: true
+    accessToken?: true
+    refreshToken?: true
+    createdAt?: true
+  }
+
+  export type UserProviderCountAggregateInputType = {
+    id?: true
+    userId?: true
+    provider?: true
+    providerId?: true
+    accessToken?: true
+    refreshToken?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type UserProviderAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserProvider to aggregate.
+     */
+    where?: UserProviderWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProviders to fetch.
+     */
+    orderBy?: UserProviderOrderByWithRelationInput | UserProviderOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserProviderWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProviders from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProviders.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserProviders
+    **/
+    _count?: true | UserProviderCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UserProviderAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserProviderSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserProviderMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserProviderMaxAggregateInputType
+  }
+
+  export type GetUserProviderAggregateType<T extends UserProviderAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserProvider]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserProvider[P]>
+      : GetScalarType<T[P], AggregateUserProvider[P]>
+  }
+
+
+
+
+  export type UserProviderGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserProviderWhereInput
+    orderBy?: UserProviderOrderByWithAggregationInput | UserProviderOrderByWithAggregationInput[]
+    by: UserProviderScalarFieldEnum[] | UserProviderScalarFieldEnum
+    having?: UserProviderScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserProviderCountAggregateInputType | true
+    _avg?: UserProviderAvgAggregateInputType
+    _sum?: UserProviderSumAggregateInputType
+    _min?: UserProviderMinAggregateInputType
+    _max?: UserProviderMaxAggregateInputType
+  }
+
+  export type UserProviderGroupByOutputType = {
+    id: number
+    userId: string
+    provider: string
+    providerId: string
+    accessToken: string | null
+    refreshToken: string | null
+    createdAt: Date
+    _count: UserProviderCountAggregateOutputType | null
+    _avg: UserProviderAvgAggregateOutputType | null
+    _sum: UserProviderSumAggregateOutputType | null
+    _min: UserProviderMinAggregateOutputType | null
+    _max: UserProviderMaxAggregateOutputType | null
+  }
+
+  type GetUserProviderGroupByPayload<T extends UserProviderGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserProviderGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserProviderGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserProviderGroupByOutputType[P]>
+            : GetScalarType<T[P], UserProviderGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserProviderSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    provider?: boolean
+    providerId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProvider"]>
+
+  export type UserProviderSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    provider?: boolean
+    providerId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProvider"]>
+
+  export type UserProviderSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    provider?: boolean
+    providerId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userProvider"]>
+
+  export type UserProviderSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    provider?: boolean
+    providerId?: boolean
+    accessToken?: boolean
+    refreshToken?: boolean
+    createdAt?: boolean
+  }
+
+  export type UserProviderOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "provider" | "providerId" | "accessToken" | "refreshToken" | "createdAt", ExtArgs["result"]["userProvider"]>
+  export type UserProviderInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type UserProviderIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type UserProviderIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $UserProviderPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserProvider"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: number
+      userId: string
+      provider: string
+      providerId: string
+      accessToken: string | null
+      refreshToken: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["userProvider"]>
+    composites: {}
+  }
+
+  type UserProviderGetPayload<S extends boolean | null | undefined | UserProviderDefaultArgs> = $Result.GetResult<Prisma.$UserProviderPayload, S>
+
+  type UserProviderCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserProviderFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserProviderCountAggregateInputType | true
+    }
+
+  export interface UserProviderDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserProvider'], meta: { name: 'UserProvider' } }
+    /**
+     * Find zero or one UserProvider that matches the filter.
+     * @param {UserProviderFindUniqueArgs} args - Arguments to find a UserProvider
+     * @example
+     * // Get one UserProvider
+     * const userProvider = await prisma.userProvider.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserProviderFindUniqueArgs>(args: SelectSubset<T, UserProviderFindUniqueArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserProvider that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserProviderFindUniqueOrThrowArgs} args - Arguments to find a UserProvider
+     * @example
+     * // Get one UserProvider
+     * const userProvider = await prisma.userProvider.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserProviderFindUniqueOrThrowArgs>(args: SelectSubset<T, UserProviderFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserProvider that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderFindFirstArgs} args - Arguments to find a UserProvider
+     * @example
+     * // Get one UserProvider
+     * const userProvider = await prisma.userProvider.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserProviderFindFirstArgs>(args?: SelectSubset<T, UserProviderFindFirstArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserProvider that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderFindFirstOrThrowArgs} args - Arguments to find a UserProvider
+     * @example
+     * // Get one UserProvider
+     * const userProvider = await prisma.userProvider.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserProviderFindFirstOrThrowArgs>(args?: SelectSubset<T, UserProviderFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserProviders that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserProviders
+     * const userProviders = await prisma.userProvider.findMany()
+     * 
+     * // Get first 10 UserProviders
+     * const userProviders = await prisma.userProvider.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userProviderWithIdOnly = await prisma.userProvider.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserProviderFindManyArgs>(args?: SelectSubset<T, UserProviderFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserProvider.
+     * @param {UserProviderCreateArgs} args - Arguments to create a UserProvider.
+     * @example
+     * // Create one UserProvider
+     * const UserProvider = await prisma.userProvider.create({
+     *   data: {
+     *     // ... data to create a UserProvider
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserProviderCreateArgs>(args: SelectSubset<T, UserProviderCreateArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserProviders.
+     * @param {UserProviderCreateManyArgs} args - Arguments to create many UserProviders.
+     * @example
+     * // Create many UserProviders
+     * const userProvider = await prisma.userProvider.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserProviderCreateManyArgs>(args?: SelectSubset<T, UserProviderCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserProviders and returns the data saved in the database.
+     * @param {UserProviderCreateManyAndReturnArgs} args - Arguments to create many UserProviders.
+     * @example
+     * // Create many UserProviders
+     * const userProvider = await prisma.userProvider.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserProviders and only return the `id`
+     * const userProviderWithIdOnly = await prisma.userProvider.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserProviderCreateManyAndReturnArgs>(args?: SelectSubset<T, UserProviderCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserProvider.
+     * @param {UserProviderDeleteArgs} args - Arguments to delete one UserProvider.
+     * @example
+     * // Delete one UserProvider
+     * const UserProvider = await prisma.userProvider.delete({
+     *   where: {
+     *     // ... filter to delete one UserProvider
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserProviderDeleteArgs>(args: SelectSubset<T, UserProviderDeleteArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserProvider.
+     * @param {UserProviderUpdateArgs} args - Arguments to update one UserProvider.
+     * @example
+     * // Update one UserProvider
+     * const userProvider = await prisma.userProvider.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserProviderUpdateArgs>(args: SelectSubset<T, UserProviderUpdateArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserProviders.
+     * @param {UserProviderDeleteManyArgs} args - Arguments to filter UserProviders to delete.
+     * @example
+     * // Delete a few UserProviders
+     * const { count } = await prisma.userProvider.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserProviderDeleteManyArgs>(args?: SelectSubset<T, UserProviderDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserProviders.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserProviders
+     * const userProvider = await prisma.userProvider.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserProviderUpdateManyArgs>(args: SelectSubset<T, UserProviderUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserProviders and returns the data updated in the database.
+     * @param {UserProviderUpdateManyAndReturnArgs} args - Arguments to update many UserProviders.
+     * @example
+     * // Update many UserProviders
+     * const userProvider = await prisma.userProvider.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserProviders and only return the `id`
+     * const userProviderWithIdOnly = await prisma.userProvider.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserProviderUpdateManyAndReturnArgs>(args: SelectSubset<T, UserProviderUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserProvider.
+     * @param {UserProviderUpsertArgs} args - Arguments to update or create a UserProvider.
+     * @example
+     * // Update or create a UserProvider
+     * const userProvider = await prisma.userProvider.upsert({
+     *   create: {
+     *     // ... data to create a UserProvider
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserProvider we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserProviderUpsertArgs>(args: SelectSubset<T, UserProviderUpsertArgs<ExtArgs>>): Prisma__UserProviderClient<$Result.GetResult<Prisma.$UserProviderPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserProviders.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderCountArgs} args - Arguments to filter UserProviders to count.
+     * @example
+     * // Count the number of UserProviders
+     * const count = await prisma.userProvider.count({
+     *   where: {
+     *     // ... the filter for the UserProviders we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserProviderCountArgs>(
+      args?: Subset<T, UserProviderCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserProviderCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserProvider.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserProviderAggregateArgs>(args: Subset<T, UserProviderAggregateArgs>): Prisma.PrismaPromise<GetUserProviderAggregateType<T>>
+
+    /**
+     * Group by UserProvider.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserProviderGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserProviderGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserProviderGroupByArgs['orderBy'] }
+        : { orderBy?: UserProviderGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserProviderGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserProviderGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserProvider model
+   */
+  readonly fields: UserProviderFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserProvider.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserProviderClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserProvider model
+   */
+  interface UserProviderFieldRefs {
+    readonly id: FieldRef<"UserProvider", 'Int'>
+    readonly userId: FieldRef<"UserProvider", 'String'>
+    readonly provider: FieldRef<"UserProvider", 'String'>
+    readonly providerId: FieldRef<"UserProvider", 'String'>
+    readonly accessToken: FieldRef<"UserProvider", 'String'>
+    readonly refreshToken: FieldRef<"UserProvider", 'String'>
+    readonly createdAt: FieldRef<"UserProvider", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserProvider findUnique
+   */
+  export type UserProviderFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProvider to fetch.
+     */
+    where: UserProviderWhereUniqueInput
+  }
+
+  /**
+   * UserProvider findUniqueOrThrow
+   */
+  export type UserProviderFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProvider to fetch.
+     */
+    where: UserProviderWhereUniqueInput
+  }
+
+  /**
+   * UserProvider findFirst
+   */
+  export type UserProviderFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProvider to fetch.
+     */
+    where?: UserProviderWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProviders to fetch.
+     */
+    orderBy?: UserProviderOrderByWithRelationInput | UserProviderOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserProviders.
+     */
+    cursor?: UserProviderWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProviders from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProviders.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserProviders.
+     */
+    distinct?: UserProviderScalarFieldEnum | UserProviderScalarFieldEnum[]
+  }
+
+  /**
+   * UserProvider findFirstOrThrow
+   */
+  export type UserProviderFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProvider to fetch.
+     */
+    where?: UserProviderWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProviders to fetch.
+     */
+    orderBy?: UserProviderOrderByWithRelationInput | UserProviderOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserProviders.
+     */
+    cursor?: UserProviderWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProviders from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProviders.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserProviders.
+     */
+    distinct?: UserProviderScalarFieldEnum | UserProviderScalarFieldEnum[]
+  }
+
+  /**
+   * UserProvider findMany
+   */
+  export type UserProviderFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter, which UserProviders to fetch.
+     */
+    where?: UserProviderWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserProviders to fetch.
+     */
+    orderBy?: UserProviderOrderByWithRelationInput | UserProviderOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserProviders.
+     */
+    cursor?: UserProviderWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserProviders from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserProviders.
+     */
+    skip?: number
+    distinct?: UserProviderScalarFieldEnum | UserProviderScalarFieldEnum[]
+  }
+
+  /**
+   * UserProvider create
+   */
+  export type UserProviderCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserProvider.
+     */
+    data: XOR<UserProviderCreateInput, UserProviderUncheckedCreateInput>
+  }
+
+  /**
+   * UserProvider createMany
+   */
+  export type UserProviderCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserProviders.
+     */
+    data: UserProviderCreateManyInput | UserProviderCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserProvider createManyAndReturn
+   */
+  export type UserProviderCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserProviders.
+     */
+    data: UserProviderCreateManyInput | UserProviderCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserProvider update
+   */
+  export type UserProviderUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserProvider.
+     */
+    data: XOR<UserProviderUpdateInput, UserProviderUncheckedUpdateInput>
+    /**
+     * Choose, which UserProvider to update.
+     */
+    where: UserProviderWhereUniqueInput
+  }
+
+  /**
+   * UserProvider updateMany
+   */
+  export type UserProviderUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserProviders.
+     */
+    data: XOR<UserProviderUpdateManyMutationInput, UserProviderUncheckedUpdateManyInput>
+    /**
+     * Filter which UserProviders to update
+     */
+    where?: UserProviderWhereInput
+    /**
+     * Limit how many UserProviders to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserProvider updateManyAndReturn
+   */
+  export type UserProviderUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * The data used to update UserProviders.
+     */
+    data: XOR<UserProviderUpdateManyMutationInput, UserProviderUncheckedUpdateManyInput>
+    /**
+     * Filter which UserProviders to update
+     */
+    where?: UserProviderWhereInput
+    /**
+     * Limit how many UserProviders to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserProvider upsert
+   */
+  export type UserProviderUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserProvider to update in case it exists.
+     */
+    where: UserProviderWhereUniqueInput
+    /**
+     * In case the UserProvider found by the `where` argument doesn't exist, create a new UserProvider with this data.
+     */
+    create: XOR<UserProviderCreateInput, UserProviderUncheckedCreateInput>
+    /**
+     * In case the UserProvider was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserProviderUpdateInput, UserProviderUncheckedUpdateInput>
+  }
+
+  /**
+   * UserProvider delete
+   */
+  export type UserProviderDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
+    /**
+     * Filter which UserProvider to delete.
+     */
+    where: UserProviderWhereUniqueInput
+  }
+
+  /**
+   * UserProvider deleteMany
+   */
+  export type UserProviderDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserProviders to delete
+     */
+    where?: UserProviderWhereInput
+    /**
+     * Limit how many UserProviders to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserProvider without action
+   */
+  export type UserProviderDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserProvider
+     */
+    select?: UserProviderSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserProvider
+     */
+    omit?: UserProviderOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserProviderInclude<ExtArgs> | null
   }
 
 
@@ -17543,21 +18702,18 @@ export namespace Prisma {
     identifier: string | null
     token: string | null
     expires: Date | null
-    createdAt: Date | null
   }
 
   export type VerificationTokenMaxAggregateOutputType = {
     identifier: string | null
     token: string | null
     expires: Date | null
-    createdAt: Date | null
   }
 
   export type VerificationTokenCountAggregateOutputType = {
     identifier: number
     token: number
     expires: number
-    createdAt: number
     _all: number
   }
 
@@ -17566,21 +18722,18 @@ export namespace Prisma {
     identifier?: true
     token?: true
     expires?: true
-    createdAt?: true
   }
 
   export type VerificationTokenMaxAggregateInputType = {
     identifier?: true
     token?: true
     expires?: true
-    createdAt?: true
   }
 
   export type VerificationTokenCountAggregateInputType = {
     identifier?: true
     token?: true
     expires?: true
-    createdAt?: true
     _all?: true
   }
 
@@ -17660,7 +18813,6 @@ export namespace Prisma {
     identifier: string
     token: string
     expires: Date
-    createdAt: Date
     _count: VerificationTokenCountAggregateOutputType | null
     _min: VerificationTokenMinAggregateOutputType | null
     _max: VerificationTokenMaxAggregateOutputType | null
@@ -17684,31 +18836,27 @@ export namespace Prisma {
     identifier?: boolean
     token?: boolean
     expires?: boolean
-    createdAt?: boolean
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     identifier?: boolean
     token?: boolean
     expires?: boolean
-    createdAt?: boolean
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     identifier?: boolean
     token?: boolean
     expires?: boolean
-    createdAt?: boolean
   }, ExtArgs["result"]["verificationToken"]>
 
   export type VerificationTokenSelectScalar = {
     identifier?: boolean
     token?: boolean
     expires?: boolean
-    createdAt?: boolean
   }
 
-  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"identifier" | "token" | "expires" | "createdAt", ExtArgs["result"]["verificationToken"]>
+  export type VerificationTokenOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"identifier" | "token" | "expires", ExtArgs["result"]["verificationToken"]>
 
   export type $VerificationTokenPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "VerificationToken"
@@ -17717,7 +18865,6 @@ export namespace Prisma {
       identifier: string
       token: string
       expires: Date
-      createdAt: Date
     }, ExtArgs["result"]["verificationToken"]>
     composites: {}
   }
@@ -18144,7 +19291,6 @@ export namespace Prisma {
     readonly identifier: FieldRef<"VerificationToken", 'String'>
     readonly token: FieldRef<"VerificationToken", 'String'>
     readonly expires: FieldRef<"VerificationToken", 'DateTime'>
-    readonly createdAt: FieldRef<"VerificationToken", 'DateTime'>
   }
     
 
@@ -19593,1027 +20739,6 @@ export namespace Prisma {
 
 
   /**
-   * Model VerificationRequest
-   */
-
-  export type AggregateVerificationRequest = {
-    _count: VerificationRequestCountAggregateOutputType | null
-    _min: VerificationRequestMinAggregateOutputType | null
-    _max: VerificationRequestMaxAggregateOutputType | null
-  }
-
-  export type VerificationRequestMinAggregateOutputType = {
-    id: string | null
-    email: string | null
-    token: string | null
-    name: string | null
-    expires: Date | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type VerificationRequestMaxAggregateOutputType = {
-    id: string | null
-    email: string | null
-    token: string | null
-    name: string | null
-    expires: Date | null
-    createdAt: Date | null
-    updatedAt: Date | null
-  }
-
-  export type VerificationRequestCountAggregateOutputType = {
-    id: number
-    email: number
-    token: number
-    name: number
-    expires: number
-    createdAt: number
-    updatedAt: number
-    _all: number
-  }
-
-
-  export type VerificationRequestMinAggregateInputType = {
-    id?: true
-    email?: true
-    token?: true
-    name?: true
-    expires?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type VerificationRequestMaxAggregateInputType = {
-    id?: true
-    email?: true
-    token?: true
-    name?: true
-    expires?: true
-    createdAt?: true
-    updatedAt?: true
-  }
-
-  export type VerificationRequestCountAggregateInputType = {
-    id?: true
-    email?: true
-    token?: true
-    name?: true
-    expires?: true
-    createdAt?: true
-    updatedAt?: true
-    _all?: true
-  }
-
-  export type VerificationRequestAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which VerificationRequest to aggregate.
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of VerificationRequests to fetch.
-     */
-    orderBy?: VerificationRequestOrderByWithRelationInput | VerificationRequestOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: VerificationRequestWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` VerificationRequests from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` VerificationRequests.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned VerificationRequests
-    **/
-    _count?: true | VerificationRequestCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: VerificationRequestMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: VerificationRequestMaxAggregateInputType
-  }
-
-  export type GetVerificationRequestAggregateType<T extends VerificationRequestAggregateArgs> = {
-        [P in keyof T & keyof AggregateVerificationRequest]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateVerificationRequest[P]>
-      : GetScalarType<T[P], AggregateVerificationRequest[P]>
-  }
-
-
-
-
-  export type VerificationRequestGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: VerificationRequestWhereInput
-    orderBy?: VerificationRequestOrderByWithAggregationInput | VerificationRequestOrderByWithAggregationInput[]
-    by: VerificationRequestScalarFieldEnum[] | VerificationRequestScalarFieldEnum
-    having?: VerificationRequestScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: VerificationRequestCountAggregateInputType | true
-    _min?: VerificationRequestMinAggregateInputType
-    _max?: VerificationRequestMaxAggregateInputType
-  }
-
-  export type VerificationRequestGroupByOutputType = {
-    id: string
-    email: string
-    token: string
-    name: string | null
-    expires: Date
-    createdAt: Date
-    updatedAt: Date
-    _count: VerificationRequestCountAggregateOutputType | null
-    _min: VerificationRequestMinAggregateOutputType | null
-    _max: VerificationRequestMaxAggregateOutputType | null
-  }
-
-  type GetVerificationRequestGroupByPayload<T extends VerificationRequestGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<VerificationRequestGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof VerificationRequestGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], VerificationRequestGroupByOutputType[P]>
-            : GetScalarType<T[P], VerificationRequestGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type VerificationRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    token?: boolean
-    name?: boolean
-    expires?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["verificationRequest"]>
-
-  export type VerificationRequestSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    token?: boolean
-    name?: boolean
-    expires?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["verificationRequest"]>
-
-  export type VerificationRequestSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    token?: boolean
-    name?: boolean
-    expires?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["verificationRequest"]>
-
-  export type VerificationRequestSelectScalar = {
-    id?: boolean
-    email?: boolean
-    token?: boolean
-    name?: boolean
-    expires?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }
-
-  export type VerificationRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "token" | "name" | "expires" | "createdAt" | "updatedAt", ExtArgs["result"]["verificationRequest"]>
-
-  export type $VerificationRequestPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "VerificationRequest"
-    objects: {}
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      email: string
-      token: string
-      name: string | null
-      expires: Date
-      createdAt: Date
-      updatedAt: Date
-    }, ExtArgs["result"]["verificationRequest"]>
-    composites: {}
-  }
-
-  type VerificationRequestGetPayload<S extends boolean | null | undefined | VerificationRequestDefaultArgs> = $Result.GetResult<Prisma.$VerificationRequestPayload, S>
-
-  type VerificationRequestCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<VerificationRequestFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: VerificationRequestCountAggregateInputType | true
-    }
-
-  export interface VerificationRequestDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VerificationRequest'], meta: { name: 'VerificationRequest' } }
-    /**
-     * Find zero or one VerificationRequest that matches the filter.
-     * @param {VerificationRequestFindUniqueArgs} args - Arguments to find a VerificationRequest
-     * @example
-     * // Get one VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends VerificationRequestFindUniqueArgs>(args: SelectSubset<T, VerificationRequestFindUniqueArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one VerificationRequest that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {VerificationRequestFindUniqueOrThrowArgs} args - Arguments to find a VerificationRequest
-     * @example
-     * // Get one VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends VerificationRequestFindUniqueOrThrowArgs>(args: SelectSubset<T, VerificationRequestFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first VerificationRequest that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestFindFirstArgs} args - Arguments to find a VerificationRequest
-     * @example
-     * // Get one VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends VerificationRequestFindFirstArgs>(args?: SelectSubset<T, VerificationRequestFindFirstArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first VerificationRequest that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestFindFirstOrThrowArgs} args - Arguments to find a VerificationRequest
-     * @example
-     * // Get one VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends VerificationRequestFindFirstOrThrowArgs>(args?: SelectSubset<T, VerificationRequestFindFirstOrThrowArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more VerificationRequests that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all VerificationRequests
-     * const verificationRequests = await prisma.verificationRequest.findMany()
-     * 
-     * // Get first 10 VerificationRequests
-     * const verificationRequests = await prisma.verificationRequest.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const verificationRequestWithIdOnly = await prisma.verificationRequest.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends VerificationRequestFindManyArgs>(args?: SelectSubset<T, VerificationRequestFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a VerificationRequest.
-     * @param {VerificationRequestCreateArgs} args - Arguments to create a VerificationRequest.
-     * @example
-     * // Create one VerificationRequest
-     * const VerificationRequest = await prisma.verificationRequest.create({
-     *   data: {
-     *     // ... data to create a VerificationRequest
-     *   }
-     * })
-     * 
-     */
-    create<T extends VerificationRequestCreateArgs>(args: SelectSubset<T, VerificationRequestCreateArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many VerificationRequests.
-     * @param {VerificationRequestCreateManyArgs} args - Arguments to create many VerificationRequests.
-     * @example
-     * // Create many VerificationRequests
-     * const verificationRequest = await prisma.verificationRequest.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends VerificationRequestCreateManyArgs>(args?: SelectSubset<T, VerificationRequestCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many VerificationRequests and returns the data saved in the database.
-     * @param {VerificationRequestCreateManyAndReturnArgs} args - Arguments to create many VerificationRequests.
-     * @example
-     * // Create many VerificationRequests
-     * const verificationRequest = await prisma.verificationRequest.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many VerificationRequests and only return the `id`
-     * const verificationRequestWithIdOnly = await prisma.verificationRequest.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends VerificationRequestCreateManyAndReturnArgs>(args?: SelectSubset<T, VerificationRequestCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a VerificationRequest.
-     * @param {VerificationRequestDeleteArgs} args - Arguments to delete one VerificationRequest.
-     * @example
-     * // Delete one VerificationRequest
-     * const VerificationRequest = await prisma.verificationRequest.delete({
-     *   where: {
-     *     // ... filter to delete one VerificationRequest
-     *   }
-     * })
-     * 
-     */
-    delete<T extends VerificationRequestDeleteArgs>(args: SelectSubset<T, VerificationRequestDeleteArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one VerificationRequest.
-     * @param {VerificationRequestUpdateArgs} args - Arguments to update one VerificationRequest.
-     * @example
-     * // Update one VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends VerificationRequestUpdateArgs>(args: SelectSubset<T, VerificationRequestUpdateArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more VerificationRequests.
-     * @param {VerificationRequestDeleteManyArgs} args - Arguments to filter VerificationRequests to delete.
-     * @example
-     * // Delete a few VerificationRequests
-     * const { count } = await prisma.verificationRequest.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends VerificationRequestDeleteManyArgs>(args?: SelectSubset<T, VerificationRequestDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VerificationRequests.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many VerificationRequests
-     * const verificationRequest = await prisma.verificationRequest.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends VerificationRequestUpdateManyArgs>(args: SelectSubset<T, VerificationRequestUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more VerificationRequests and returns the data updated in the database.
-     * @param {VerificationRequestUpdateManyAndReturnArgs} args - Arguments to update many VerificationRequests.
-     * @example
-     * // Update many VerificationRequests
-     * const verificationRequest = await prisma.verificationRequest.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more VerificationRequests and only return the `id`
-     * const verificationRequestWithIdOnly = await prisma.verificationRequest.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends VerificationRequestUpdateManyAndReturnArgs>(args: SelectSubset<T, VerificationRequestUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one VerificationRequest.
-     * @param {VerificationRequestUpsertArgs} args - Arguments to update or create a VerificationRequest.
-     * @example
-     * // Update or create a VerificationRequest
-     * const verificationRequest = await prisma.verificationRequest.upsert({
-     *   create: {
-     *     // ... data to create a VerificationRequest
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the VerificationRequest we want to update
-     *   }
-     * })
-     */
-    upsert<T extends VerificationRequestUpsertArgs>(args: SelectSubset<T, VerificationRequestUpsertArgs<ExtArgs>>): Prisma__VerificationRequestClient<$Result.GetResult<Prisma.$VerificationRequestPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of VerificationRequests.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestCountArgs} args - Arguments to filter VerificationRequests to count.
-     * @example
-     * // Count the number of VerificationRequests
-     * const count = await prisma.verificationRequest.count({
-     *   where: {
-     *     // ... the filter for the VerificationRequests we want to count
-     *   }
-     * })
-    **/
-    count<T extends VerificationRequestCountArgs>(
-      args?: Subset<T, VerificationRequestCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], VerificationRequestCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a VerificationRequest.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends VerificationRequestAggregateArgs>(args: Subset<T, VerificationRequestAggregateArgs>): Prisma.PrismaPromise<GetVerificationRequestAggregateType<T>>
-
-    /**
-     * Group by VerificationRequest.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {VerificationRequestGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends VerificationRequestGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: VerificationRequestGroupByArgs['orderBy'] }
-        : { orderBy?: VerificationRequestGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, VerificationRequestGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVerificationRequestGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the VerificationRequest model
-   */
-  readonly fields: VerificationRequestFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for VerificationRequest.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__VerificationRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the VerificationRequest model
-   */
-  interface VerificationRequestFieldRefs {
-    readonly id: FieldRef<"VerificationRequest", 'String'>
-    readonly email: FieldRef<"VerificationRequest", 'String'>
-    readonly token: FieldRef<"VerificationRequest", 'String'>
-    readonly name: FieldRef<"VerificationRequest", 'String'>
-    readonly expires: FieldRef<"VerificationRequest", 'DateTime'>
-    readonly createdAt: FieldRef<"VerificationRequest", 'DateTime'>
-    readonly updatedAt: FieldRef<"VerificationRequest", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * VerificationRequest findUnique
-   */
-  export type VerificationRequestFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter, which VerificationRequest to fetch.
-     */
-    where: VerificationRequestWhereUniqueInput
-  }
-
-  /**
-   * VerificationRequest findUniqueOrThrow
-   */
-  export type VerificationRequestFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter, which VerificationRequest to fetch.
-     */
-    where: VerificationRequestWhereUniqueInput
-  }
-
-  /**
-   * VerificationRequest findFirst
-   */
-  export type VerificationRequestFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter, which VerificationRequest to fetch.
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of VerificationRequests to fetch.
-     */
-    orderBy?: VerificationRequestOrderByWithRelationInput | VerificationRequestOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for VerificationRequests.
-     */
-    cursor?: VerificationRequestWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` VerificationRequests from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` VerificationRequests.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of VerificationRequests.
-     */
-    distinct?: VerificationRequestScalarFieldEnum | VerificationRequestScalarFieldEnum[]
-  }
-
-  /**
-   * VerificationRequest findFirstOrThrow
-   */
-  export type VerificationRequestFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter, which VerificationRequest to fetch.
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of VerificationRequests to fetch.
-     */
-    orderBy?: VerificationRequestOrderByWithRelationInput | VerificationRequestOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for VerificationRequests.
-     */
-    cursor?: VerificationRequestWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` VerificationRequests from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` VerificationRequests.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of VerificationRequests.
-     */
-    distinct?: VerificationRequestScalarFieldEnum | VerificationRequestScalarFieldEnum[]
-  }
-
-  /**
-   * VerificationRequest findMany
-   */
-  export type VerificationRequestFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter, which VerificationRequests to fetch.
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of VerificationRequests to fetch.
-     */
-    orderBy?: VerificationRequestOrderByWithRelationInput | VerificationRequestOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing VerificationRequests.
-     */
-    cursor?: VerificationRequestWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` VerificationRequests from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` VerificationRequests.
-     */
-    skip?: number
-    distinct?: VerificationRequestScalarFieldEnum | VerificationRequestScalarFieldEnum[]
-  }
-
-  /**
-   * VerificationRequest create
-   */
-  export type VerificationRequestCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * The data needed to create a VerificationRequest.
-     */
-    data: XOR<VerificationRequestCreateInput, VerificationRequestUncheckedCreateInput>
-  }
-
-  /**
-   * VerificationRequest createMany
-   */
-  export type VerificationRequestCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many VerificationRequests.
-     */
-    data: VerificationRequestCreateManyInput | VerificationRequestCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * VerificationRequest createManyAndReturn
-   */
-  export type VerificationRequestCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * The data used to create many VerificationRequests.
-     */
-    data: VerificationRequestCreateManyInput | VerificationRequestCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * VerificationRequest update
-   */
-  export type VerificationRequestUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * The data needed to update a VerificationRequest.
-     */
-    data: XOR<VerificationRequestUpdateInput, VerificationRequestUncheckedUpdateInput>
-    /**
-     * Choose, which VerificationRequest to update.
-     */
-    where: VerificationRequestWhereUniqueInput
-  }
-
-  /**
-   * VerificationRequest updateMany
-   */
-  export type VerificationRequestUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update VerificationRequests.
-     */
-    data: XOR<VerificationRequestUpdateManyMutationInput, VerificationRequestUncheckedUpdateManyInput>
-    /**
-     * Filter which VerificationRequests to update
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * Limit how many VerificationRequests to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * VerificationRequest updateManyAndReturn
-   */
-  export type VerificationRequestUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * The data used to update VerificationRequests.
-     */
-    data: XOR<VerificationRequestUpdateManyMutationInput, VerificationRequestUncheckedUpdateManyInput>
-    /**
-     * Filter which VerificationRequests to update
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * Limit how many VerificationRequests to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * VerificationRequest upsert
-   */
-  export type VerificationRequestUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * The filter to search for the VerificationRequest to update in case it exists.
-     */
-    where: VerificationRequestWhereUniqueInput
-    /**
-     * In case the VerificationRequest found by the `where` argument doesn't exist, create a new VerificationRequest with this data.
-     */
-    create: XOR<VerificationRequestCreateInput, VerificationRequestUncheckedCreateInput>
-    /**
-     * In case the VerificationRequest was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<VerificationRequestUpdateInput, VerificationRequestUncheckedUpdateInput>
-  }
-
-  /**
-   * VerificationRequest delete
-   */
-  export type VerificationRequestDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-    /**
-     * Filter which VerificationRequest to delete.
-     */
-    where: VerificationRequestWhereUniqueInput
-  }
-
-  /**
-   * VerificationRequest deleteMany
-   */
-  export type VerificationRequestDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which VerificationRequests to delete
-     */
-    where?: VerificationRequestWhereInput
-    /**
-     * Limit how many VerificationRequests to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * VerificationRequest without action
-   */
-  export type VerificationRequestDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the VerificationRequest
-     */
-    select?: VerificationRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the VerificationRequest
-     */
-    omit?: VerificationRequestOmit<ExtArgs> | null
-  }
-
-
-  /**
    * Enums
    */
 
@@ -20648,6 +20773,19 @@ export namespace Prisma {
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const UserProviderScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    provider: 'provider',
+    providerId: 'providerId',
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
+    createdAt: 'createdAt'
+  };
+
+  export type UserProviderScalarFieldEnum = (typeof UserProviderScalarFieldEnum)[keyof typeof UserProviderScalarFieldEnum]
 
 
   export const UnitScalarFieldEnum: {
@@ -20797,8 +20935,7 @@ export namespace Prisma {
   export const VerificationTokenScalarFieldEnum: {
     identifier: 'identifier',
     token: 'token',
-    expires: 'expires',
-    createdAt: 'createdAt'
+    expires: 'expires'
   };
 
   export type VerificationTokenScalarFieldEnum = (typeof VerificationTokenScalarFieldEnum)[keyof typeof VerificationTokenScalarFieldEnum]
@@ -20817,19 +20954,6 @@ export namespace Prisma {
   };
 
   export type ErrorLogScalarFieldEnum = (typeof ErrorLogScalarFieldEnum)[keyof typeof ErrorLogScalarFieldEnum]
-
-
-  export const VerificationRequestScalarFieldEnum: {
-    id: 'id',
-    email: 'email',
-    token: 'token',
-    name: 'name',
-    expires: 'expires',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
-  };
-
-  export type VerificationRequestScalarFieldEnum = (typeof VerificationRequestScalarFieldEnum)[keyof typeof VerificationRequestScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -20955,6 +21079,7 @@ export namespace Prisma {
     units?: UnitListRelationFilter
     unitLikes?: UnitLikeListRelationFilter
     userInterests?: UserInterestListRelationFilter
+    providers?: UserProviderListRelationFilter
     userSkills?: UserSkillListRelationFilter
   }
 
@@ -20983,6 +21108,7 @@ export namespace Prisma {
     units?: UnitOrderByRelationAggregateInput
     unitLikes?: UnitLikeOrderByRelationAggregateInput
     userInterests?: UserInterestOrderByRelationAggregateInput
+    providers?: UserProviderOrderByRelationAggregateInput
     userSkills?: UserSkillOrderByRelationAggregateInput
   }
 
@@ -21014,6 +21140,7 @@ export namespace Prisma {
     units?: UnitListRelationFilter
     unitLikes?: UnitLikeListRelationFilter
     userInterests?: UserInterestListRelationFilter
+    providers?: UserProviderListRelationFilter
     userSkills?: UserSkillListRelationFilter
   }, "id" | "email">
 
@@ -21063,6 +21190,74 @@ export namespace Prisma {
     emailVerified?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
     selfIntroduction?: StringNullableWithAggregatesFilter<"User"> | string | null
+  }
+
+  export type UserProviderWhereInput = {
+    AND?: UserProviderWhereInput | UserProviderWhereInput[]
+    OR?: UserProviderWhereInput[]
+    NOT?: UserProviderWhereInput | UserProviderWhereInput[]
+    id?: IntFilter<"UserProvider"> | number
+    userId?: StringFilter<"UserProvider"> | string
+    provider?: StringFilter<"UserProvider"> | string
+    providerId?: StringFilter<"UserProvider"> | string
+    accessToken?: StringNullableFilter<"UserProvider"> | string | null
+    refreshToken?: StringNullableFilter<"UserProvider"> | string | null
+    createdAt?: DateTimeFilter<"UserProvider"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type UserProviderOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    provider?: SortOrder
+    providerId?: SortOrder
+    accessToken?: SortOrderInput | SortOrder
+    refreshToken?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type UserProviderWhereUniqueInput = Prisma.AtLeast<{
+    id?: number
+    provider_providerId?: UserProviderProviderProviderIdCompoundUniqueInput
+    AND?: UserProviderWhereInput | UserProviderWhereInput[]
+    OR?: UserProviderWhereInput[]
+    NOT?: UserProviderWhereInput | UserProviderWhereInput[]
+    userId?: StringFilter<"UserProvider"> | string
+    provider?: StringFilter<"UserProvider"> | string
+    providerId?: StringFilter<"UserProvider"> | string
+    accessToken?: StringNullableFilter<"UserProvider"> | string | null
+    refreshToken?: StringNullableFilter<"UserProvider"> | string | null
+    createdAt?: DateTimeFilter<"UserProvider"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "provider_providerId">
+
+  export type UserProviderOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    provider?: SortOrder
+    providerId?: SortOrder
+    accessToken?: SortOrderInput | SortOrder
+    refreshToken?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: UserProviderCountOrderByAggregateInput
+    _avg?: UserProviderAvgOrderByAggregateInput
+    _max?: UserProviderMaxOrderByAggregateInput
+    _min?: UserProviderMinOrderByAggregateInput
+    _sum?: UserProviderSumOrderByAggregateInput
+  }
+
+  export type UserProviderScalarWhereWithAggregatesInput = {
+    AND?: UserProviderScalarWhereWithAggregatesInput | UserProviderScalarWhereWithAggregatesInput[]
+    OR?: UserProviderScalarWhereWithAggregatesInput[]
+    NOT?: UserProviderScalarWhereWithAggregatesInput | UserProviderScalarWhereWithAggregatesInput[]
+    id?: IntWithAggregatesFilter<"UserProvider"> | number
+    userId?: StringWithAggregatesFilter<"UserProvider"> | string
+    provider?: StringWithAggregatesFilter<"UserProvider"> | string
+    providerId?: StringWithAggregatesFilter<"UserProvider"> | string
+    accessToken?: StringNullableWithAggregatesFilter<"UserProvider"> | string | null
+    refreshToken?: StringNullableWithAggregatesFilter<"UserProvider"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"UserProvider"> | Date | string
   }
 
   export type UnitWhereInput = {
@@ -21868,32 +22063,28 @@ export namespace Prisma {
     identifier?: StringFilter<"VerificationToken"> | string
     token?: StringFilter<"VerificationToken"> | string
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
-    createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
   }
 
   export type VerificationTokenOrderByWithRelationInput = {
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
-    createdAt?: SortOrder
   }
 
   export type VerificationTokenWhereUniqueInput = Prisma.AtLeast<{
-    token?: string
     identifier_token?: VerificationTokenIdentifierTokenCompoundUniqueInput
     AND?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
     OR?: VerificationTokenWhereInput[]
     NOT?: VerificationTokenWhereInput | VerificationTokenWhereInput[]
     identifier?: StringFilter<"VerificationToken"> | string
+    token?: StringFilter<"VerificationToken"> | string
     expires?: DateTimeFilter<"VerificationToken"> | Date | string
-    createdAt?: DateTimeFilter<"VerificationToken"> | Date | string
-  }, "token" | "identifier_token">
+  }, "identifier_token">
 
   export type VerificationTokenOrderByWithAggregationInput = {
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
-    createdAt?: SortOrder
     _count?: VerificationTokenCountOrderByAggregateInput
     _max?: VerificationTokenMaxOrderByAggregateInput
     _min?: VerificationTokenMinOrderByAggregateInput
@@ -21906,7 +22097,6 @@ export namespace Prisma {
     identifier?: StringWithAggregatesFilter<"VerificationToken"> | string
     token?: StringWithAggregatesFilter<"VerificationToken"> | string
     expires?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
-    createdAt?: DateTimeWithAggregatesFilter<"VerificationToken"> | Date | string
   }
 
   export type ErrorLogWhereInput = {
@@ -21983,68 +22173,6 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ErrorLog"> | Date | string
   }
 
-  export type VerificationRequestWhereInput = {
-    AND?: VerificationRequestWhereInput | VerificationRequestWhereInput[]
-    OR?: VerificationRequestWhereInput[]
-    NOT?: VerificationRequestWhereInput | VerificationRequestWhereInput[]
-    id?: StringFilter<"VerificationRequest"> | string
-    email?: StringFilter<"VerificationRequest"> | string
-    token?: StringFilter<"VerificationRequest"> | string
-    name?: StringNullableFilter<"VerificationRequest"> | string | null
-    expires?: DateTimeFilter<"VerificationRequest"> | Date | string
-    createdAt?: DateTimeFilter<"VerificationRequest"> | Date | string
-    updatedAt?: DateTimeFilter<"VerificationRequest"> | Date | string
-  }
-
-  export type VerificationRequestOrderByWithRelationInput = {
-    id?: SortOrder
-    email?: SortOrder
-    token?: SortOrder
-    name?: SortOrderInput | SortOrder
-    expires?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type VerificationRequestWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    email?: string
-    token?: string
-    AND?: VerificationRequestWhereInput | VerificationRequestWhereInput[]
-    OR?: VerificationRequestWhereInput[]
-    NOT?: VerificationRequestWhereInput | VerificationRequestWhereInput[]
-    name?: StringNullableFilter<"VerificationRequest"> | string | null
-    expires?: DateTimeFilter<"VerificationRequest"> | Date | string
-    createdAt?: DateTimeFilter<"VerificationRequest"> | Date | string
-    updatedAt?: DateTimeFilter<"VerificationRequest"> | Date | string
-  }, "id" | "email" | "token">
-
-  export type VerificationRequestOrderByWithAggregationInput = {
-    id?: SortOrder
-    email?: SortOrder
-    token?: SortOrder
-    name?: SortOrderInput | SortOrder
-    expires?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-    _count?: VerificationRequestCountOrderByAggregateInput
-    _max?: VerificationRequestMaxOrderByAggregateInput
-    _min?: VerificationRequestMinOrderByAggregateInput
-  }
-
-  export type VerificationRequestScalarWhereWithAggregatesInput = {
-    AND?: VerificationRequestScalarWhereWithAggregatesInput | VerificationRequestScalarWhereWithAggregatesInput[]
-    OR?: VerificationRequestScalarWhereWithAggregatesInput[]
-    NOT?: VerificationRequestScalarWhereWithAggregatesInput | VerificationRequestScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"VerificationRequest"> | string
-    email?: StringWithAggregatesFilter<"VerificationRequest"> | string
-    token?: StringWithAggregatesFilter<"VerificationRequest"> | string
-    name?: StringNullableWithAggregatesFilter<"VerificationRequest"> | string | null
-    expires?: DateTimeWithAggregatesFilter<"VerificationRequest"> | Date | string
-    createdAt?: DateTimeWithAggregatesFilter<"VerificationRequest"> | Date | string
-    updatedAt?: DateTimeWithAggregatesFilter<"VerificationRequest"> | Date | string
-  }
-
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -22070,6 +22198,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -22098,6 +22227,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -22126,6 +22256,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -22154,6 +22285,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -22215,6 +22347,72 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     selfIntroduction?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type UserProviderCreateInput = {
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutProvidersInput
+  }
+
+  export type UserProviderUncheckedCreateInput = {
+    id?: number
+    userId: string
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserProviderUpdateInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutProvidersNestedInput
+  }
+
+  export type UserProviderUncheckedUpdateInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserProviderCreateManyInput = {
+    id?: number
+    userId: string
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserProviderUpdateManyMutationInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserProviderUncheckedUpdateManyInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    userId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UnitCreateInput = {
@@ -22988,49 +23186,42 @@ export namespace Prisma {
     identifier: string
     token: string
     expires: Date | string
-    createdAt?: Date | string
   }
 
   export type VerificationTokenUncheckedCreateInput = {
     identifier: string
     token: string
     expires: Date | string
-    createdAt?: Date | string
   }
 
   export type VerificationTokenUpdateInput = {
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenUncheckedUpdateInput = {
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenCreateManyInput = {
     identifier: string
     token: string
     expires: Date | string
-    createdAt?: Date | string
   }
 
   export type VerificationTokenUpdateManyMutationInput = {
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenUncheckedUpdateManyInput = {
     identifier?: StringFieldUpdateOperationsInput | string
     token?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ErrorLogCreateInput = {
@@ -23110,76 +23301,6 @@ export namespace Prisma {
     url?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     timestamp?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VerificationRequestCreateInput = {
-    id?: string
-    email: string
-    token: string
-    name?: string | null
-    expires: Date | string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type VerificationRequestUncheckedCreateInput = {
-    id?: string
-    email: string
-    token: string
-    name?: string | null
-    expires: Date | string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type VerificationRequestUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VerificationRequestUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VerificationRequestCreateManyInput = {
-    id?: string
-    email: string
-    token: string
-    name?: string | null
-    expires: Date | string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type VerificationRequestUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type VerificationRequestUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    email?: StringFieldUpdateOperationsInput | string
-    token?: StringFieldUpdateOperationsInput | string
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -23294,6 +23415,12 @@ export namespace Prisma {
     none?: UserInterestWhereInput
   }
 
+  export type UserProviderListRelationFilter = {
+    every?: UserProviderWhereInput
+    some?: UserProviderWhereInput
+    none?: UserProviderWhereInput
+  }
+
   export type UserSkillListRelationFilter = {
     every?: UserSkillWhereInput
     some?: UserSkillWhereInput
@@ -23330,6 +23457,10 @@ export namespace Prisma {
   }
 
   export type UserInterestOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type UserProviderOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -23509,6 +23640,65 @@ export namespace Prisma {
     isNot?: UserWhereInput
   }
 
+  export type UserProviderProviderProviderIdCompoundUniqueInput = {
+    provider: string
+    providerId: string
+  }
+
+  export type UserProviderCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    provider?: SortOrder
+    providerId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserProviderAvgOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type UserProviderMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    provider?: SortOrder
+    providerId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserProviderMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    provider?: SortOrder
+    providerId?: SortOrder
+    accessToken?: SortOrder
+    refreshToken?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserProviderSumOrderByAggregateInput = {
+    id?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type UnitTagListRelationFilter = {
     every?: UnitTagWhereInput
     some?: UnitTagWhereInput
@@ -23588,22 +23778,6 @@ export namespace Prisma {
     achievementLevel?: SortOrder
     likesCount?: SortOrder
     commentsCount?: SortOrder
-  }
-
-  export type IntWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel>
-    in?: number[] | ListIntFieldRefInput<$PrismaModel>
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
-    _count?: NestedIntFilter<$PrismaModel>
-    _avg?: NestedFloatFilter<$PrismaModel>
-    _sum?: NestedIntFilter<$PrismaModel>
-    _min?: NestedIntFilter<$PrismaModel>
-    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type UnitScalarRelationFilter = {
@@ -24041,21 +24215,18 @@ export namespace Prisma {
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
-    createdAt?: SortOrder
   }
 
   export type VerificationTokenMaxOrderByAggregateInput = {
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
-    createdAt?: SortOrder
   }
 
   export type VerificationTokenMinOrderByAggregateInput = {
     identifier?: SortOrder
     token?: SortOrder
     expires?: SortOrder
-    createdAt?: SortOrder
   }
 
   export type ErrorLogCountOrderByAggregateInput = {
@@ -24100,36 +24271,6 @@ export namespace Prisma {
 
   export type ErrorLogSumOrderByAggregateInput = {
     id?: SortOrder
-  }
-
-  export type VerificationRequestCountOrderByAggregateInput = {
-    id?: SortOrder
-    email?: SortOrder
-    token?: SortOrder
-    name?: SortOrder
-    expires?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type VerificationRequestMaxOrderByAggregateInput = {
-    id?: SortOrder
-    email?: SortOrder
-    token?: SortOrder
-    name?: SortOrder
-    expires?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
-  }
-
-  export type VerificationRequestMinOrderByAggregateInput = {
-    id?: SortOrder
-    email?: SortOrder
-    token?: SortOrder
-    name?: SortOrder
-    expires?: SortOrder
-    createdAt?: SortOrder
-    updatedAt?: SortOrder
   }
 
   export type AccountCreateNestedManyWithoutUserInput = {
@@ -24179,6 +24320,13 @@ export namespace Prisma {
     connectOrCreate?: UserInterestCreateOrConnectWithoutUserInput | UserInterestCreateOrConnectWithoutUserInput[]
     createMany?: UserInterestCreateManyUserInputEnvelope
     connect?: UserInterestWhereUniqueInput | UserInterestWhereUniqueInput[]
+  }
+
+  export type UserProviderCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput> | UserProviderCreateWithoutUserInput[] | UserProviderUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProviderCreateOrConnectWithoutUserInput | UserProviderCreateOrConnectWithoutUserInput[]
+    createMany?: UserProviderCreateManyUserInputEnvelope
+    connect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
   }
 
   export type UserSkillCreateNestedManyWithoutUserInput = {
@@ -24235,6 +24383,13 @@ export namespace Prisma {
     connectOrCreate?: UserInterestCreateOrConnectWithoutUserInput | UserInterestCreateOrConnectWithoutUserInput[]
     createMany?: UserInterestCreateManyUserInputEnvelope
     connect?: UserInterestWhereUniqueInput | UserInterestWhereUniqueInput[]
+  }
+
+  export type UserProviderUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput> | UserProviderCreateWithoutUserInput[] | UserProviderUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProviderCreateOrConnectWithoutUserInput | UserProviderCreateOrConnectWithoutUserInput[]
+    createMany?: UserProviderCreateManyUserInputEnvelope
+    connect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
   }
 
   export type UserSkillUncheckedCreateNestedManyWithoutUserInput = {
@@ -24370,6 +24525,20 @@ export namespace Prisma {
     deleteMany?: UserInterestScalarWhereInput | UserInterestScalarWhereInput[]
   }
 
+  export type UserProviderUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput> | UserProviderCreateWithoutUserInput[] | UserProviderUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProviderCreateOrConnectWithoutUserInput | UserProviderCreateOrConnectWithoutUserInput[]
+    upsert?: UserProviderUpsertWithWhereUniqueWithoutUserInput | UserProviderUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserProviderCreateManyUserInputEnvelope
+    set?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    disconnect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    delete?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    connect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    update?: UserProviderUpdateWithWhereUniqueWithoutUserInput | UserProviderUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserProviderUpdateManyWithWhereWithoutUserInput | UserProviderUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserProviderScalarWhereInput | UserProviderScalarWhereInput[]
+  }
+
   export type UserSkillUpdateManyWithoutUserNestedInput = {
     create?: XOR<UserSkillCreateWithoutUserInput, UserSkillUncheckedCreateWithoutUserInput> | UserSkillCreateWithoutUserInput[] | UserSkillUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserSkillCreateOrConnectWithoutUserInput | UserSkillCreateOrConnectWithoutUserInput[]
@@ -24482,6 +24651,20 @@ export namespace Prisma {
     deleteMany?: UserInterestScalarWhereInput | UserInterestScalarWhereInput[]
   }
 
+  export type UserProviderUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput> | UserProviderCreateWithoutUserInput[] | UserProviderUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserProviderCreateOrConnectWithoutUserInput | UserProviderCreateOrConnectWithoutUserInput[]
+    upsert?: UserProviderUpsertWithWhereUniqueWithoutUserInput | UserProviderUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserProviderCreateManyUserInputEnvelope
+    set?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    disconnect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    delete?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    connect?: UserProviderWhereUniqueInput | UserProviderWhereUniqueInput[]
+    update?: UserProviderUpdateWithWhereUniqueWithoutUserInput | UserProviderUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserProviderUpdateManyWithWhereWithoutUserInput | UserProviderUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserProviderScalarWhereInput | UserProviderScalarWhereInput[]
+  }
+
   export type UserSkillUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<UserSkillCreateWithoutUserInput, UserSkillUncheckedCreateWithoutUserInput> | UserSkillCreateWithoutUserInput[] | UserSkillUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserSkillCreateOrConnectWithoutUserInput | UserSkillCreateOrConnectWithoutUserInput[]
@@ -24494,6 +24677,28 @@ export namespace Prisma {
     update?: UserSkillUpdateWithWhereUniqueWithoutUserInput | UserSkillUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserSkillUpdateManyWithWhereWithoutUserInput | UserSkillUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserSkillScalarWhereInput | UserSkillScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutProvidersInput = {
+    create?: XOR<UserCreateWithoutProvidersInput, UserUncheckedCreateWithoutProvidersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProvidersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutProvidersNestedInput = {
+    create?: XOR<UserCreateWithoutProvidersInput, UserUncheckedCreateWithoutProvidersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutProvidersInput
+    upsert?: UserUpsertWithoutProvidersInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProvidersInput, UserUpdateWithoutProvidersInput>, UserUncheckedUpdateWithoutProvidersInput>
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
   }
 
   export type CommentCreateNestedManyWithoutUnitInput = {
@@ -24556,14 +24761,6 @@ export namespace Prisma {
     connectOrCreate?: UnitTagCreateOrConnectWithoutUnitInput | UnitTagCreateOrConnectWithoutUnitInput[]
     createMany?: UnitTagCreateManyUnitInputEnvelope
     connect?: UnitTagWhereUniqueInput | UnitTagWhereUniqueInput[]
-  }
-
-  export type IntFieldUpdateOperationsInput = {
-    set?: number
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type CommentUpdateManyWithoutUnitNestedInput = {
@@ -25596,6 +25793,33 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type UserProviderCreateWithoutUserInput = {
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserProviderUncheckedCreateWithoutUserInput = {
+    id?: number
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserProviderCreateOrConnectWithoutUserInput = {
+    where: UserProviderWhereUniqueInput
+    create: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserProviderCreateManyUserInputEnvelope = {
+    data: UserProviderCreateManyUserInput | UserProviderCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserSkillCreateWithoutUserInput = {
     tag: TagCreateNestedOneWithoutUserSkillsInput
   }
@@ -25824,6 +26048,35 @@ export namespace Prisma {
     tagId?: IntFilter<"UserInterest"> | number
   }
 
+  export type UserProviderUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserProviderWhereUniqueInput
+    update: XOR<UserProviderUpdateWithoutUserInput, UserProviderUncheckedUpdateWithoutUserInput>
+    create: XOR<UserProviderCreateWithoutUserInput, UserProviderUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserProviderUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserProviderWhereUniqueInput
+    data: XOR<UserProviderUpdateWithoutUserInput, UserProviderUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserProviderUpdateManyWithWhereWithoutUserInput = {
+    where: UserProviderScalarWhereInput
+    data: XOR<UserProviderUpdateManyMutationInput, UserProviderUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserProviderScalarWhereInput = {
+    AND?: UserProviderScalarWhereInput | UserProviderScalarWhereInput[]
+    OR?: UserProviderScalarWhereInput[]
+    NOT?: UserProviderScalarWhereInput | UserProviderScalarWhereInput[]
+    id?: IntFilter<"UserProvider"> | number
+    userId?: StringFilter<"UserProvider"> | string
+    provider?: StringFilter<"UserProvider"> | string
+    providerId?: StringFilter<"UserProvider"> | string
+    accessToken?: StringNullableFilter<"UserProvider"> | string | null
+    refreshToken?: StringNullableFilter<"UserProvider"> | string | null
+    createdAt?: DateTimeFilter<"UserProvider"> | Date | string
+  }
+
   export type UserSkillUpsertWithWhereUniqueWithoutUserInput = {
     where: UserSkillWhereUniqueInput
     update: XOR<UserSkillUpdateWithoutUserInput, UserSkillUncheckedUpdateWithoutUserInput>
@@ -25846,6 +26099,134 @@ export namespace Prisma {
     NOT?: UserSkillScalarWhereInput | UserSkillScalarWhereInput[]
     userId?: StringFilter<"UserSkill"> | string
     tagId?: IntFilter<"UserSkill"> | number
+  }
+
+  export type UserCreateWithoutProvidersInput = {
+    id?: string
+    name?: string | null
+    topImage?: string | null
+    age?: number | null
+    ageVisible?: boolean
+    email: string
+    hashedPassword?: string | null
+    primaryAuthMethod: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    subscriptionStatus?: string | null
+    subscriptionPlan?: string | null
+    subscriptionStart?: Date | string | null
+    subscriptionEnd?: Date | string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    selfIntroduction?: string | null
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    comments?: CommentCreateNestedManyWithoutUserInput
+    logs?: LogCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    units?: UnitCreateNestedManyWithoutUserInput
+    unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
+    userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    userSkills?: UserSkillCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutProvidersInput = {
+    id?: string
+    name?: string | null
+    topImage?: string | null
+    age?: number | null
+    ageVisible?: boolean
+    email: string
+    hashedPassword?: string | null
+    primaryAuthMethod: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    subscriptionStatus?: string | null
+    subscriptionPlan?: string | null
+    subscriptionStart?: Date | string | null
+    subscriptionEnd?: Date | string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    selfIntroduction?: string | null
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    comments?: CommentUncheckedCreateNestedManyWithoutUserInput
+    logs?: LogUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    units?: UnitUncheckedCreateNestedManyWithoutUserInput
+    unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
+    userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutProvidersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutProvidersInput, UserUncheckedCreateWithoutProvidersInput>
+  }
+
+  export type UserUpsertWithoutProvidersInput = {
+    update: XOR<UserUpdateWithoutProvidersInput, UserUncheckedUpdateWithoutProvidersInput>
+    create: XOR<UserCreateWithoutProvidersInput, UserUncheckedCreateWithoutProvidersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutProvidersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutProvidersInput, UserUncheckedUpdateWithoutProvidersInput>
+  }
+
+  export type UserUpdateWithoutProvidersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    topImage?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    ageVisible?: BoolFieldUpdateOperationsInput | boolean
+    email?: StringFieldUpdateOperationsInput | string
+    hashedPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryAuthMethod?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscriptionStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionPlan?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    selfIntroduction?: NullableStringFieldUpdateOperationsInput | string | null
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    comments?: CommentUpdateManyWithoutUserNestedInput
+    logs?: LogUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    units?: UnitUpdateManyWithoutUserNestedInput
+    unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
+    userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    userSkills?: UserSkillUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProvidersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    topImage?: NullableStringFieldUpdateOperationsInput | string | null
+    age?: NullableIntFieldUpdateOperationsInput | number | null
+    ageVisible?: BoolFieldUpdateOperationsInput | boolean
+    email?: StringFieldUpdateOperationsInput | string
+    hashedPassword?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryAuthMethod?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    subscriptionStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionPlan?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriptionStart?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    selfIntroduction?: NullableStringFieldUpdateOperationsInput | string | null
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    comments?: CommentUncheckedUpdateManyWithoutUserNestedInput
+    logs?: LogUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    units?: UnitUncheckedUpdateManyWithoutUserNestedInput
+    unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
+    userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type CommentCreateWithoutUnitInput = {
@@ -25936,6 +26317,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -25963,6 +26345,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -26076,6 +26459,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -26103,6 +26487,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -26218,6 +26603,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -26245,6 +26631,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -26389,6 +26776,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -26416,6 +26804,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -26996,6 +27385,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutUserSkillsInput = {
@@ -27023,6 +27413,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutUserSkillsInput = {
@@ -27092,6 +27483,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUserSkillsInput = {
@@ -27119,6 +27511,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TagCreateWithoutUserInterestsInput = {
@@ -27165,6 +27558,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -27192,6 +27586,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -27261,6 +27656,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -27288,6 +27684,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -27363,6 +27760,7 @@ export namespace Prisma {
     sessions?: SessionCreateNestedManyWithoutUserInput
     units?: UnitCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -27390,6 +27788,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -27487,6 +27886,7 @@ export namespace Prisma {
     sessions?: SessionUpdateManyWithoutUserNestedInput
     units?: UnitUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -27514,6 +27914,7 @@ export namespace Prisma {
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -27589,6 +27990,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -27616,6 +28018,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -27713,6 +28116,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -27740,6 +28144,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -27767,6 +28172,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -27794,6 +28200,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -27837,6 +28244,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -27864,6 +28272,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -27891,6 +28300,7 @@ export namespace Prisma {
     units?: UnitCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeCreateNestedManyWithoutUserInput
     userInterests?: UserInterestCreateNestedManyWithoutUserInput
+    providers?: UserProviderCreateNestedManyWithoutUserInput
     userSkills?: UserSkillCreateNestedManyWithoutUserInput
   }
 
@@ -27918,6 +28328,7 @@ export namespace Prisma {
     units?: UnitUncheckedCreateNestedManyWithoutUserInput
     unitLikes?: UnitLikeUncheckedCreateNestedManyWithoutUserInput
     userInterests?: UserInterestUncheckedCreateNestedManyWithoutUserInput
+    providers?: UserProviderUncheckedCreateNestedManyWithoutUserInput
     userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
   }
 
@@ -27961,6 +28372,7 @@ export namespace Prisma {
     units?: UnitUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUpdateManyWithoutUserNestedInput
   }
 
@@ -27988,6 +28400,7 @@ export namespace Prisma {
     units?: UnitUncheckedUpdateManyWithoutUserNestedInput
     unitLikes?: UnitLikeUncheckedUpdateManyWithoutUserNestedInput
     userInterests?: UserInterestUncheckedUpdateManyWithoutUserNestedInput
+    providers?: UserProviderUncheckedUpdateManyWithoutUserNestedInput
     userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -28059,6 +28472,15 @@ export namespace Prisma {
 
   export type UserInterestCreateManyUserInput = {
     tagId: number
+  }
+
+  export type UserProviderCreateManyUserInput = {
+    id?: number
+    provider: string
+    providerId: string
+    accessToken?: string | null
+    refreshToken?: string | null
+    createdAt?: Date | string
   }
 
   export type UserSkillCreateManyUserInput = {
@@ -28282,6 +28704,32 @@ export namespace Prisma {
 
   export type UserInterestUncheckedUpdateManyWithoutUserInput = {
     tagId?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type UserProviderUpdateWithoutUserInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserProviderUncheckedUpdateWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserProviderUncheckedUpdateManyWithoutUserInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    provider?: StringFieldUpdateOperationsInput | string
+    providerId?: StringFieldUpdateOperationsInput | string
+    accessToken?: NullableStringFieldUpdateOperationsInput | string | null
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserSkillUpdateWithoutUserInput = {

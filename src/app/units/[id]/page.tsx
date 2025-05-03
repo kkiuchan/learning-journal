@@ -8,7 +8,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const id = await params.id;
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   const numericId = parseInt(id);
 
   // IDが無効な場合のエラーハンドリング
@@ -80,7 +81,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // ページコンポーネント
 export default async function UnitPage({ params }: Props) {
-  const id = await params.id;
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   const numericId = parseInt(id);
 
   if (isNaN(numericId)) {
