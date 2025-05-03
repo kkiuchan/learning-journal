@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-const { PrismaPlugin } = require("@prisma/nextjs-monorepo-workaround-plugin");
-
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -108,22 +106,13 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
   // キャッシュの最適化
   experimental: {
-    optimizePackageImports: ["@prisma/client", "@/components"],
+    optimizePackageImports: ["@/components"],
     optimizeCss: false,
     serverActions: {
       allowedOrigins: ["localhost:3000", "learning-journal.vercel.app"],
     },
   },
-  outputFileTracingIncludes: {
-    "/api/**/*": [
-      "node_modules/.prisma/**/*",
-      "node_modules/@prisma/client/**/*",
-      ".env*",
-      "prisma/**/*",
-    ],
-  },
   transpilePackages: [
-    "@prisma/client",
     "bcryptjs",
     "@radix-ui/react-dialog",
     "class-variance-authority",
@@ -131,7 +120,6 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = [...config.externals, "@prisma/client", "prisma"];
-      config.plugins = [...config.plugins, new PrismaPlugin()];
     }
     return config;
   },
