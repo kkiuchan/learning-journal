@@ -180,9 +180,14 @@ export async function GET(
       const [users, total] = await Promise.all([
         prisma.user.findMany({
           where: {
-            emailVerified: {
-              not: null,
-            },
+            AND: [
+              {
+                OR: [
+                  { emailVerified: { not: null } },
+                  { accounts: { some: {} } },
+                ],
+              },
+            ],
           },
           skip: (page - 1) * limit,
           take: limit,
@@ -224,9 +229,14 @@ export async function GET(
         }),
         prisma.user.count({
           where: {
-            emailVerified: {
-              not: null,
-            },
+            AND: [
+              {
+                OR: [
+                  { emailVerified: { not: null } },
+                  { accounts: { some: {} } },
+                ],
+              },
+            ],
           },
         }),
       ]);
@@ -262,29 +272,33 @@ export async function GET(
     // 検索クエリがある場合は検索を実行
     const users = await prisma.user.findMany({
       where: {
-        emailVerified: {
-          not: null,
-        },
-        OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { selfIntroduction: { contains: query, mode: "insensitive" } },
+        AND: [
           {
-            userSkills: {
-              some: {
-                tag: {
-                  name: { contains: query, mode: "insensitive" },
-                },
-              },
-            },
+            OR: [{ emailVerified: { not: null } }, { accounts: { some: {} } }],
           },
           {
-            userInterests: {
-              some: {
-                tag: {
-                  name: { contains: query, mode: "insensitive" },
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { selfIntroduction: { contains: query, mode: "insensitive" } },
+              {
+                userSkills: {
+                  some: {
+                    tag: {
+                      name: { contains: query, mode: "insensitive" },
+                    },
+                  },
                 },
               },
-            },
+              {
+                userInterests: {
+                  some: {
+                    tag: {
+                      name: { contains: query, mode: "insensitive" },
+                    },
+                  },
+                },
+              },
+            ],
           },
         ],
       },
@@ -330,29 +344,33 @@ export async function GET(
 
     const total = await prisma.user.count({
       where: {
-        emailVerified: {
-          not: null,
-        },
-        OR: [
-          { name: { contains: query, mode: "insensitive" } },
-          { selfIntroduction: { contains: query, mode: "insensitive" } },
+        AND: [
           {
-            userSkills: {
-              some: {
-                tag: {
-                  name: { contains: query, mode: "insensitive" },
-                },
-              },
-            },
+            OR: [{ emailVerified: { not: null } }, { accounts: { some: {} } }],
           },
           {
-            userInterests: {
-              some: {
-                tag: {
-                  name: { contains: query, mode: "insensitive" },
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { selfIntroduction: { contains: query, mode: "insensitive" } },
+              {
+                userSkills: {
+                  some: {
+                    tag: {
+                      name: { contains: query, mode: "insensitive" },
+                    },
+                  },
                 },
               },
-            },
+              {
+                userInterests: {
+                  some: {
+                    tag: {
+                      name: { contains: query, mode: "insensitive" },
+                    },
+                  },
+                },
+              },
+            ],
           },
         ],
       },

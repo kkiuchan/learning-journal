@@ -249,9 +249,7 @@ export async function GET(
     const user = await prisma.user.findFirst({
       where: {
         id: id,
-        emailVerified: {
-          not: null,
-        },
+        OR: [{ emailVerified: { not: null } }, { accounts: { some: {} } }],
       },
       select: {
         id: true,
