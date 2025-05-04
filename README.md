@@ -1,36 +1,188 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Learning Journal
 
-## Getting Started
+プログラミング学習の記録と振り返りをサポートするWebアプリケーション
 
-First, run the development server:
+## 概要
+
+Learning Journalは、プログラミング学習者向けの学習記録プラットフォームです。日々の学習内容を記録し、振り返りを行うことで、効果的な学習をサポートします。また、AIによる学習アドバイスを提供し、より効率的な学習をサポートします。
+
+### 主な機能
+
+- 📝 学習ユニットの作成と管理
+
+  - 学習目標の設定と進捗管理
+  - 事前の理解度確認と学習計画
+  - 学習後の振り返りと次のアクションの記録
+  - ステータス管理（未着手、進行中、完了）
+  - 公開/非公開設定
+  - いいね機能とコメント機能
+
+- ⏱ 学習ログの記録
+
+  - 日付別の学習時間トラッキング
+  - 学習内容の詳細なメモ機能
+  - タグによる学習内容の分類
+  - 画像アップロード機能
+  - 学習の進捗状況の可視化
+  - 総学習時間の自動計算
+
+- 👥 ユーザー機能
+
+  - メールアドレスによる認証（メール確認機能付き）
+  - GitHub/Googleアカウントでのソーシャルログイン
+  - プロフィールのカスタマイズ
+    - プロフィール画像の設定
+    - 自己紹介文の編集
+  - スキルと興味分野の設定（タグ形式）
+
+- 🔍 検索・発見機能
+
+  - ユーザー検索（名前、スキル、興味分野）
+  - タグベースの学習内容検索
+  - 学習ユニットの検索と絞り込み
+
+- 📊 分析・レポート機能
+
+  - 月別・週別の学習時間集計
+  - 目標達成率の表示
+  - 学習の継続状況の可視化
+
+- 🛠 その他の機能
+
+  - レスポンシブデザイン対応
+  - ダークモード対応
+
+- 🤖 AIによる学習サポート
+  - 学習ログの分析に基づく改善提案
+  - 次の学習ステップのレコメンド
+
+## 技術スタック
+
+- **フロントエンド**
+
+  - Next.js 14 (App Router)
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI
+  - React Hook Form
+
+- **バックエンド**
+
+  - Next.js API Routes
+  - Prisma (ORM)
+  - PostgreSQL
+  - NextAuth.js
+
+- **AI**
+
+  - OpenAI API (GPT-4)
+
+- **インフラ**
+  - Vercel (ホスティング)
+  - Supabase (データベース)
+  - Resend (メール送信)
+
+## 開発環境のセットアップ
+
+1. リポジトリのクローン
+
+```bash
+git clone https://github.com/kkiuchan/learning-journal.git
+cd learning-journal
+```
+
+2. 依存関係のインストール
+
+```bash
+npm install
+```
+
+3. 環境変数の設定
+
+```bash
+cp .env.example .env.local
+```
+
+`.env.local`ファイルを編集し、必要な環境変数を設定してください。
+
+4. データベースのセットアップ
+
+```bash
+npx prisma migrate dev
+```
+
+5. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+アプリケーションは http://localhost:3000 で起動します。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 環境変数
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+以下の環境変数が必要です：
 
-## Learn More
+```env
+# 認証
+AUTH_SECRET="your-auth-secret"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret"
 
-To learn more about Next.js, take a look at the following resources:
+# データベース
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Discord認証
+DISCORD_CLIENT_ID="your-discord-client-id"
+DISCORD_CLIENT_SECRET="your-discord-client-secret"
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# GitHub認証
+GITHUB_CLIENT_ID="your-github-client-id"
+GITHUB_CLIENT_SECRET="your-github-client-secret"
 
-## Deploy on Vercel
+# Google認証
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# メール送信（Resend）
+RESEND_API_KEY="your-resend-api-key"
+EMAIL_FROM="noreply@learning-journal-app.com"
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# アプリケーション
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
+
+# OpenAI
+OPENAI_API_KEY="your-openai-api-key"
+
+# Vercel
+VERCEL_BLOB_TOKEN="your-vercel-blob-token"
+```
+
+各環境変数は以下のカテゴリに分類されます：
+
+1. アプリケーション設定
+
+   - データベース
+   - 認証設定
+   - ソーシャルログイン
+   - メール送信
+   - ファイルアップロード
+   - AI機能
+   - セキュリティ
+
+2. 外部サービス連携
+
+   - Cloudinary関連の設定
+   - OpenAI関連の設定
+   - セキュリティ関連の設定
+
+3. 環境変数の説明
+   - カテゴリごとに環境変数の用途を説明
+   - より具体的な設定値の例を提供
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。
