@@ -24,6 +24,10 @@ type Tag = {
   name: string;
 };
 
+type UnitTag = {
+  tag: Tag;
+};
+
 type Unit = {
   id: number;
   title: string;
@@ -34,7 +38,7 @@ type Unit = {
   startDate: Date | null;
   endDate: Date | null;
   status: string;
-  tags: Tag[];
+  unitTags: UnitTag[];
 };
 
 export default function EditUnitPage({
@@ -70,24 +74,31 @@ export default function EditUnitPage({
       const data = await response.json();
 
       if (response.ok) {
-        setUnit(data.data);
-        setTitle(data.data.title);
-        setLearningGoal(data.data.learningGoal || "");
-        setPreLearningState(data.data.preLearningState || "");
-        setReflection(data.data.reflection || "");
-        setNextAction(data.data.nextAction || "");
+        const unitData = data.data;
+        setUnit(unitData);
+        setTitle(unitData.title);
+        setLearningGoal(unitData.learningGoal || "");
+        setPreLearningState(unitData.preLearningState || "");
+        setReflection(unitData.reflection || "");
+        setNextAction(unitData.nextAction || "");
         setStartDate(
-          data.data.startDate
-            ? new Date(data.data.startDate).toISOString().split("T")[0]
+          unitData.startDate
+            ? new Date(unitData.startDate).toISOString().split("T")[0]
             : ""
         );
         setEndDate(
-          data.data.endDate
-            ? new Date(data.data.endDate).toISOString().split("T")[0]
+          unitData.endDate
+            ? new Date(unitData.endDate).toISOString().split("T")[0]
             : ""
         );
-        setStatus(data.data.status);
-        setTags(data.data.tags);
+        setStatus(unitData.status);
+        // タグデータの変換と設定
+        const unitTags =
+          unitData.unitTags?.map((ut: any) => ({
+            id: ut.tag.id,
+            name: ut.tag.name,
+          })) || [];
+        setTags(unitTags);
       } else {
         console.error("ユニットの取得に失敗しました:", data.error);
       }
