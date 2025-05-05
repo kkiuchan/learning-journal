@@ -269,16 +269,12 @@ export async function DELETE(
   await ensurePrismaConnected();
   try {
     const { id } = await params;
-    // セッションの取得
     const session = await getServerSession(authConfig);
+
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
-    // ユニットの存在確認と権限チェック
     const unit = await prisma.unit.findUnique({
       where: { id: parseInt(id) },
       select: { userId: true },
@@ -286,34 +282,66 @@ export async function DELETE(
 
     if (!unit) {
       return NextResponse.json(
-        { error: "ユニットが見つかりません", status: 404 },
+        { error: "ユニットが見つかりません" },
         { status: 404 }
       );
     }
 
     if (unit.userId !== session.user.id) {
       return NextResponse.json(
-        { error: "このユニットを削除する権限がありません", status: 403 },
+        { error: "このユニットを削除する権限がありません" },
         { status: 403 }
       );
     }
 
-    // ユニットの削除
-    await prisma.unit.delete({
-      where: { id: parseInt(id) },
+    // トランザクションを使用して関連データも削除
+    await prisma.$transaction(async (tx) => {
+      // 関連するLogTagを先に削除
+      await tx.logTag.deleteMany({
+        where: {
+          log: {
+            unitId: parseInt(id),
+          },
+        },
+      });
+
+      // 関連する学習ログを削除
+      await tx.log.deleteMany({
+        where: { unitId: parseInt(id) },
+      });
+
+      // 関連するコメントを削除
+      await tx.comment.deleteMany({
+        where: { unitId: parseInt(id) },
+      });
+
+      // 関連するいいねを削除
+      await tx.unitLike.deleteMany({
+        where: { unitId: parseInt(id) },
+      });
+
+      // 関連するタグを削除
+      await tx.unitTag.deleteMany({
+        where: { unitId: parseInt(id) },
+      });
+
+      // ユニットを削除
+      await tx.unit.delete({
+        where: { id: parseInt(id) },
+      });
     });
 
     // キャッシュの再検証
-    // revalidateTag(CACHE_TAGS.UNIT);
-    // revalidateTag(CACHE_TAGS.UNIT_LIST);
-    // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
-    revalidateUnitData(id);
+    await revalidateUnitData(id);
 
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json(
+      { message: "ユニットを削除しました" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("ユニットの削除中にエラーが発生しました:", error);
     return NextResponse.json(
-      { error: "ユニットの削除中にエラーが発生しました", status: 500 },
+      { error: "ユニットの削除中にエラーが発生しました" },
       { status: 500 }
     );
   }

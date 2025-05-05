@@ -2,11 +2,13 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
 import { Providers } from "@/components/providers";
-import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { MenuProvider } from "@/contexts/MenuContext";
 import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
+import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -129,20 +131,30 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body
-        className={`${inter.variable} ${notoSansJP.variable} font-sans min-h-screen flex flex-col overflow-x-hidden relative`}
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          inter.variable,
+          notoSansJP.variable
+        )}
       >
-        <Providers>
-          <ThemeProvider>
-            <div className="flex flex-col flex-1">
-              <Header />
-              <main className="flex-1 flex flex-col">
-                <AnimatedLayout>{children}</AnimatedLayout>
-              </main>
-              <Footer />
-            </div>
+        <NextThemesProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+        >
+          <MenuProvider>
+            <Providers>
+              <div className="flex flex-col flex-1">
+                <Header />
+                <main className="flex-1 flex flex-col">
+                  <AnimatedLayout>{children}</AnimatedLayout>
+                </main>
+                <Footer />
+              </div>
+            </Providers>
             <Toaster />
-          </ThemeProvider>
-        </Providers>
+          </MenuProvider>
+        </NextThemesProvider>
       </body>
     </html>
   );

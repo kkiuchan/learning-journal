@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
+import UserAvatar from "@/components/UserAvatar";
 import { useComments } from "@/hooks/useComments";
 import { useLogs } from "@/hooks/useLogs";
 import { Unit } from "@/types";
@@ -661,10 +662,10 @@ export default function UnitDetail({ id }: { id: string }) {
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <div className="flex items-center gap-2">
                   {unit.user?.image && (
-                    <img
-                      src={unit.user.image}
-                      alt={unit.user?.name || "ユーザー"}
-                      className="w-6 h-6 rounded-full"
+                    <UserAvatar
+                      imageUrl={unit.user.image}
+                      userName={unit.user.name}
+                      size="sm"
                     />
                   )}
                   <span>{unit.user?.name || "ユーザー"}</span>
@@ -1362,10 +1363,11 @@ export default function UnitDetail({ id }: { id: string }) {
                       <div className="flex items-start gap-3">
                         {comment.user.image &&
                           isValidImageUrl(comment.user.image) && (
-                            <img
-                              src={comment.user.image}
-                              alt={comment.user.name || "ユーザー"}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+                            <UserAvatar
+                              imageUrl={comment.user.image}
+                              userName={comment.user.name}
+                              size="md"
+                              className="w-8 h-8 sm:w-10 sm:h-10"
                             />
                           )}
                         <div className="flex-1 min-w-0">
@@ -1525,14 +1527,4 @@ export default function UnitDetail({ id }: { id: string }) {
       {logs && <TableOfContents logs={logs} />}
     </div>
   );
-}
-
-function getEffectTypeLabel(type: string): string {
-  const labels: Record<string, string> = {
-    understanding: "理解が深まった",
-    practical: "実際に使えるようになった",
-    application: "応用のアイデアが生まれた",
-    none: "特になかった",
-  };
-  return labels[type] || type;
 }

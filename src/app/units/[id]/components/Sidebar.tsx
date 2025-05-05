@@ -1,4 +1,7 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { Unit } from "@/types";
 import {
   Copy,
@@ -10,7 +13,7 @@ import {
 } from "lucide-react";
 import type { Session } from "next-auth";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 interface SidebarProps {
   unit: Unit;
@@ -27,9 +30,10 @@ interface SidebarProps {
   className?: string;
   commentCount: number;
   onCommentClick: () => void;
+  onMutate: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
+export function Sidebar({
   unit,
   session,
   id,
@@ -44,14 +48,35 @@ const Sidebar: React.FC<SidebarProps> = ({
   className = "",
   commentCount,
   onCommentClick,
-}) => {
+  onMutate,
+}: SidebarProps) {
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        openMenuId !== null &&
+        menuButtonRef.current &&
+        menuContentRef.current &&
+        !menuButtonRef.current.contains(event.target as Node) &&
+        !menuContentRef.current.contains(event.target as Node)
+      ) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId, setOpenMenuId]);
+
   return (
     <aside
-      className={`hidden lg:flex flex-col w-48 h-full px-4 z-30 ${className}`}
+      className={cn("hidden lg:flex flex-col w-48 h-full px-4 z-30", className)}
     >
-      {/* 共有・いいね・3点リーダーなどのボタン群 */}
       <div className="flex flex-col gap-4 items-center mt-4">
-        {/* 共有ボタン群 */}
         <div className="flex flex-col gap-3 items-center">
           <a
             href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
@@ -105,7 +130,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
         </div>
-        {/* いいねボタン */}
         <button
           onClick={handleLike}
           className={`w-8 h-8 flex items-center justify-center rounded-full bg-pink-100 hover:bg-pink-200 text-pink-600 shadow transition-colors duration-200 relative`}
@@ -116,7 +140,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             {unit._count?.unitLikes ?? 0}
           </span>
         </button>
-        {/* コメントボタン */}
         <button
           onClick={onCommentClick}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 shadow transition-colors duration-200 relative"
@@ -127,7 +150,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             {commentCount}
           </span>
         </button>
-        {/* 3点リーダー（編集・削除） */}
         {session?.user?.id === unit.userId && (
           <div className="relative">
             <Button
@@ -137,15 +159,12 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() =>
                 setOpenMenuId(openMenuId === parseInt(id) ? null : parseInt(id))
               }
+              ref={menuButtonRef}
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
             <div
-              ref={(el) => {
-                if (el) {
-                  menuRefs.current[parseInt(id)] = el;
-                }
-              }}
+              ref={menuContentRef}
               className={`absolute right-0 top-full mt-1 bg-background rounded-md shadow-lg z-10 border transition-all duration-200 ease-in-out min-w-[160px] ${
                 openMenuId === parseInt(id)
                   ? "opacity-100 transform translate-y-0"
@@ -179,6 +198,4 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
     </aside>
   );
-};
-
-export default Sidebar;
+}

@@ -89,46 +89,33 @@ export type ApiResponse<T> =
     };
 
 // ユニット関連の型
-export type Unit = {
+export interface Unit {
   id: number;
   title: string;
   learningGoal: string | null;
   preLearningState: string | null;
   reflection: string | null;
   nextAction: string | null;
-  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED";
-  startDate: string | null;
-  endDate: string | null;
-  displayFlag: boolean;
-  createdAt: string;
-  achievementLevel: number;
-  totalLearningTime: number;
+  userId: string;
   isLiked: boolean;
-  unitTags: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
-  _count?: {
+  achievementLevel: number | null;
+  _count: {
     logs: number;
     comments: number;
     unitLikes: number;
   };
-  userId: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-};
+}
 
 // コメントの型
 export type Comment = {
   id: number;
   comment: string;
   createdAt: string;
-  user: FrontendUser;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  };
 };
 
 // リソースの型
@@ -145,7 +132,7 @@ export type Resource = {
 export type Log = {
   id: number;
   unitId: number;
-  userId: number;
+  userId: string;
   title: string;
   learningTime: number;
   note: string;

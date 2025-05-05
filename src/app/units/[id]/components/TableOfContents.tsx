@@ -11,19 +11,48 @@ interface TableOfContentsProps {
 
 export function TableOfContents({ logs }: TableOfContentsProps) {
   const [activeLogId, setActiveLogId] = useState<number | null>(null);
-  const [position, setPosition] = useState(() => {
-    // ローカルストレージから位置を復元
-    const saved = localStorage.getItem("tocPosition");
-    return saved ? JSON.parse(saved) : { x: 20, y: 100 };
-  });
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
   const initialMousePosition = useRef<{ x: number; y: number } | null>(null);
   const initialElementPosition = useRef<{ x: number; y: number } | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
+  // クライアントサイドでの初期化
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    setIsClient(true);
+    const defaultPosition = {
+      x: window.innerWidth - 320,
+      y: 100,
+    };
+
+    try {
+      const saved = localStorage.getItem("tocPosition");
+      if (saved) {
+        const savedPosition = JSON.parse(saved);
+        const adjustedPosition = {
+          x: Math.min(savedPosition.x, window.innerWidth - 320),
+          y: Math.min(savedPosition.y, window.innerHeight - 100),
+        };
+        setPosition(adjustedPosition);
+      } else {
+        setPosition(defaultPosition);
+      }
+    } catch (error) {
+      console.error("Error loading saved position:", error);
+      setPosition(defaultPosition);
+    }
+  }, []);
+
+  // IntersectionObserverの初期化と監視の設定
+  useEffect(() => {
+    if (!isClient) return;
+
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
@@ -38,17 +67,58 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
       }
     );
 
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isClient]);
+
+  // ログ要素の監視を設定
+  useEffect(() => {
+    if (!isClient || !observerRef.current || logs.length === 0) return;
+
+    // 既存の監視をクリア
+    observerRef.current.disconnect();
+
     // 各ログ要素を監視
     logs.forEach((log) => {
       const element = document.getElementById(`log-${log.id}`);
-      if (element) observer.observe(element);
+      if (element) {
+        observerRef.current?.observe(element);
+      }
     });
 
-    return () => observer.disconnect();
-  }, [logs]);
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [logs, isClient]);
 
+  // ウィンドウリサイズ時の位置調整
   useEffect(() => {
-    if (!isDragging) return;
+    if (!isClient || !position) return;
+
+    const handleResize = () => {
+      setPosition((prev) => {
+        if (!prev) return prev;
+        const maxX = window.innerWidth - 320;
+        const maxY = window.innerHeight - 100;
+        return {
+          x: Math.min(prev.x, maxX),
+          y: Math.min(prev.y, maxY),
+        };
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isClient, position]);
+
+  // ドラッグ処理
+  useEffect(() => {
+    if (!isDragging || !position) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!initialMousePosition.current || !initialElementPosition.current)
@@ -60,7 +130,6 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
       const newX = initialElementPosition.current.x + deltaX;
       const newY = initialElementPosition.current.y + deltaY;
 
-      // 画面内に収まるように制限
       const maxX = window.innerWidth - (dragRef.current?.offsetWidth || 0);
       const maxY = window.innerHeight - (dragRef.current?.offsetHeight || 0);
 
@@ -74,7 +143,9 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
       setIsDragging(false);
       initialMousePosition.current = null;
       initialElementPosition.current = null;
-      localStorage.setItem("tocPosition", JSON.stringify(position));
+      if (position) {
+        localStorage.setItem("tocPosition", JSON.stringify(position));
+      }
       document.body.style.userSelect = "";
     };
 
@@ -88,9 +159,8 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
   }, [isDragging, position]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!dragRef.current) return;
+    if (!dragRef.current || !position) return;
 
-    // 右クリックは無視
     if (e.button !== 0) return;
 
     setIsDragging(true);
@@ -110,25 +180,34 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
   const scrollToLog = (logId: number) => {
     const element = document.getElementById(`log-${logId}`);
     if (element) {
-      // スムーズスクロールを実行
       element.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
 
-      // アクティブなログIDを更新
       setActiveLogId(logId);
-      // モバイル表示時は自動的に閉じる
       if (window.innerWidth < 1024) {
         setIsExpanded(false);
       }
     }
   };
 
-  if (logs.length === 0) return null;
+  if (!isClient || !position || logs.length === 0) return null;
 
   // モバイル表示用のコンポーネント
-  const MobileView = () => (
+  const MobileView = ({
+    logs,
+    isExpanded,
+    setIsExpanded,
+    activeLogId,
+    scrollToLog,
+  }: {
+    logs: Log[];
+    isExpanded: boolean;
+    setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+    activeLogId: number | null;
+    scrollToLog: (logId: number) => void;
+  }) => (
     <div
       className={cn(
         "fixed bottom-0 left-0 right-0 bg-background border-t z-50 transition-transform duration-300 lg:hidden",
@@ -177,17 +256,35 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
   );
 
   // デスクトップ表示用のコンポーネント
-  const DesktopView = () => (
+  const DesktopView = ({
+    logs,
+    dragRef,
+    isDragging,
+    position,
+    activeLogId,
+    handleMouseDown,
+    scrollToLog,
+  }: {
+    logs: Log[];
+    dragRef: React.RefObject<HTMLDivElement>;
+    isDragging: boolean;
+    position: { x: number; y: number };
+    activeLogId: number | null;
+    handleMouseDown: (e: React.MouseEvent) => void;
+    scrollToLog: (logId: number) => void;
+  }) => (
     <div
       ref={dragRef}
       className={cn(
-        "fixed z-50 w-64 rounded-lg border bg-card p-4 shadow-sm transition-shadow select-none hidden lg:block",
+        "fixed z-50 w-64 rounded-lg border bg-card p-4 shadow-sm transition-all duration-300 select-none hidden lg:block",
         isDragging && "shadow-lg cursor-grabbing opacity-90"
       )}
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
         cursor: isDragging ? "grabbing" : "grab",
+        transform: `translate3d(0, 0, 0)`,
+        willChange: "transform",
       }}
     >
       <div
@@ -231,8 +328,22 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
 
   return (
     <>
-      <MobileView />
-      <DesktopView />
+      <MobileView
+        logs={logs}
+        isExpanded={isExpanded}
+        setIsExpanded={setIsExpanded}
+        activeLogId={activeLogId}
+        scrollToLog={scrollToLog}
+      />
+      <DesktopView
+        logs={logs}
+        dragRef={dragRef}
+        isDragging={isDragging}
+        position={position}
+        activeLogId={activeLogId}
+        handleMouseDown={handleMouseDown}
+        scrollToLog={scrollToLog}
+      />
     </>
   );
 }

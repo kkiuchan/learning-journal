@@ -328,40 +328,40 @@ export async function POST(
       revalidateCommentData(comment.id);
 
       return NextResponse.json({ data: comment });
-    } else {
-      // 通常のユーザーからのコメント作成
-      const comment = await prisma.comment.create({
-        data: {
-          comment: content,
-          unitId: parseInt(id),
-          userId: session.user.id,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
-      });
-
-      // ユニットのコメント数を更新
-      await prisma.unit.update({
-        where: { id: parseInt(id) },
-        data: {
-          commentsCount: {
-            increment: 1,
-          },
-        },
-      });
-      // キャッシュの再検証
-      revalidateUnitData(id);
-      revalidateCommentData(comment.id);
-
-      return NextResponse.json({ data: comment });
     }
+
+    // 通常のユーザーからのコメント作成
+    const comment = await prisma.comment.create({
+      data: {
+        comment: content,
+        unitId: parseInt(id),
+        userId: session.user.id,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+
+    // ユニットのコメント数を更新
+    await prisma.unit.update({
+      where: { id: parseInt(id) },
+      data: {
+        commentsCount: {
+          increment: 1,
+        },
+      },
+    });
+    // キャッシュの再検証
+    revalidateUnitData(id);
+    revalidateCommentData(comment.id);
+
+    return NextResponse.json({ data: comment });
   } catch (error) {
     console.error("コメントの作成中にエラーが発生しました:", error);
     return NextResponse.json(

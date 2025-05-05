@@ -1,7 +1,10 @@
+import { auth } from "@/auth";
+import { Loading } from "@/components/ui/loading";
+import { MenuProvider } from "@/contexts/MenuContext";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
-import UnitDetail from "./UnitDetail";
+import { Suspense } from "react";
+import UnitDetail from "./components/UnitDetail";
 
 interface Props {
   params: { id: string };
@@ -79,15 +82,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-// ページコンポーネント
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function UnitPage({ params }: Props) {
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
-  const numericId = parseInt(id);
+  const session = await auth();
+  const { id } = params;
 
-  if (isNaN(numericId)) {
-    notFound();
-  }
-
-  return <UnitDetail id={id} />;
+  return (
+    <MenuProvider>
+      <Suspense fallback={<Loading text="読み込み中..." />}>
+        <UnitDetail id={id} session={session} />
+      </Suspense>
+    </MenuProvider>
+  );
 }
