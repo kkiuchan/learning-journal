@@ -145,6 +145,36 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, [position, isClient]);
 
+  useEffect(() => {
+    if (!isClient || logs.length === 0) return;
+
+    const handleScroll = () => {
+      let minDiff = Infinity;
+      let activeId: number | null = null;
+      logs.forEach((log) => {
+        const el = document.getElementById(`log-${log.id}`);
+        if (el) {
+          const diff = Math.abs(el.getBoundingClientRect().top);
+          if (diff < minDiff) {
+            minDiff = diff;
+            activeId = log.id;
+          }
+        }
+      });
+      if (activeId !== null) {
+        setActiveLogId(activeId);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // 初回も実行
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [isClient, logs]);
+
   const scrollToLog = (logId: number) => {
     const element = document.getElementById(`log-${logId}`);
     if (element) {
@@ -152,11 +182,10 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
         behavior: "smooth",
         block: "start",
       });
-
-      setActiveLogId(logId);
-      if (window.innerWidth < 1024) {
-        setIsExpanded(false);
-      }
+    }
+    setActiveLogId(logId);
+    if (window.innerWidth < 1024) {
+      setIsExpanded(false);
     }
   };
 
