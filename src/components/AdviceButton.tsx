@@ -141,7 +141,7 @@ export function AdviceButton({
             size="sm"
             onClick={handleAdviceClick}
             disabled={isLoading || !isOwner}
-            className={`relative ${
+            className={`relative text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4 ${
               isOwner
                 ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -149,16 +149,16 @@ export function AdviceButton({
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                生成中...
+                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1 animate-spin" />
+                <span className="hidden sm:inline">生成中...</span>
               </>
             ) : (
               <>
-                <Sparkles className="mr-1 h-4 w-4" />
-                AIアドバイス
+                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                <span className="hidden sm:inline">AIアドバイス</span>
               </>
             )}
-            <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full">
               無料
             </span>
           </Button>

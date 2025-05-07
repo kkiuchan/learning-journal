@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Unit } from "@/types";
-import { Link } from "lucide-react";
+import { Heart, Link, MessageCircle } from "lucide-react";
 import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -157,6 +157,10 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     }
   };
 
+  const handleAddAIComment = () => {
+    // Implementation of handleAddAIComment function
+  };
+
   return (
     <div className="relative min-h-screen">
       <Sidebar
@@ -197,6 +201,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           session={sessionData}
           openMenuId={openMenuId}
           setOpenMenuId={setOpenMenuId}
+          onAIAdvice={handleAddAIComment}
         />
 
         <CommentsSection
@@ -204,6 +209,29 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           userId={unit.userId}
           session={sessionData}
         />
+
+        <div className="flex flex-wrap items-center justify-end gap-4 mt-4">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-1 lg:hidden ${
+              unit.isLiked ? "text-pink-500" : "text-gray-500"
+            }`}
+            title="いいね"
+          >
+            <Heart
+              className={`h-4 w-4 ${unit.isLiked ? "fill-current" : ""}`}
+            />
+            <span className="text-sm">{unit._count?.unitLikes ?? 0}</span>
+          </button>
+          <button
+            onClick={scrollToComments}
+            className="flex items-center gap-1 text-gray-500 lg:hidden"
+            title="コメント"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="text-sm">{unit._count?.comments ?? 0}</span>
+          </button>
+        </div>
       </main>
     </div>
   );

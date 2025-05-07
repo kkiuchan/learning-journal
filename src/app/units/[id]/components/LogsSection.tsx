@@ -1,9 +1,11 @@
 "use client";
 
+import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
+import { Plus } from "lucide-react";
 import { Session } from "next-auth";
 import { useState } from "react";
 import CreateLogForm from "./CreateLogForm";
@@ -17,6 +19,7 @@ interface LogsSectionProps {
   session: Session | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
+  onAIAdvice: (comment: string) => void;
 }
 
 export function LogsSection({
@@ -25,6 +28,7 @@ export function LogsSection({
   session,
   openMenuId,
   setOpenMenuId,
+  onAIAdvice,
 }: LogsSectionProps) {
   const [isCreatingLog, setIsCreatingLog] = useState(false);
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
@@ -34,9 +38,25 @@ export function LogsSection({
     <div className="mt-4 sm:mt-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl sm:text-2xl font-bold">学習ログ</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           {session?.user?.id === userId && (
-            <Button onClick={() => setIsCreatingLog(true)}>ログを追加</Button>
+            <>
+              <Button
+                onClick={() => setIsCreatingLog(true)}
+                size="sm"
+                className="text-xs sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
+              >
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">ログを追加</span>
+              </Button>
+              <div className="scale-90 sm:scale-100">
+                <AdviceButton
+                  unitId={unitId}
+                  onAddComment={onAIAdvice}
+                  userId={userId}
+                />
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -82,8 +102,6 @@ export function LogsSection({
                     log={log}
                     unitId={unitId}
                     session={session}
-                    openMenuId={openMenuId}
-                    setOpenMenuId={setOpenMenuId}
                     onEdit={() => setEditingLogId(log.id)}
                     onDelete={mutateLogs}
                   />

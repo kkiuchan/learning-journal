@@ -1,6 +1,5 @@
 "use client";
 
-import { AdviceButton } from "@/components/AdviceButton";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useComments } from "@/hooks/useComments";
@@ -195,18 +194,6 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
           </div>
         )}
       </div>
-      {/* AIアドバイスボタン */}
-      {session?.user?.id === unit.userId && (
-        <div className="mt-6 flex justify-end">
-          <div className="shadow-sm hover:shadow-md transition-shadow duration-200 rounded-lg">
-            <AdviceButton
-              unitId={String(unit.id)}
-              onAddComment={handleAddAIComment}
-              userId={unit.userId}
-            />
-          </div>
-        </div>
-      )}
     </Card>
   );
 }
