@@ -45,11 +45,24 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = achievementSchema.parse(body);
 
-    const updatedUnit = await prisma.$executeRaw`
-      UPDATE "Unit"
-      SET "achievementLevel" = ${validatedData.achievementLevel}
-      WHERE id = ${parseInt(id)}
-    `;
+    // 達成度に応じてステータスを自動的に更新
+    let status = "PLANNED";
+    if (
+      validatedData.achievementLevel > 0 &&
+      validatedData.achievementLevel < 100
+    ) {
+      status = "IN_PROGRESS";
+    } else if (validatedData.achievementLevel === 100) {
+      status = "COMPLETED";
+    }
+
+    const updatedUnit = await prisma.unit.update({
+      where: { id: parseInt(id) },
+      data: {
+        achievementLevel: validatedData.achievementLevel,
+        status: status,
+      },
+    });
 
     if (!updatedUnit) {
       throw new Error("更新に失敗しました");
