@@ -6,7 +6,7 @@ import { useComments } from "@/hooks/useComments";
 import { Unit } from "@/types";
 import { motion } from "framer-motion";
 import { Session } from "next-auth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -23,6 +23,10 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
   const [achievementLevel, setAchievementLevel] = useState(
     unit.achievementLevel || 0
   );
+
+  useEffect(() => {
+    setAchievementLevel(unit.achievementLevel || 0);
+  }, [unit.achievementLevel]);
 
   const { mutate: mutateComments, optimisticUpdate } = useComments({
     unitId: id,
