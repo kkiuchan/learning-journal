@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -14,6 +15,8 @@ export function SearchForm() {
   const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
+
+  const debouncedSearchInput = useDebouncedValue(searchInput, 500);
 
   // 検索条件を更新する関数
   const updateSearchParams = (term: string) => {
@@ -29,15 +32,10 @@ export function SearchForm() {
   // 検索入力のデバウンス処理
   useEffect(() => {
     if (isComposing) return; // 日本語入力中は更新しない
-
-    const timer = setTimeout(() => {
-      if (searchInput !== searchParams.get("q")) {
-        updateSearchParams(searchInput);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchInput, searchParams, isComposing]);
+    if (debouncedSearchInput !== searchParams.get("q")) {
+      updateSearchParams(debouncedSearchInput);
+    }
+  }, [debouncedSearchInput, searchParams, isComposing]);
 
   return (
     <div className="space-y-6">

@@ -11,11 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useUnits } from "@/hooks/useUnits";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { UnitCard } from "./UnitCard";
 
@@ -45,6 +46,8 @@ export function UnitsList({ userId }: UnitsListProps) {
     statusFilter,
     userId,
   });
+
+  const debouncedSearchInput = useDebouncedValue(searchInput, 500);
 
   // 検索条件を更新する関数
   const updateSearchParams = useCallback(
@@ -81,11 +84,11 @@ export function UnitsList({ userId }: UnitsListProps) {
   );
 
   // 検索ハンドラー
-  const handleSearch = useCallback(() => {
-    if (!isComposing) {
-      updateSearchParams(searchInput);
+  useEffect(() => {
+    if (!isComposing && debouncedSearchInput !== searchQuery) {
+      updateSearchParams(debouncedSearchInput);
     }
-  }, [isComposing, searchInput, updateSearchParams]);
+  }, [isComposing, debouncedSearchInput, searchQuery, updateSearchParams]);
 
   // いいねハンドラー
   const handleLike = async (unitId: number) => {
@@ -175,11 +178,6 @@ export function UnitsList({ userId }: UnitsListProps) {
             onChange={(e) => setSearchInput(e.target.value)}
             onCompositionStart={onCompositionStart}
             onCompositionEnd={onCompositionEnd}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
             className="w-full"
           />
         </div>
