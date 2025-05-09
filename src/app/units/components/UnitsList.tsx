@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useUnits } from "@/hooks/useUnits";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -29,7 +30,8 @@ export function UnitsList({ userId }: UnitsListProps) {
 
   // 検索入力の状態を管理
   const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
-  const [isComposing, setIsComposing] = useState(false);
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
 
   // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
@@ -167,15 +169,12 @@ export function UnitsList({ userId }: UnitsListProps) {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <Input
-            type="search"
-            placeholder="ユニットを検索..."
+            type="text"
+            placeholder="ユニット名・タグで検索"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={(e) => {
-              setIsComposing(false);
-              setSearchInput((e.target as HTMLInputElement).value);
-            }}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 handleSearch();

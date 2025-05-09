@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { X } from "lucide-react";
 import { KeyboardEvent, useState } from "react";
 
@@ -20,7 +21,8 @@ export function TagInput({
   disabled = false,
 }: TagInputProps) {
   const [input, setInput] = useState("");
-  const [isComposing, setIsComposing] = useState(false);
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
@@ -72,8 +74,8 @@ export function TagInput({
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
-          onCompositionStart={() => setIsComposing(true)}
-          onCompositionEnd={() => setIsComposing(false)}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
           disabled={disabled}
           className="w-32"
         />

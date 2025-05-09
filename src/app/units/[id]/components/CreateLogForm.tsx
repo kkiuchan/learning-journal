@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { format } from "date-fns";
 import { Eye, EyeOff, X } from "lucide-react";
@@ -32,7 +33,6 @@ export default function CreateLogForm({
   onCancel,
   onSuccess,
 }: CreateLogFormProps) {
-  const [isComposing, setIsComposing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [learningTime, setLearningTime] = useState(0);
@@ -49,6 +49,8 @@ export default function CreateLogForm({
   const [effectType, setEffectType] = useState<string>("understanding");
   const [showPreview, setShowPreview] = useState(false);
   const router = useRouter();
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
 
   const effectTypes = [
     { value: "understanding", label: "理解が深まった" },
@@ -207,6 +209,8 @@ export default function CreateLogForm({
             onChange={(e) => setTitle(e.target.value)}
             placeholder="学習内容のタイトル"
             disabled={isSubmitting}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
           />
         </div>
 
@@ -318,6 +322,8 @@ export default function CreateLogForm({
             rows={8}
             className="w-full font-mono"
             disabled={isSubmitting}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
           />
         )}
         <p className="text-xs text-muted-foreground mt-2">
@@ -333,8 +339,8 @@ export default function CreateLogForm({
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
             disabled={isSubmitting}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !isComposing) {
                 e.preventDefault();

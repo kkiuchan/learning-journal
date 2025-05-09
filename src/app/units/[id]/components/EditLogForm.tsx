@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { Log } from "@/types/log";
 import { format } from "date-fns";
@@ -34,7 +35,8 @@ export default function EditLogForm({
   onCancel,
   onUpdate,
 }: EditLogFormProps) {
-  const [isComposing, setIsComposing] = useState(false);
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
   const [title, setTitle] = useState(log.title);
   const [learningTime, setLearningTime] = useState(log.learningTime);
   const [note, setNote] = useState(log.note);
@@ -243,7 +245,10 @@ export default function EditLogForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
+          placeholder="タイトル"
           disabled={isSubmitting}
+          onCompositionStart={onCompositionStart}
+          onCompositionEnd={onCompositionEnd}
         />
       </div>
 
@@ -311,6 +316,8 @@ export default function EditLogForm({
             className="w-full font-mono"
             required
             disabled={isSubmitting}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
           />
         )}
         <p className="text-xs text-muted-foreground mt-2">
@@ -372,8 +379,8 @@ export default function EditLogForm({
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="新しいタグ"
             disabled={isSubmitting}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !isComposing) {
                 e.preventDefault();

@@ -1,6 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -11,7 +12,8 @@ export function SearchForm() {
 
   // 検索入力の状態を管理
   const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
-  const [isComposing, setIsComposing] = useState(false);
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
 
   // 検索条件を更新する関数
   const updateSearchParams = (term: string) => {
@@ -45,11 +47,8 @@ export function SearchForm() {
             placeholder="ユーザーを検索..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={(e) => {
-              setIsComposing(false);
-              setSearchInput((e.target as HTMLInputElement).value);
-            }}
+            onCompositionStart={onCompositionStart}
+            onCompositionEnd={onCompositionEnd}
             className="w-full"
           />
         </div>
