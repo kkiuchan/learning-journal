@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
+import { useSyncedState } from "@/hooks/useSyncedState";
 import { storage } from "@/lib/supabaseClient";
 import { Log } from "@/types/log";
 import { format } from "date-fns";
@@ -37,9 +38,9 @@ export default function EditLogForm({
 }: EditLogFormProps) {
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
-  const [title, setTitle] = useState(log.title);
+  const [title, setTitle] = useSyncedState(log.title);
   const [learningTime, setLearningTime] = useState(log.learningTime);
-  const [note, setNote] = useState(log.note);
+  const [note, setNote] = useSyncedState(log.note);
   const [logDate, setLogDate] = useState(
     format(new Date(log.logDate), "yyyy-MM-dd")
   );
