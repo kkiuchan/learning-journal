@@ -3,10 +3,11 @@
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useComments } from "@/hooks/useComments";
+import { useSyncedState } from "@/hooks/useSyncedState";
 import { Unit } from "@/types";
 import { motion } from "framer-motion";
 import { Session } from "next-auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -20,13 +21,9 @@ interface UnitContentProps {
 
 export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [achievementLevel, setAchievementLevel] = useState(
+  const [achievementLevel, setAchievementLevel] = useSyncedState(
     unit.achievementLevel || 0
   );
-
-  useEffect(() => {
-    setAchievementLevel(unit.achievementLevel || 0);
-  }, [unit.achievementLevel]);
 
   const { mutate: mutateComments, optimisticUpdate } = useComments({
     unitId: id,
