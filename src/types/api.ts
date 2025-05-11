@@ -1,10 +1,8 @@
-import {
-  PaginatedResponse as BasePaginatedResponse,
-  User as BaseUser,
-  Comment,
-  Log,
-  Unit,
-} from "./index";
+// import { PaginatedResponse } from "./index"; // ローカル定義と競合するため削除
+import { CommentDTO } from "./comment";
+import { LogDTO } from "./log";
+import { UnitDTO } from "./unit";
+import { UserDTO } from "./user";
 
 // 共通のレスポンス型
 export interface ApiResponse<T = unknown> {
@@ -20,7 +18,7 @@ export interface ApiError {
 
 // 認証関連の型定義
 export interface AuthResponse {
-  user: BaseUser;
+  user: UserDTO;
   session: {
     accessToken: string;
     refreshToken: string;
@@ -155,13 +153,13 @@ export interface PublicUserResponse {
 }
 
 // ユニット検索レスポンスの型
-export type UnitSearchResponse = BasePaginatedResponse<Unit>;
+export type UnitSearchResponse = PaginatedResponse<UnitDTO>;
 
 // ログ検索レスポンスの型
-export type LogSearchResponse = BasePaginatedResponse<Log>;
+export type LogSearchResponse = PaginatedResponse<LogDTO>;
 
 // コメント検索レスポンスの型
-export type CommentSearchResponse = BasePaginatedResponse<Comment>;
+export type CommentSearchResponse = PaginatedResponse<CommentDTO>;
 
 // APIエンドポイントの型
 export interface ApiEndpoints {
@@ -232,3 +230,18 @@ export const API_ENDPOINTS: ApiEndpoints = {
     search: "/api/comments/search",
   },
 };
+
+export interface UserDetailResponse {
+  data: {
+    user: UserDTO;
+    units: {
+      data: UnitDTO[];
+      pagination: {
+        total: number;
+        page: number;
+        perPage: number;
+        totalPages: number;
+      };
+    };
+  };
+}

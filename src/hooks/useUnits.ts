@@ -1,4 +1,4 @@
-import { Unit } from "@/types";
+import { UnitDTO } from "@/types/unit";
 import useSWR from "swr";
 
 interface UseUnitsOptions {
@@ -10,7 +10,7 @@ interface UseUnitsOptions {
 
 interface UnitsResponse {
   data: {
-    units: Unit[];
+    units: UnitDTO[];
     pagination: {
       totalPages: number;
       currentPage: number;

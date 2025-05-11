@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import UserAvatar from "@/components/UserAvatar";
-import { Unit } from "@/types";
+import { UnitDTO } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -9,7 +9,7 @@ import { FileText, Heart, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 interface UnitCardProps {
-  unit: Unit;
+  unit: UnitDTO;
   onLike?: (unitId: number) => void;
   showMenu?: boolean;
 }
@@ -63,21 +63,21 @@ export function UnitCard({ unit, onLike, showMenu = true }: UnitCardProps) {
             </p>
           )}
           <div className="flex flex-wrap gap-1">
-            {unit.unitTags?.slice(0, 3).map((unitTag) => (
+            {unit.tags?.slice(0, 3).map((tag) => (
               <Badge
-                key={unitTag.tag.id}
+                key={tag.id}
                 variant="outline"
                 className="text-xs sm:text-sm bg-gray-100"
               >
-                {unitTag.tag.name}
+                {tag.name}
               </Badge>
             ))}
-            {unit.unitTags && unit.unitTags.length > 3 && (
+            {unit.tags && unit.tags.length > 3 && (
               <Badge
                 variant="outline"
                 className="text-xs sm:text-sm bg-gray-100"
               >
-                +{unit.unitTags.length - 3}
+                +{unit.tags.length - 3}
               </Badge>
             )}
           </div>

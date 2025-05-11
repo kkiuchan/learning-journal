@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Unit } from "@/types";
+import type { UnitDTO } from "@/types/unit";
 import {
   Copy,
   Heart,
@@ -16,7 +16,7 @@ import Link from "next/link";
 import React, { useEffect, useRef } from "react";
 
 interface SidebarProps {
-  unit: Unit;
+  unit: UnitDTO;
   session: Session | null;
   id: string;
   openMenuId: number | null;

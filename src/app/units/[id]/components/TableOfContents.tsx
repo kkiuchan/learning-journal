@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Log } from "@/types";
+import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { motion, useMotionValue } from "framer-motion";
@@ -9,7 +9,7 @@ import { ChevronUp, GripVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface TableOfContentsProps {
-  logs: Log[];
+  logs: LogDTO[];
 }
 
 interface Position {
@@ -199,7 +199,7 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
     activeLogId,
     scrollToLog,
   }: {
-    logs: Log[];
+    logs: LogDTO[];
     isExpanded: boolean;
     setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
     activeLogId: number | null;
@@ -270,7 +270,7 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
     activeLogId,
     scrollToLog,
   }: {
-    logs: Log[];
+    logs: LogDTO[];
     dragRef: React.RefObject<HTMLDivElement>;
     position: Position;
     activeLogId: number | null;

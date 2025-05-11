@@ -1,74 +1,8 @@
-// 基本のユーザー情報
-export type BaseUser = {
-  id: string;
-  name: string | null;
-  image: string | null;
-  email: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-// データベースのユーザー型（Prismaの型に近い）
-export type DbUser = BaseUser & {
-  topImage: string | null;
-  selfIntroduction: string | null;
-  age: number | null;
-  ageVisible: boolean;
-  primaryAuthMethod: string;
-  subscriptionStatus?: string | null;
-  subscriptionPlan?: string | null;
-  subscriptionStart?: Date | null;
-  subscriptionEnd?: Date | null;
-  emailVerified?: Date | null;
-  userSkills: {
-    tag: {
-      id: string;
-      name: string;
-    };
-  }[];
-  userInterests: {
-    tag: {
-      id: string;
-      name: string;
-    };
-  }[];
-};
-
-// APIレスポンス用のユーザー型
-export interface ApiUser {
-  id: string;
-  name: string | null;
-  image: string | null;
-  topImage: string | null;
-  age: number | null;
-  ageVisible: boolean;
-  email: string;
-  hashedPassword: string | null;
-  primaryAuthMethod: string;
-  createdAt: Date;
-  updatedAt: Date;
-  selfIntroduction: string | null;
-  skills?: Array<{ id: string; name: string }>;
-  interests?: Array<{ id: string; name: string }>;
-  _count?: {
-    units: number;
-    totalLearningTime: number;
-    logs: number;
-  };
-}
-
-// フロントエンド表示用のユーザー型
-export type FrontendUser = Omit<ApiUser, "createdAt" | "updatedAt">;
-
-// 認証用のユーザー型
-export type AuthUser = Pick<
-  DbUser,
-  "id" | "name" | "email" | "image" | "subscriptionStatus" | "primaryAuthMethod"
->;
+import { UserDTO } from "./user";
 
 // 検索結果の型
 export type SearchResult = {
-  users: FrontendUser[];
+  users: UserDTO[];
   total: number;
   pagination: {
     page: number;
@@ -88,92 +22,20 @@ export type ApiResponse<T> =
       error: string;
     };
 
-// ユニット関連の型
-export interface Unit {
-  id: number;
-  title: string;
-  learningGoal: string | null;
-  preLearningState: string | null;
-  reflection: string | null;
-  nextAction: string | null;
-  userId: string;
-  isLiked: boolean;
-  achievementLevel: number | null;
-  _count: {
-    logs: number;
-    comments: number;
-    unitLikes: number;
-  };
-}
+// ユニット関連の型はunit.tsで管理するため削除
+// import { UnitDTO, UnitModel } from "./unit";
+// 必要なら下記のように再エクスポート
+// export type { UnitDTO, UnitModel } from "./unit";
 
-// コメントの型
-export type Comment = {
-  id: number;
-  comment: string;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-};
+// コメント関連の型はcomment.tsで管理するため削除
+// import { CommentDTO, CommentModel } from "./comment";
+// 必要なら下記のように再エクスポート
+// export type { CommentDTO, CommentModel } from "./comment";
 
-// リソースの型
-export type Resource = {
-  id: number;
-  resourceType: string | null;
-  resourceLink: string;
-  description: string | null;
-  fileName?: string;
-  filePath?: string;
-};
-
-// ログの型
-export type Log = {
-  id: number;
-  unitId: number;
-  userId: string;
-  title: string;
-  learningTime: number;
-  note: string;
-  logDate: string;
-  createdAt: string;
-  updatedAt: string;
-  effectScore?: number;
-  effectType?: string;
-  logTags?: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
-  resources?: Resource[];
-};
-
-// ユーザー関連の型定義
-export interface User {
-  id: string;
-  name: string | null;
-  image: string | null;
-  selfIntroduction: string | null;
-  age: number | null;
-  ageVisible: boolean;
-  skills: Skill[];
-  interests: Interest[];
-  _count: {
-    units: number;
-  };
-}
-
-export interface Skill {
-  id: string;
-  name: string;
-}
-
-export interface Interest {
-  id: string;
-  name: string;
-}
+// ユーザー関連の型はuser.tsで管理するため削除
+// import { UserDTO, UserModel, Skill, Interest, BaseUser, DbUser, ApiUser, FrontendUser, AuthUser } from "./user";
+// 必要なら下記のように再エクスポート
+// export type { UserDTO, UserModel, Skill, Interest, BaseUser, DbUser, ApiUser, FrontendUser, AuthUser } from "./user";
 
 // ページネーション用の型定義
 export interface PaginatedResponse<T> {
@@ -186,18 +48,4 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// ユーザーAPIレスポンスの型
-export interface UserApiResponse {
-  data: {
-    user: User;
-    units: {
-      data: Unit[];
-      pagination: {
-        total: number;
-        page: number;
-        perPage: number;
-        totalPages: number;
-      };
-    };
-  };
-}
+// UserApiResponse型はapi.tsにUserDetailResponseとして移動済み

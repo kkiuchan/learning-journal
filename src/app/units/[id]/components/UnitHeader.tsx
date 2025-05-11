@@ -10,8 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Unit } from "@/types";
-import { UnitStatus } from "@/types/unit";
+import { UnitDTO } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -22,17 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface UnitHeaderProps {
-  unit: Unit & {
-    status: UnitStatus;
-    startDate: Date | string | null;
-    endDate: Date | string | null;
-    unitTags: {
-      tag: {
-        id: number;
-        name: string;
-      };
-    }[];
-  };
+  unit: UnitDTO;
   session: Session | null;
   onMutate: () => void;
   handleLike: () => void;
@@ -147,18 +136,18 @@ export function UnitHeader({
                     dateTime={
                       typeof unit.startDate === "string"
                         ? unit.startDate
-                        : unit.startDate.toISOString()
+                        : unit.startDate
+                          ? new Date(unit.startDate).toISOString()
+                          : ""
                     }
                     className="font-medium"
                   >
                     {format(
                       typeof unit.startDate === "string"
                         ? new Date(unit.startDate)
-                        : unit.startDate,
+                        : (unit.startDate ?? new Date()),
                       "yyyy/MM/dd",
-                      {
-                        locale: ja,
-                      }
+                      { locale: ja }
                     )}
                   </time>
                 </div>
@@ -170,18 +159,18 @@ export function UnitHeader({
                     dateTime={
                       typeof unit.endDate === "string"
                         ? unit.endDate
-                        : unit.endDate.toISOString()
+                        : unit.endDate
+                          ? new Date(unit.endDate).toISOString()
+                          : ""
                     }
                     className="font-medium"
                   >
                     {format(
                       typeof unit.endDate === "string"
                         ? new Date(unit.endDate)
-                        : unit.endDate,
+                        : (unit.endDate ?? new Date()),
                       "yyyy/MM/dd",
-                      {
-                        locale: ja,
-                      }
+                      { locale: ja }
                     )}
                   </time>
                 </div>
@@ -364,15 +353,15 @@ export function UnitHeader({
           </div>
         </div>
 
-        {unit.unitTags && unit.unitTags.length > 0 && (
+        {unit.tags && unit.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {unit.unitTags.map((unitTag) => (
+            {unit.tags.map((tag) => (
               <Badge
-                key={unitTag.tag.id}
+                key={tag.id}
                 variant="secondary"
                 className="px-2.5 py-0.5 text-sm bg-secondary/20 hover:bg-secondary/30 border-none transition-colors duration-200"
               >
-                {unitTag.tag.name}
+                {tag.name}
               </Badge>
             ))}
           </div>

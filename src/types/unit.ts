@@ -1,16 +1,30 @@
-import { Unit as BaseUnit } from "./index";
-
-// ユニットの型は index.ts から import して使用
-export type { BaseUnit };
-
 // ユニットのステータス（英語のみ）
 export type UnitStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED";
 
 // ユニットの表示フラグ
 export type UnitDisplayFlag = boolean;
 
-// ユニットの基本型
-export interface BaseUnit {
+// 共通の型定義
+export interface UserDTO {
+  id: string;
+  name: string | null;
+  image: string | null;
+}
+
+export interface TagDTO {
+  id: number;
+  name: string;
+}
+
+export interface UnitCountDTO {
+  logs: number;
+  unitLikes: number;
+  comments: number;
+  totalLearningTime?: number;
+}
+
+// ドメインモデル（Prismaの型を拡張）
+export interface UnitModel {
   id: number;
   userId: string;
   title: string;
@@ -27,158 +41,91 @@ export interface BaseUnit {
   updatedAt: Date;
 }
 
-// データベースモデル用のUnit型
-export type DbUnit = BaseUnit & {
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  _count: {
-    logs: number;
-    unitLikes: number;
-    comments: number;
-    totalLearningTime: number;
-  };
-};
-
-// APIレスポンス用のUnit型
-export interface ApiUnit
-  extends Omit<BaseUnit, "startDate" | "endDate" | "createdAt" | "updatedAt"> {
+// DTO（APIレスポンス用）
+export interface UnitDTO
+  extends Omit<UnitModel, "startDate" | "endDate" | "createdAt" | "updatedAt"> {
   startDate: string | null;
   endDate: string | null;
   createdAt: string;
   updatedAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  tags: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
-  _count: {
-    logs: number;
-    unitLikes: number;
-    comments: number;
-  };
-  isLiked: boolean;
-  totalLearningTime?: number;
-}
-
-// フォーム用のUnit型
-export type UnitForm = Omit<BaseUnit, "id" | "userId" | "tags" | "isLiked"> & {
-  startDate: Date | null;
-  endDate: Date | null;
-  tags: string[]; // タグ名の配列
-};
-
-// 型変換ユーティリティ
-export const convertDbUnitToApiUnit = (dbUnit: DbUnit): ApiUnit => {
-  return {
-    id: dbUnit.id,
-    userId: dbUnit.userId,
-    title: dbUnit.title,
-    learningGoal: dbUnit.learningGoal,
-    preLearningState: dbUnit.preLearningState,
-    reflection: dbUnit.reflection,
-    nextAction: dbUnit.nextAction,
-    startDate: dbUnit.startDate?.toISOString() || null,
-    endDate: dbUnit.endDate?.toISOString() || null,
-    status: dbUnit.status,
-    displayFlag: dbUnit.displayFlag,
-    createdAt: dbUnit.createdAt.toISOString(),
-    updatedAt: dbUnit.updatedAt.toISOString(),
-    user: dbUnit.user,
-    tags: dbUnit.tags.map((tag) => ({ tag })),
-    _count: {
-      logs: dbUnit._count.logs,
-      unitLikes: dbUnit._count.unitLikes,
-      comments: dbUnit._count.comments,
-    },
-    isLiked: dbUnit.isLiked,
-    totalLearningTime: dbUnit._count.totalLearningTime,
-  };
-};
-
-export const convertApiUnitToDbUnit = (
-  apiUnit: ApiUnit
-): Omit<DbUnit, "user" | "updatedAt"> => {
-  return {
-    id: apiUnit.id,
-    userId: apiUnit.userId,
-    title: apiUnit.title,
-    learningGoal: apiUnit.learningGoal,
-    preLearningState: apiUnit.preLearningState,
-    reflection: apiUnit.reflection,
-    nextAction: apiUnit.nextAction,
-    startDate: apiUnit.startDate ? new Date(apiUnit.startDate) : null,
-    endDate: apiUnit.endDate ? new Date(apiUnit.endDate) : null,
-    status: apiUnit.status,
-    displayFlag: apiUnit.displayFlag,
-    createdAt: new Date(apiUnit.createdAt),
-    user: apiUnit.user,
-    tags: apiUnit.tags.map((tag) => tag.tag),
-    _count: {
-      logs: apiUnit._count.logs,
-      unitLikes: apiUnit._count.unitLikes,
-      comments: apiUnit._count.comments,
-      totalLearningTime: apiUnit.totalLearningTime,
-    },
-    isLiked: apiUnit.isLiked,
-  };
-};
-
-export interface Unit {
-  id: number;
-  userId: string;
-  title: string;
-  learningGoal: string | null;
-  preLearningState: string | null;
-  reflection: string | null;
-  nextAction: string | null;
-  achievementLevel: number | null;
-  startDate: Date | null;
-  endDate: Date | null;
-  status: UnitStatus;
-  displayFlag: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  unitTags: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
-  _count: {
-    logs: number;
-    unitLikes: number;
-    comments: number;
-  };
+  user: UserDTO;
+  tags: TagDTO[];
+  _count: UnitCountDTO;
   isLiked: boolean;
 }
 
-export interface CreateUnitInput {
+// フォーム型
+export interface UnitFormDTO {
   title: string;
   learningGoal?: string;
   preLearningState?: string;
   reflection?: string;
   nextAction?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate?: Date;
+  endDate?: Date;
   status?: UnitStatus;
   tags?: string[];
   displayFlag?: boolean;
 }
 
-export interface UpdateUnitInput extends Partial<CreateUnitInput> {
+// 型変換ユーティリティ
+export const convertUnitModelToDTO = (
+  model: UnitModel & {
+    user: UserDTO;
+    tags: { tag: TagDTO }[];
+    _count: UnitCountDTO;
+    isLiked: boolean;
+  }
+): UnitDTO => {
+  return {
+    id: model.id,
+    userId: model.userId,
+    title: model.title,
+    learningGoal: model.learningGoal,
+    preLearningState: model.preLearningState,
+    reflection: model.reflection,
+    nextAction: model.nextAction,
+    achievementLevel: model.achievementLevel,
+    startDate: model.startDate?.toISOString() || null,
+    endDate: model.endDate?.toISOString() || null,
+    status: model.status,
+    displayFlag: model.displayFlag,
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+    user: model.user,
+    tags: model.tags.map(({ tag }) => tag),
+    _count: model._count,
+    isLiked: model.isLiked,
+  };
+};
+
+export const convertDTOToUnitModel = (
+  dto: UnitDTO
+): Omit<UnitModel, "user" | "updatedAt"> => {
+  return {
+    id: dto.id,
+    userId: dto.userId,
+    title: dto.title,
+    learningGoal: dto.learningGoal,
+    preLearningState: dto.preLearningState,
+    reflection: dto.reflection,
+    nextAction: dto.nextAction,
+    achievementLevel: dto.achievementLevel,
+    startDate: dto.startDate ? new Date(dto.startDate) : null,
+    endDate: dto.endDate ? new Date(dto.endDate) : null,
+    status: dto.status,
+    displayFlag: dto.displayFlag,
+    createdAt: new Date(dto.createdAt),
+  };
+};
+
+// 作成・更新用の型
+export interface CreateUnitDTO
+  extends Omit<UnitFormDTO, "startDate" | "endDate"> {
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface UpdateUnitDTO extends Partial<CreateUnitDTO> {
   achievementLevel?: number;
 }

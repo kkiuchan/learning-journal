@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useSyncedState } from "@/hooks/useSyncedState";
 import { storage } from "@/lib/supabaseClient";
-import { Log } from "@/types/log";
+import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { Eye, EyeOff, X } from "lucide-react";
 import { useState } from "react";
@@ -15,10 +15,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface EditLogFormProps {
-  log: Log;
+  log: LogDTO;
   unitId: string;
   onCancel: () => void;
-  onUpdate: (updatedLog: Log) => void;
+  onUpdate: (updatedLog: LogDTO) => void;
 }
 
 interface Resource {
@@ -45,7 +45,7 @@ export default function EditLogForm({
     format(new Date(log.logDate), "yyyy-MM-dd")
   );
   const [tags, setTags] = useState<string[]>(
-    log.logTags?.map(({ tag }) => tag.name) || []
+    log.logTags?.map((tag) => tag.name) || []
   );
   const [newTag, setNewTag] = useState("");
   const [resources, setResources] = useState<Resource[]>(
@@ -361,7 +361,15 @@ export default function EditLogForm({
                   name="effectType"
                   value={type.value}
                   checked={effectType === type.value}
-                  onChange={(e) => setEffectType(e.target.value)}
+                  onChange={(e) =>
+                    setEffectType(
+                      e.target.value as
+                        | "understanding"
+                        | "practical"
+                        | "application"
+                        | "none"
+                    )
+                  }
                   className="form-radio"
                   disabled={isSubmitting}
                 />

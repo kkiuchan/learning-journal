@@ -442,6 +442,7 @@ export async function GET(
 
     return createApiResponse({
       ...unit,
+      tags: unit.unitTags.map((ut) => ut.tag),
       isLiked,
     });
   } catch (error) {

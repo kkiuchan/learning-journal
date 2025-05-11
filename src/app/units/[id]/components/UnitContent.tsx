@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { useComments } from "@/hooks/useComments";
 import { useSyncedState } from "@/hooks/useSyncedState";
-import { Unit } from "@/types";
+import { UnitDTO } from "@/types/unit";
 import { motion } from "framer-motion";
 import { Session } from "next-auth";
 import { useState } from "react";
@@ -13,7 +13,7 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 interface UnitContentProps {
-  unit: Unit;
+  unit: UnitDTO;
   session: Session | null;
   onMutate: () => void;
   id: string;

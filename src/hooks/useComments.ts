@@ -1,4 +1,4 @@
-import { Comment } from "@/types";
+import { CommentDTO } from "@/types/comment";
 import useSWR from "swr";
 
 interface UseCommentsProps {
@@ -8,7 +8,7 @@ interface UseCommentsProps {
 }
 
 interface CommentResponse {
-  data: Comment[];
+  data: CommentDTO[];
   pagination: {
     totalPages: number;
     currentPage: number;
@@ -35,7 +35,7 @@ export function useComments({ unitId, page, limit }: UseCommentsProps) {
 
   const optimisticUpdate = async (
     type: "create" | "update" | "delete",
-    optimisticData?: Partial<Comment>,
+    optimisticData?: Partial<CommentDTO>,
     commentId?: number
   ) => {
     if (!data) return;
@@ -48,7 +48,7 @@ export function useComments({ unitId, page, limit }: UseCommentsProps) {
       mutate(
         {
           ...data,
-          data: [optimisticData as Comment, ...currentComments],
+          data: [optimisticData as CommentDTO, ...currentComments],
         },
         false
       );

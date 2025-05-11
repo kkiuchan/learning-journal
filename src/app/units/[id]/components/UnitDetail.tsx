@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Unit } from "@/types";
+import { UnitDTO } from "@/types/unit";
 import { Heart, Link, MessageCircle } from "lucide-react";
 import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
@@ -31,11 +31,11 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
   const {
     data: { data: unit } = {
-      data: { _count: { logs: 0, comments: 0, unitLikes: 0 } } as Unit,
+      data: { _count: { logs: 0, comments: 0, unitLikes: 0 } } as UnitDTO,
     },
     error,
     mutate: mutateUnit,
-  } = useSWR<{ data: Unit }>(`/api/units/${id}`, {
+  } = useSWR<{ data: UnitDTO }>(`/api/units/${id}`, {
     revalidateOnFocus: false,
     revalidateIfStale: true,
   });

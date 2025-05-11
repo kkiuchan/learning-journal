@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMenu } from "@/contexts/MenuContext";
-import { Log } from "@/types";
+import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
@@ -22,7 +22,7 @@ import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 interface LogCardProps {
-  log: Log;
+  log: LogDTO;
   unitId: string;
   session: Session | null;
   openMenuId: number | null;
@@ -204,11 +204,11 @@ export default function LogCard({
         </div>
       )}
 
-      {log.logTags && log.logTags.length > 0 && (
+      {log.tags && log.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
-          {log.logTags.map((logTag) => (
-            <Badge key={logTag.tag.id} variant="outline" className="text-xs">
-              {logTag.tag.name}
+          {log.tags.map((tag) => (
+            <Badge key={tag.id} variant="outline" className="text-xs">
+              {tag.name}
             </Badge>
           ))}
         </div>
