@@ -296,36 +296,46 @@ export async function DELETE(
 
     // トランザクションを使用して関連データも削除
     await prisma.$transaction(async (tx) => {
-      // 関連するLogTagを先に削除
-      await tx.logTag.deleteMany({
-        where: {
-          log: {
-            unitId: parseInt(id),
-          },
-        },
-      });
-
-      // 関連する学習ログを削除
-      await tx.log.deleteMany({
+      // 1. ユニットに紐づく全ログIDを取得
+      const logs = await tx.log.findMany({
         where: { unitId: parseInt(id) },
+        select: { id: true },
       });
+      const logIds = logs.map((log) => log.id);
 
-      // 関連するコメントを削除
+      // 2. まずリソースを削除
+      if (logIds.length > 0) {
+        await tx.resource.deleteMany({
+          where: { logId: { in: logIds } },
+        });
+
+        // 3. ログタグを削除
+        await tx.logTag.deleteMany({
+          where: { logId: { in: logIds } },
+        });
+
+        // 4. ログを削除
+        await tx.log.deleteMany({
+          where: { id: { in: logIds } },
+        });
+      }
+
+      // 5. コメントを削除
       await tx.comment.deleteMany({
         where: { unitId: parseInt(id) },
       });
 
-      // 関連するいいねを削除
+      // 6. いいねを削除
       await tx.unitLike.deleteMany({
         where: { unitId: parseInt(id) },
       });
 
-      // 関連するタグを削除
+      // 7. ユニットタグを削除
       await tx.unitTag.deleteMany({
         where: { unitId: parseInt(id) },
       });
 
-      // ユニットを削除
+      // 8. ユニット本体を削除
       await tx.unit.delete({
         where: { id: parseInt(id) },
       });

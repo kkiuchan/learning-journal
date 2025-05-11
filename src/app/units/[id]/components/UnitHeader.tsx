@@ -86,7 +86,7 @@ export function UnitHeader({
         throw new Error(data.error || "ユニットの削除に失敗しました");
       }
 
-      toast.success(data.message || "ユニットを削除しました");
+      toast.success("ユニットを削除しました");
       await new Promise((resolve) => setTimeout(resolve, 500));
       router.push("/units");
     } catch (error) {
