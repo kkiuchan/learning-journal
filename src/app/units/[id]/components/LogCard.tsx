@@ -19,7 +19,6 @@ import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { toast } from "sonner";
 
 interface LogCardProps {
   log: LogDTO;
@@ -29,6 +28,7 @@ interface LogCardProps {
   setOpenMenuId: (id: number | null) => void;
   onEdit: () => void;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
 export default function LogCard({
@@ -37,9 +37,9 @@ export default function LogCard({
   session,
   onEdit,
   onDelete,
+  isDeleting = false,
 }: Omit<LogCardProps, "openMenuId" | "setOpenMenuId">) {
   const { openMenuId, setOpenMenuId } = useMenu();
-  const [isDeleting, setIsDeleting] = useState(false);
   const [expandedContent, setExpandedContent] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);
@@ -65,33 +65,6 @@ export default function LogCard({
       };
     }
   }, [openMenuId, log.id, setOpenMenuId]);
-
-  const handleDelete = async () => {
-    if (!confirm("このログを削除してもよろしいですか？")) return;
-    if (isDeleting) return;
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/units/${unitId}/logs/${log.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        onDelete();
-        setOpenMenuId(null);
-        toast.success("ログを削除しました");
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || "ログの削除に失敗しました");
-      }
-    } catch (error) {
-      console.error("Error deleting log:", error);
-      toast.error(
-        error instanceof Error ? error.message : "ログの削除に失敗しました"
-      );
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <div>
@@ -136,7 +109,7 @@ export default function LogCard({
                     className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2 menu-action-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete();
+                      onDelete();
                     }}
                     disabled={isDeleting}
                   >

@@ -19,6 +19,11 @@ interface EditLogFormProps {
   unitId: string;
   onCancel: () => void;
   onUpdate: (updatedLog: LogDTO) => void;
+  onSubmit: (form: EditLogFormValues) => Promise<void>;
+  tags: string[];
+  setTags: React.Dispatch<React.SetStateAction<string[]>>;
+  resources: Resource[];
+  setResources: React.Dispatch<React.SetStateAction<Resource[]>>;
 }
 
 interface Resource {
@@ -30,11 +35,27 @@ interface Resource {
   filePath?: string;
 }
 
+export interface EditLogFormValues {
+  title: string;
+  learningTime: number;
+  note: string;
+  logDate: string;
+  tags: string[];
+  resources: Resource[];
+  effectScore: number;
+  effectType: string;
+}
+
 export default function EditLogForm({
   log,
   unitId,
   onCancel,
   onUpdate,
+  onSubmit,
+  tags,
+  setTags,
+  resources,
+  setResources,
 }: EditLogFormProps) {
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
@@ -44,20 +65,7 @@ export default function EditLogForm({
   const [logDate, setLogDate] = useState(
     format(new Date(log.logDate), "yyyy-MM-dd")
   );
-  const [tags, setTags] = useState<string[]>(
-    log.logTags?.map((tag) => tag.name) || []
-  );
   const [newTag, setNewTag] = useState("");
-  const [resources, setResources] = useState<Resource[]>(
-    log.resources?.map((r) => ({
-      id: r.id,
-      resourceType: r.resourceType,
-      resourceLink: r.resourceLink,
-      description: r.description,
-      fileName: r.fileName,
-      filePath: r.filePath,
-    })) || []
-  );
   const [newResourceTitle, setNewResourceTitle] = useState("");
   const [newResourceLink, setNewResourceLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -171,67 +179,17 @@ export default function EditLogForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      const formattedResources = resources.map((resource) => ({
-        id: resource.id,
-        resourceType: resource.resourceType,
-        resourceLink: resource.resourceLink,
-        description: resource.description,
-        fileName: resource.fileName || undefined,
-        filePath: resource.filePath || undefined,
-      }));
-
-      const response = await fetch(`/api/units/${unitId}/logs/${log.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          learningTime,
-          note,
-          logDate,
-          tags,
-          resources: formattedResources,
-          effectScore,
-          effectType,
-        }),
-        next: {
-          tags: [
-            `unit-${unitId}`,
-            "unit",
-            "unit-list",
-            "log",
-            "log-list",
-            `log-${log.id}`,
-          ],
-        },
+      await onSubmit({
+        title,
+        learningTime,
+        note,
+        logDate,
+        tags,
+        resources,
+        effectScore,
+        effectType,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("サーバーエラー:", errorData);
-
-        // ログが見つからない場合の特別なエラーハンドリング
-        if (errorData.error === "Log not found") {
-          alert(
-            "このログは削除された可能性があります。ページを更新してください。"
-          );
-          // フォームをキャンセルして更新を促す
-          onCancel();
-          return;
-        }
-
-        throw new Error("ログの更新に失敗しました");
-      }
-
-      const data = await response.json();
-      onUpdate(data.data);
-      onCancel();
-    } catch (error) {
-      console.error("Error updating log:", error);
-      alert("ログの更新に失敗しました");
     } finally {
       setIsSubmitting(false);
     }

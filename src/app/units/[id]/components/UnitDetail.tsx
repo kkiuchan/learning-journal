@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useComments } from "@/hooks/useComments";
 import { UnitDTO } from "@/types/unit";
 import { Heart, Link, MessageCircle } from "lucide-react";
 import { Session } from "next-auth";
@@ -20,6 +21,8 @@ interface UnitDetailProps {
   session: Session | null;
 }
 
+// const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
 export default function UnitDetail({ id, session }: UnitDetailProps) {
   const router = useRouter();
   const { data: sessionData } = useSession();
@@ -28,16 +31,27 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const [currentUrl, setCurrentUrl] = useState<string>("");
   const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
+  const [commentPage, setCommentPage] = useState(1);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   const {
-    data: { data: unit } = {
-      data: { _count: { logs: 0, comments: 0, unitLikes: 0 } } as UnitDTO,
-    },
+    data: unitData,
     error,
     mutate: mutateUnit,
-  } = useSWR<{ data: UnitDTO }>(`/api/units/${id}`, {
-    revalidateOnFocus: false,
-    revalidateIfStale: true,
+  } = useSWR<{ data: UnitDTO }>(`/api/units/${id}`);
+
+  const unit = unitData?.data;
+
+  const {
+    comments,
+    pagination,
+    isLoading: isLoadingComments,
+    mutate: mutateComments,
+    optimisticUpdate,
+  } = useComments({
+    unitId: id,
+    page: commentPage,
+    limit: 10,
   });
 
   useEffect(() => {
@@ -161,6 +175,110 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     // Implementation of handleAddAIComment function
   };
 
+  const handleCreateComment = async (comment: string) => {
+    if (!sessionData?.user) return;
+
+    try {
+      // 楽観的更新
+      const optimisticComment = {
+        id: Date.now(),
+        comment,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: sessionData.user.id,
+          name: sessionData.user.name || null,
+          image: sessionData.user.image || null,
+        },
+      };
+
+      await optimisticUpdate("create", optimisticComment);
+
+      const response = await fetch(`/api/units/${id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment,
+        }),
+      });
+
+      if (!response.ok) {
+        mutateComments();
+        const data = await response.json();
+        throw new Error(data.error || "コメントの作成に失敗しました");
+      }
+
+      toast.success("コメントを作成しました");
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      toast.error(
+        error instanceof Error ? error.message : "コメントの作成に失敗しました"
+      );
+      mutateComments();
+    }
+  };
+
+  const handleUpdateComment = async (commentId: number, content: string) => {
+    try {
+      await optimisticUpdate("update", { comment: content }, commentId);
+
+      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment: content,
+        }),
+      });
+
+      if (!response.ok) {
+        mutateComments();
+        const data = await response.json();
+        throw new Error(data.error || "コメントの更新に失敗しました");
+      }
+
+      toast.success("コメントを更新しました");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      toast.error(
+        error instanceof Error ? error.message : "コメントの更新に失敗しました"
+      );
+      mutateComments();
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!confirm("このコメントを削除してもよろしいですか？")) return;
+    if (isDeletingComment) return;
+
+    setIsDeletingComment(true);
+    try {
+      await optimisticUpdate("delete", undefined, commentId);
+
+      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        mutateComments();
+        const data = await response.json();
+        throw new Error(data.error || "コメントの削除に失敗しました");
+      }
+
+      toast.success("コメントを削除しました");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error(
+        error instanceof Error ? error.message : "コメントの削除に失敗しました"
+      );
+      mutateComments();
+    } finally {
+      setIsDeletingComment(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen">
       <Sidebar
@@ -206,8 +324,16 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
         <CommentsSection
           unitId={id}
-          userId={unit.userId}
+          userId={unit?.userId || ""}
           session={sessionData}
+          comments={comments}
+          pagination={pagination || null}
+          isLoading={isLoadingComments}
+          onPageChange={setCommentPage}
+          onCreateComment={handleCreateComment}
+          onUpdateComment={handleUpdateComment}
+          onDeleteComment={handleDeleteComment}
+          isDeleting={isDeletingComment}
         />
 
         <div className="flex flex-wrap items-center justify-end gap-4 mt-4">

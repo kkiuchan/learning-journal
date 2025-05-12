@@ -6,119 +6,59 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/UserAvatar";
 import { useMenu } from "@/contexts/MenuContext";
-import { useComments } from "@/hooks/useComments";
+import { CommentDTO } from "@/types/comment";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Session } from "next-auth";
 import { useState } from "react";
-import { toast } from "sonner";
 
 interface CommentsSectionProps {
   unitId: string;
   userId: string;
   session: Session | null;
+  comments: CommentDTO[];
+  pagination: {
+    totalPages: number;
+    currentPage: number;
+    totalItems: number;
+  } | null;
+  isLoading: boolean;
+  onPageChange: (page: number) => void;
+  onCreateComment: (comment: string) => Promise<void>;
+  onUpdateComment: (commentId: number, content: string) => Promise<void>;
+  onDeleteComment: (commentId: number) => Promise<void>;
+  isDeleting: boolean;
 }
 
 export function CommentsSection({
   unitId,
   userId,
   session,
+  comments,
+  pagination,
+  isLoading,
+  onPageChange,
+  onCreateComment,
+  onUpdateComment,
+  onDeleteComment,
+  isDeleting,
 }: CommentsSectionProps) {
   const { openMenuId, setOpenMenuId } = useMenu();
-  const [commentPage, setCommentPage] = useState(1);
-  const {
-    comments,
-    pagination,
-    isLoading,
-    mutate: mutateComments,
-    optimisticUpdate,
-  } = useComments({
-    unitId,
-    page: commentPage,
-    limit: 10,
-  });
-
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
   const [expandedComments, setExpandedComments] = useState<number[]>([]);
-  const [deletingCommentIds, setDeletingCommentIds] = useState<number[]>([]);
 
   const handleCreateComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !session?.user) return;
 
     try {
-      // 楽観的更新
-      const optimisticComment = {
-        id: Date.now(),
-        comment: newComment,
-        createdAt: new Date().toISOString(),
-        user: {
-          id: session.user.id,
-          name: session.user.name || null,
-          image: session.user.image || null,
-        },
-      };
-
-      await optimisticUpdate("create", optimisticComment);
+      await onCreateComment(newComment);
       setNewComment("");
-
-      const response = await fetch(`/api/units/${unitId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          comment: newComment,
-        }),
-      });
-
-      if (!response.ok) {
-        mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの作成に失敗しました");
-      }
     } catch (error) {
-      console.error("Error creating comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの作成に失敗しました"
-      );
-      mutateComments();
-    }
-  };
-
-  const handleDeleteComment = async (commentId: number) => {
-    if (!confirm("このコメントを削除してもよろしいですか？")) return;
-    if (deletingCommentIds.includes(commentId)) return;
-
-    setDeletingCommentIds((prev) => [...prev, commentId]);
-    try {
-      await optimisticUpdate("delete", undefined, commentId);
-
-      const response = await fetch(
-        `/api/units/${unitId}/comments/${commentId}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (!response.ok) {
-        mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの削除に失敗しました");
-      }
-
-      toast.success("コメントを削除しました");
-    } catch (error) {
-      console.error("Error deleting comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの削除に失敗しました"
-      );
-      mutateComments();
-    } finally {
-      setDeletingCommentIds((prev) => prev.filter((id) => id !== commentId));
+      // エラー処理は親コンポーネントで行う
     }
   };
 
@@ -126,40 +66,11 @@ export function CommentsSection({
     if (!editingCommentContent.trim()) return;
 
     try {
-      await optimisticUpdate(
-        "update",
-        { comment: editingCommentContent },
-        commentId
-      );
+      await onUpdateComment(commentId, editingCommentContent);
       setEditingCommentId(null);
       setEditingCommentContent("");
-
-      const response = await fetch(
-        `/api/units/${unitId}/comments/${commentId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            comment: editingCommentContent,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの更新に失敗しました");
-      }
-
-      toast.success("コメントを更新しました");
     } catch (error) {
-      console.error("Error updating comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの更新に失敗しました"
-      );
-      mutateComments();
+      // エラー処理は親コンポーネントで行う
     }
   };
 
@@ -267,15 +178,13 @@ export function CommentsSection({
                             <button
                               className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2 menu-action-button"
                               onClick={() => {
-                                handleDeleteComment(comment.id);
+                                onDeleteComment(comment.id);
                                 setOpenMenuId(null);
                               }}
-                              disabled={deletingCommentIds.includes(comment.id)}
+                              disabled={isDeleting}
                             >
                               <Trash2 className="h-3 w-3" />
-                              {deletingCommentIds.includes(comment.id)
-                                ? "削除中..."
-                                : "削除"}
+                              {isDeleting ? "削除中..." : "削除"}
                             </button>
                           </div>
                         </div>
@@ -340,10 +249,10 @@ export function CommentsSection({
         </div>
       )}
 
-      {pagination && commentPage < pagination.totalPages && (
+      {pagination && pagination.currentPage < pagination.totalPages && (
         <Button
           variant="outline"
-          onClick={() => setCommentPage((prev) => prev + 1)}
+          onClick={() => onPageChange(pagination.currentPage + 1)}
           className="mt-4 w-full"
         >
           もっと見る

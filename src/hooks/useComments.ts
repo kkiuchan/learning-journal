@@ -55,7 +55,13 @@ export function useComments({ unitId, page, limit }: UseCommentsProps) {
     } else if (type === "update" && optimisticData && commentId) {
       // コメントを更新
       const updatedComments = currentComments.map((comment) =>
-        comment.id === commentId ? { ...comment, ...optimisticData } : comment
+        comment.id === commentId
+          ? {
+              ...comment,
+              ...optimisticData,
+              user: comment.user, // ユーザー情報を保持
+            }
+          : comment
       );
       mutate(
         {

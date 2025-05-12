@@ -17,6 +17,11 @@ interface CreateLogFormProps {
   unitId: string;
   onCancel: () => void;
   onSuccess: () => void;
+  tags: string[];
+  setTags: React.Dispatch<React.SetStateAction<string[]>>;
+  resources: Resource[];
+  setResources: React.Dispatch<React.SetStateAction<Resource[]>>;
+  onSubmit: (form: any) => Promise<void>;
 }
 
 interface Resource {
@@ -32,15 +37,18 @@ export default function CreateLogForm({
   unitId,
   onCancel,
   onSuccess,
+  tags,
+  setTags,
+  resources,
+  setResources,
+  onSubmit,
 }: CreateLogFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState("");
   const [learningTime, setLearningTime] = useState(0);
   const [note, setNote] = useState("");
   const [logDate, setLogDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [resources, setResources] = useState<Resource[]>([]);
   const [newResourceTitle, setNewResourceTitle] = useState("");
   const [newResourceLink, setNewResourceLink] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -158,36 +166,22 @@ export default function CreateLogForm({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/units/${unitId}/logs`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          learningTime,
-          note,
-          logDate,
-          tags,
-          effectScore,
-          effectType,
-          resources: resources.map((r) => ({
-            resourceType: r.resourceType,
-            resourceLink: r.resourceLink,
-            description: r.description,
-            fileName: r.fileName,
-            filePath: r.filePath,
-          })),
-        }),
+      await onSubmit({
+        title,
+        learningTime,
+        note,
+        logDate,
+        tags,
+        effectScore,
+        effectType,
+        resources: resources.map((r) => ({
+          resourceType: r.resourceType,
+          resourceLink: r.resourceLink,
+          description: r.description,
+          fileName: r.fileName,
+          filePath: r.filePath,
+        })),
       });
-
-      if (!response.ok) {
-        throw new Error("ログの作成に失敗しました");
-      }
-
-      const data = await response.json();
-      console.log("Created log:", data);
-      router.refresh();
       onSuccess();
       onCancel();
     } catch (error) {
