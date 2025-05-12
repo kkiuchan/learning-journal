@@ -14,7 +14,14 @@ import { UnitDTO } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Copy, MoreHorizontal, Pencil, Share2, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Share2,
+  Trash2,
+} from "lucide-react";
 import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -39,6 +46,7 @@ export function UnitHeader({
   const [currentUrl, setCurrentUrl] = useState("");
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const buttonRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
+  const [isEditLoading, setIsEditLoading] = useState(false);
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -287,7 +295,7 @@ export function UnitHeader({
                       toast.success("URLをコピーしました");
                       setOpenMenuId(null);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-foreground hover:bg-accent rounded-md flex items-center gap-2"
                   >
                     <Copy className="h-4 w-4" />
                     URLをコピー
@@ -332,16 +340,25 @@ export function UnitHeader({
                     <button
                       className="w-full text-left px-4 py-2 text-foreground hover:bg-muted/30 flex items-center gap-2 transition-colors duration-200"
                       onClick={() => {
+                        setIsEditLoading(true);
                         router.push(`/units/${unit.id}/edit`);
                       }}
+                      disabled={isEditLoading || isDeleting}
                     >
                       <Pencil className="h-4 w-4" />
-                      編集
+                      {isEditLoading ? (
+                        <>
+                          <Loader2 className="animate-spin h-4 w-4 mr-1" />
+                          遷移中...
+                        </>
+                      ) : (
+                        "編集"
+                      )}
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-destructive hover:bg-destructive/10 flex items-center gap-2 transition-colors duration-200"
                       onClick={handleDelete}
-                      disabled={isDeleting}
+                      disabled={isEditLoading || isDeleting}
                     >
                       <Trash2 className="h-4 w-4" />
                       {isDeleting ? "削除中..." : "削除"}
