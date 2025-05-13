@@ -1,6 +1,7 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { ApiResponse, FrontendUser, SearchResult } from "@/types";
+import { ApiResponse, SearchResult } from "@/types";
+import { UserDTO } from "@/types/user";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -256,7 +257,9 @@ export async function GET(
           name: interest.tag.name,
         })),
         _count: user._count,
-      })) as FrontendUser[];
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })) as UserDTO[];
 
       return createApiResponse({
         users: formattedUsers,
@@ -393,7 +396,9 @@ export async function GET(
         name: interest.tag.name,
       })),
       _count: user._count,
-    })) as FrontendUser[];
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })) as UserDTO[];
 
     return createApiResponse({
       users: formattedUsers,

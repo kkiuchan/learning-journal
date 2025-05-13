@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
-import { Log } from "@/types/log";
+import { LogDTO as Log } from "@/types/log";
 import { CACHE_TAGS } from "@/utils/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -129,9 +129,9 @@ export function LogList({ unitId }: LogListProps) {
             </div>
           )}
 
-          {log.logTags && log.logTags.length > 0 && (
+          {log.tags && log.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2">
-              {log.logTags.map(({ tag }) => (
+              {log.tags.map((tag) => (
                 <Badge key={tag.id} variant="secondary">
                   {tag.name}
                 </Badge>

@@ -9,6 +9,45 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   throw new Error("Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY");
 }
 
+// ファイルバリデーション設定
+const FILE_VALIDATION = {
+  allowedTypes: [
+    // 画像
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    // ドキュメント
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    // スプレッドシート
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    // プレゼンテーション
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    // テキスト
+    "text/plain",
+    "text/markdown",
+    // 圧縮ファイル
+    "application/zip",
+    "application/x-rar-compressed",
+  ],
+  maxSizeMB: 10,
+  validateFile: (file: File) => {
+    if (!FILE_VALIDATION.allowedTypes.includes(file.type)) {
+      throw new Error("許可されていないファイル形式です");
+    }
+
+    if (file.size > FILE_VALIDATION.maxSizeMB * 1024 * 1024) {
+      throw new Error(
+        `ファイルサイズは${FILE_VALIDATION.maxSizeMB}MB以下にしてください`
+      );
+    }
+  },
+};
+
 // 共通のSupabaseクライアントを作成
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -19,6 +58,8 @@ export const supabase = createClient(
 export const storage = {
   // プロフィール画像のアップロード
   uploadProfileImage: async (file: File): Promise<string> => {
+    FILE_VALIDATION.validateFile(file);
+
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `profile-image/${fileName}`;
@@ -38,6 +79,8 @@ export const storage = {
 
   // リソースファイルのアップロード
   uploadResource: async (file: File, unitId: string): Promise<string> => {
+    FILE_VALIDATION.validateFile(file);
+
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `${unitId}/${fileName}`;
