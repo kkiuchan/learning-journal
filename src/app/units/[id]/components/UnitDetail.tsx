@@ -3,11 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { useComments } from "@/hooks/useComments";
 import { UnitDTO } from "@/types/unit";
-import { Heart, Link, MessageCircle } from "lucide-react";
+import { Link } from "lucide-react";
 import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { CommentsSection } from "./CommentsSection";
@@ -57,14 +57,6 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   useEffect(() => {
     setCurrentUrl(window.location.href);
   }, []);
-
-  if (error) {
-    return <div>エラーが発生しました</div>;
-  }
-
-  if (!unit) {
-    return <div>読み込み中...</div>;
-  }
 
   const handleCopyUrl = async () => {
     try {
@@ -164,12 +156,12 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     }
   };
 
-  const scrollToComments = () => {
+  const scrollToComments = useCallback(() => {
     const commentsSection = document.getElementById("comments-section");
     if (commentsSection) {
-      commentsSection.scrollIntoView({ behavior: "smooth" });
+      commentsSection.scrollIntoView({ behavior: "auto" });
     }
-  };
+  }, []);
 
   const handleAddAIComment = () => {
     // Implementation of handleAddAIComment function
@@ -278,6 +270,14 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       setIsDeletingComment(false);
     }
   };
+
+  if (error) {
+    return <div>エラーが発生しました</div>;
+  }
+
+  if (!unit) {
+    return <div>読み込み中...</div>;
+  }
 
   return (
     <div className="relative min-h-screen">

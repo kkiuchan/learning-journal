@@ -179,7 +179,7 @@ export function TableOfContents({ logs }: TableOfContentsProps) {
     const element = document.getElementById(`log-${logId}`);
     if (element) {
       element.scrollIntoView({
-        behavior: "smooth",
+        behavior: "auto",
         block: "start",
       });
     }
