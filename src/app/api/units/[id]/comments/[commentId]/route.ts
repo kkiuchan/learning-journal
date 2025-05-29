@@ -1,6 +1,9 @@
 import { authConfig } from "@/auth.config";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { revalidateCommentData, revalidateUnitData } from "@/utils/cache";
+import {
+  revalidateCommentData,
+  revalidateUnitData,
+} from "@/utils/server-cache";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 

@@ -1,7 +1,7 @@
 import { authConfig } from "@/auth.config";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
-import { revalidateLogData, revalidateUnitData } from "@/utils/cache";
+import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";

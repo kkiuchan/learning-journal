@@ -1,8 +1,9 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { ApiResponse, ApiUser } from "@/types";
-import { revalidateUserData } from "@/utils/cache";
+import { ApiResponse } from "@/types";
+import { ApiUser } from "@/types/user";
+import { revalidateUserData } from "@/utils/server-cache";
 import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
@@ -192,6 +193,9 @@ export async function GET(): Promise<NextResponse<ApiResponse<ApiUser>>> {
     const formattedUser: ApiUser = {
       id: user.id,
       name: user.name,
+      email: user.email,
+      primaryAuthMethod: user.primaryAuthMethod,
+      hashedPassword: null,
       image: user.image,
       topImage: user.topImage,
       selfIntroduction: user.selfIntroduction,
@@ -437,6 +441,9 @@ export async function PUT(
     const formattedUser: ApiUser = {
       id: user.id,
       name: user.name,
+      email: user.email,
+      primaryAuthMethod: user.primaryAuthMethod,
+      hashedPassword: null,
       image: user.image,
       topImage: user.topImage,
       selfIntroduction: user.selfIntroduction,

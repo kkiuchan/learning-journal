@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
-import { Plus } from "lucide-react";
+import { CACHE_TAGS } from "@/utils/cache";
+import { List, Plus, Wand2 } from "lucide-react";
 import { Session } from "next-auth";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import CreateLogForm from "./CreateLogForm";
 import EditLogForm from "./EditLogForm";
 import LogCard from "./LogCard";
 import { TableOfContents } from "./TableOfContents";
+import WizardLogForm from "./WizardLogForm";
 
 interface LogsSectionProps {
   unitId: string;
@@ -20,7 +22,26 @@ interface LogsSectionProps {
   session: Session | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
-  onAIAdvice: (comment: string) => void;
+  onAIAdvice?: () => void;
+}
+
+// WizardLogFormのResource型と一致させる
+interface WizardResource {
+  resourceType: string | null;
+  resourceLink: string;
+  description: string | null;
+  fileName?: string;
+  filePath?: string;
+}
+
+// CreateLogFormのResource型
+interface CreateLogResource {
+  id?: number;
+  resourceType: string | null;
+  resourceLink: string;
+  description: string | null;
+  fileName?: string;
+  filePath?: string;
 }
 
 export function LogsSection({
@@ -32,104 +53,166 @@ export function LogsSection({
   onAIAdvice,
 }: LogsSectionProps) {
   const [isCreatingLog, setIsCreatingLog] = useState(false);
+  const [useWizardForm, setUseWizardForm] = useState(true); // デフォルトはウィザード形式
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
-  const { logs, isLoading, mutate: mutateLogs } = useLogs(unitId);
-  const [tags, setTags] = useState<string[]>([]);
-  const [resources, setResources] = useState<any[]>([]);
-  const [createTags, setCreateTags] = useState<string[]>([]);
-  const [createResources, setCreateResources] = useState<any[]>([]);
   const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (editingLogId !== null) {
-      const editingLog = logs.find((l) => l.id === editingLogId);
-      if (editingLog) {
-        setTags(editingLog.tags?.map((tag) => tag.name) || []);
-        setResources(editingLog.resources || []);
-      }
-    }
-  }, [editingLogId, logs]);
+  // フォーム状態
+  const [createTags, setCreateTags] = useState<string[]>([]);
+  const [createResources, setCreateResources] = useState<CreateLogResource[]>(
+    []
+  );
+  const [tags, setTags] = useState<string[]>([]);
+  const [resources, setResources] = useState<CreateLogResource[]>([]);
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [editResources, setEditResources] = useState<
+    {
+      id: number;
+      resourceType: string | null;
+      resourceLink: string;
+      description: string | null;
+      fileName?: string;
+      filePath?: string;
+    }[]
+  >([]);
 
-  const handleEditLogSubmit = async (logId: number, form: any) => {
-    try {
-      const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-        next: {
-          tags: [
-            `unit-${unitId}`,
-            "unit",
-            "unit-list",
-            "log",
-            "log-list",
-            `log-${logId}`,
-          ],
-        },
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (errorData.error === "Log not found") {
-          alert(
-            "このログは削除された可能性があります。ページを更新してください。"
-          );
-          setEditingLogId(null);
-          return;
-        }
-        throw new Error("ログの更新に失敗しました");
-      }
-      mutateLogs();
-      setEditingLogId(null);
-    } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "ログの更新に失敗しました"
-      );
-    }
-  };
+  const { logs, isLoading, mutate: mutateLogs } = useLogs(unitId);
 
-  const handleCreateLogSubmit = async (form: any) => {
+  const handleCreateLogSubmit = async (formData: {
+    title: string;
+    learningTime: number;
+    note: string;
+    logDate: string;
+    tags: string[];
+    effectScore: number;
+    effectType: string;
+    resources: CreateLogResource[];
+  }) => {
     try {
       const response = await fetch(`/api/units/${unitId}/logs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          learningTime: formData.learningTime,
+          note: formData.note,
+          logDate: formData.logDate,
+          effectScore: formData.effectScore,
+          effectType: formData.effectType,
+          tags: formData.tags,
+          resources: formData.resources,
+        }),
+        next: {
+          tags: [
+            `${CACHE_TAGS.UNIT}-${unitId}`,
+            CACHE_TAGS.UNIT,
+            CACHE_TAGS.UNIT_LIST,
+            CACHE_TAGS.LOG,
+            CACHE_TAGS.LOG_LIST,
+          ],
+        },
       });
-      if (!response.ok) throw new Error("ログの作成に失敗しました");
+
+      if (!response.ok) {
+        throw new Error("ログの作成に失敗しました");
+      }
+
+      toast.success("学習ログを作成しました");
       mutateLogs();
-      setCreateTags([]);
-      setCreateResources([]);
-      setIsCreatingLog(false);
     } catch (error) {
-      alert(
-        error instanceof Error ? error.message : "ログの作成に失敗しました"
-      );
+      console.error("ログ作成エラー:", error);
+      throw error;
+    }
+  };
+
+  const handleEditLogSubmit = async (
+    logId: number,
+    formData: {
+      title: string;
+      learningTime: number;
+      note: string;
+      logDate: string;
+      tags: string[];
+      resources: CreateLogResource[];
+      effectScore: number;
+      effectType: string;
+    }
+  ) => {
+    try {
+      const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: formData.title,
+          learningTime: formData.learningTime,
+          note: formData.note,
+          logDate: formData.logDate,
+          effectScore: formData.effectScore,
+          effectType: formData.effectType,
+          tags: formData.tags,
+          resources: formData.resources,
+        }),
+        next: {
+          tags: [
+            `${CACHE_TAGS.UNIT}-${unitId}`,
+            CACHE_TAGS.UNIT,
+            CACHE_TAGS.UNIT_LIST,
+            CACHE_TAGS.LOG,
+            CACHE_TAGS.LOG_LIST,
+            `${CACHE_TAGS.LOG}-${logId}`,
+          ],
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("ログの更新に失敗しました");
+      }
+
+      toast.success("学習ログを更新しました");
+      mutateLogs();
+    } catch (error) {
+      console.error("ログ更新エラー:", error);
+      toast.error("ログの更新に失敗しました");
     }
   };
 
   const handleDeleteLog = async (
     logId: number,
-    setOpenMenuId?: (id: number | null) => void
+    setOpenMenuId: (id: number | null) => void
   ) => {
     if (!confirm("このログを削除してもよろしいですか？")) return;
-    if (deletingLogIds.includes(logId)) return;
+
     setDeletingLogIds((prev) => [...prev, logId]);
+    setOpenMenuId(null);
+
     try {
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "DELETE",
+        next: {
+          tags: [
+            `${CACHE_TAGS.UNIT}-${unitId}`,
+            CACHE_TAGS.UNIT,
+            CACHE_TAGS.UNIT_LIST,
+            CACHE_TAGS.LOG,
+            CACHE_TAGS.LOG_LIST,
+            `${CACHE_TAGS.LOG}-${logId}`,
+          ],
+        },
       });
-      if (response.ok) {
-        mutateLogs();
-        if (setOpenMenuId) setOpenMenuId(null);
-        toast.success("ログを削除しました");
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || "ログの削除に失敗しました");
+
+      if (!response.ok) {
+        throw new Error("ログの削除に失敗しました");
       }
+
+      toast.success("学習ログを削除しました");
+      mutateLogs();
     } catch (error) {
-      console.error("Error deleting log:", error);
-      toast.error(
-        error instanceof Error ? error.message : "ログの削除に失敗しました"
-      );
+      console.error("ログ削除エラー:", error);
+      toast.error("ログの削除に失敗しました");
     } finally {
       setDeletingLogIds((prev) => prev.filter((id) => id !== logId));
     }
@@ -163,21 +246,65 @@ export function LogsSection({
       </div>
 
       {isCreatingLog && (
-        <CreateLogForm
-          unitId={unitId}
-          onCancel={() => setIsCreatingLog(false)}
-          onSuccess={() => {
-            setIsCreatingLog(false);
-            mutateLogs();
-            setCreateTags([]);
-            setCreateResources([]);
-          }}
-          tags={createTags}
-          setTags={setCreateTags}
-          resources={createResources}
-          setResources={setCreateResources}
-          onSubmit={handleCreateLogSubmit}
-        />
+        <div className="mb-6">
+          {/* フォーム切り替えボタン */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">学習ログを作成</h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={useWizardForm ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseWizardForm(true)}
+                className="flex items-center gap-2"
+              >
+                <Wand2 className="h-4 w-4" />
+                ウィザード
+              </Button>
+              <Button
+                variant={!useWizardForm ? "default" : "outline"}
+                size="sm"
+                onClick={() => setUseWizardForm(false)}
+                className="flex items-center gap-2"
+              >
+                <List className="h-4 w-4" />
+                従来形式
+              </Button>
+            </div>
+          </div>
+
+          {useWizardForm ? (
+            <WizardLogForm
+              unitId={unitId}
+              onCancel={() => {
+                setIsCreatingLog(false);
+                setCreateTags([]);
+                setCreateResources([]);
+              }}
+              onSuccess={() => {
+                setIsCreatingLog(false);
+                setCreateTags([]);
+                setCreateResources([]);
+              }}
+              onSubmit={handleCreateLogSubmit}
+            />
+          ) : (
+            <CreateLogForm
+              unitId={unitId}
+              onCancel={() => setIsCreatingLog(false)}
+              onSuccess={() => {
+                setIsCreatingLog(false);
+                mutateLogs();
+                setCreateTags([]);
+                setCreateResources([]);
+              }}
+              tags={createTags}
+              setTags={setCreateTags}
+              resources={createResources}
+              setResources={setCreateResources}
+              onSubmit={handleCreateLogSubmit}
+            />
+          )}
+        </div>
       )}
 
       {isLoading ? (
@@ -205,10 +332,10 @@ export function LogsSection({
                       mutateLogs();
                     }}
                     onSubmit={(form) => handleEditLogSubmit(log.id, form)}
-                    tags={tags}
-                    setTags={setTags}
-                    resources={resources}
-                    setResources={setResources}
+                    tags={editTags}
+                    setTags={setEditTags}
+                    resources={editResources}
+                    setResources={setEditResources}
                   />
                 ) : (
                   <LogCard

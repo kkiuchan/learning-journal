@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, Star, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
@@ -56,6 +57,7 @@ export default function CreateLogForm({
   const [effectScore, setEffectScore] = useState<number>(3);
   const [effectType, setEffectType] = useState<string>("understanding");
   const [showPreview, setShowPreview] = useState(false);
+  const [hoveredScore, setHoveredScore] = useState<number | null>(null);
   const router = useRouter();
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
@@ -235,22 +237,32 @@ export default function CreateLogForm({
 
         <div>
           <Label>効果実感スコア</Label>
-          <div className="flex gap-1">
+          <div
+            className="flex items-center gap-2"
+            onMouseLeave={() => setHoveredScore(null)}
+          >
             {[1, 2, 3, 4, 5].map((score) => (
               <button
                 key={score}
                 type="button"
                 onClick={() => setEffectScore(score)}
+                onMouseEnter={() => setHoveredScore(score)}
                 disabled={isSubmitting}
-                className={`p-1 rounded ${
-                  effectScore === score
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary"
-                }`}
+                className="transition-all hover:scale-110 focus:outline-none"
               >
-                {"⭐".repeat(score)}
+                <Star
+                  className={cn(
+                    "h-6 w-6 transition-all cursor-pointer",
+                    score <= (hoveredScore || effectScore)
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "fill-transparent text-gray-300 hover:text-yellow-300"
+                  )}
+                />
               </button>
             ))}
+            <span className="ml-2 text-sm font-medium text-muted-foreground">
+              {effectScore}/5
+            </span>
           </div>
         </div>
 
