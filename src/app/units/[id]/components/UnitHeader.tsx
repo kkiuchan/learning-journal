@@ -16,7 +16,9 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
   Copy,
+  Heart,
   Loader2,
+  MessageCircle,
   MoreHorizontal,
   Pencil,
   Share2,
@@ -32,6 +34,7 @@ interface UnitHeaderProps {
   session: Session | null;
   onMutate: () => void;
   handleLike: () => void;
+  scrollToComments: () => void;
 }
 
 export function UnitHeader({
@@ -39,6 +42,7 @@ export function UnitHeader({
   session,
   onMutate,
   handleLike,
+  scrollToComments,
 }: UnitHeaderProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -110,7 +114,7 @@ export function UnitHeader({
   };
 
   return (
-    <Card className="p-6 bg-card">
+    <Card className="p-6 bg-card relative">
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 min-w-0">
@@ -383,6 +387,24 @@ export function UnitHeader({
             ))}
           </div>
         )}
+      </div>
+      <div className="lg:hidden absolute right-4 bottom-4 flex gap-3 z-10">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-1 rounded-full px-2 py-1 shadow-md bg-background border border-border ${unit.isLiked ? "text-pink-500" : "text-gray-500"}`}
+          title="いいね"
+        >
+          <Heart className={`h-4 w-4 ${unit.isLiked ? "fill-current" : ""}`} />
+          <span className="text-sm">{unit._count?.unitLikes ?? 0}</span>
+        </button>
+        <button
+          onClick={scrollToComments}
+          className="flex items-center gap-1 rounded-full px-2 py-1 shadow-md bg-background border border-border text-gray-500"
+          title="コメント"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-sm">{unit._count?.comments ?? 0}</span>
+        </button>
       </div>
     </Card>
   );

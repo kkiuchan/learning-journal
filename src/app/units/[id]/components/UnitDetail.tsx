@@ -305,6 +305,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           session={sessionData}
           onMutate={mutateUnit}
           handleLike={handleLike}
+          scrollToComments={scrollToComments}
         />
         <UnitContent
           unit={unit}
@@ -335,29 +336,6 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           onDeleteComment={handleDeleteComment}
           isDeleting={isDeletingComment}
         />
-
-        <div className="flex flex-wrap items-center justify-end gap-4 mt-4">
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-1 lg:hidden ${
-              unit.isLiked ? "text-pink-500" : "text-gray-500"
-            }`}
-            title="いいね"
-          >
-            <Heart
-              className={`h-4 w-4 ${unit.isLiked ? "fill-current" : ""}`}
-            />
-            <span className="text-sm">{unit._count?.unitLikes ?? 0}</span>
-          </button>
-          <button
-            onClick={scrollToComments}
-            className="flex items-center gap-1 text-gray-500 lg:hidden"
-            title="コメント"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span className="text-sm">{unit._count?.comments ?? 0}</span>
-          </button>
-        </div>
       </main>
     </div>
   );
