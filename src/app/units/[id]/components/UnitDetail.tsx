@@ -70,6 +70,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   };
 
   const handleLike = async () => {
+    if (!unit) return;
     if (!sessionData?.user) {
       toast.error(
         <div className="flex flex-col gap-2">

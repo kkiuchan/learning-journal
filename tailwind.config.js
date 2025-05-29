@@ -48,6 +48,24 @@ export default {
             "code::after": {
               content: '""',
             },
+            h1: {
+              fontSize: "2.25rem", // text-3xl
+              fontWeight: "700",
+              marginTop: "1.5rem",
+              marginBottom: "1rem",
+            },
+            h2: {
+              fontSize: "1.875rem", // text-2xl
+              fontWeight: "600",
+              marginTop: "1.25rem",
+              marginBottom: "0.75rem",
+            },
+            h3: {
+              fontSize: "1.5rem", // text-xl
+              fontWeight: "600",
+              marginTop: "1rem",
+              marginBottom: "0.5rem",
+            },
           },
         },
       },

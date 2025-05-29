@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMenu } from "@/contexts/MenuContext";
+import { cn } from "@/lib/utils";
 import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
@@ -19,6 +20,7 @@ import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 interface LogCardProps {
   log: LogDTO;
@@ -126,11 +128,15 @@ export default function LogCard({
       {log.note && (
         <div className="mt-2">
           <div
-            className={`prose prose-sm max-w-none dark:prose-invert ${
+            className={cn(
+              "prose prose-sm max-w-none dark:prose-invert",
               !expandedContent && log.note.length > 200 ? "line-clamp-[4]" : ""
-            }`}
+            )}
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+            >
               {log.note}
             </ReactMarkdown>
           </div>

@@ -87,7 +87,8 @@ export const revalidate = 0;
 
 export default async function UnitPage({ params }: Props) {
   const session = await auth();
-  const { id } = params;
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
 
   return (
     <MenuProvider>
