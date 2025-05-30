@@ -3,6 +3,12 @@
 import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
 import { CACHE_TAGS } from "@/utils/cache";
@@ -322,34 +328,46 @@ export function LogsSection({
                 id={`log-${log.id}`}
                 className="p-4 scroll-mt-24"
               >
-                {editingLogId === log.id ? (
-                  <EditLogForm
-                    log={log}
-                    unitId={unitId}
-                    onCancel={() => setEditingLogId(null)}
-                    onUpdate={() => {
-                      setEditingLogId(null);
-                      mutateLogs();
-                    }}
-                    onSubmit={(form) => handleEditLogSubmit(log.id, form)}
-                    tags={editTags}
-                    setTags={setEditTags}
-                    resources={editResources}
-                    setResources={setEditResources}
-                  />
-                ) : (
-                  <LogCard
-                    log={log}
-                    unitId={unitId}
-                    session={session}
-                    onEdit={() => setEditingLogId(log.id)}
-                    onDelete={() => handleDeleteLog(log.id, setOpenMenuId)}
-                    isDeleting={deletingLogIds.includes(log.id)}
-                  />
-                )}
+                <LogCard
+                  log={log}
+                  unitId={unitId}
+                  session={session}
+                  onEdit={() => setEditingLogId(log.id)}
+                  onDelete={() => handleDeleteLog(log.id, setOpenMenuId)}
+                  isDeleting={deletingLogIds.includes(log.id)}
+                />
               </Card>
             ))}
           </div>
+
+          {/* 編集モーダル */}
+          <Dialog
+            open={editingLogId !== null}
+            onOpenChange={(open) => !open && setEditingLogId(null)}
+          >
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>学習ログを編集</DialogTitle>
+              </DialogHeader>
+              {editingLogId && (
+                <EditLogForm
+                  log={logs.find((log) => log.id === editingLogId)!}
+                  unitId={unitId}
+                  onCancel={() => setEditingLogId(null)}
+                  onUpdate={() => {
+                    setEditingLogId(null);
+                    mutateLogs();
+                  }}
+                  onSubmit={(form) => handleEditLogSubmit(editingLogId, form)}
+                  tags={editTags}
+                  setTags={setEditTags}
+                  resources={editResources}
+                  setResources={setEditResources}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
           {logs.length > 0 && <TableOfContents logs={logs} />}
         </>
       )}
