@@ -54,16 +54,6 @@ export function LogList({ unitId }: LogListProps) {
     try {
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "DELETE",
-        next: {
-          tags: [
-            `${CACHE_TAGS.UNIT}-${unitId}`,
-            CACHE_TAGS.UNIT,
-            CACHE_TAGS.UNIT_LIST,
-            CACHE_TAGS.LOG,
-            CACHE_TAGS.LOG_LIST,
-            `${CACHE_TAGS.LOG}-${logId}`,
-          ],
-        },
       });
 
       if (!response.ok) {

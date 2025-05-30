@@ -80,7 +80,10 @@ export async function generateMetadata({
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL}/api/users/${id}`,
       {
-        next: { revalidate: 3600 }, // 1時間キャッシュ
+        next: {
+          revalidate: 3600, // 1時間キャッシュ
+          tags: [`user-${id}`, "user", "user-profile"],
+        },
       }
     );
 
@@ -153,7 +156,10 @@ export default async function UserPage({ params }: Props) {
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL}/api/users/${id}`,
     {
-      cache: "no-store",
+      next: {
+        revalidate: 3600, // 1時間キャッシュ
+        tags: [`user-${id}`, "user", "user-profile"],
+      },
     }
   );
 

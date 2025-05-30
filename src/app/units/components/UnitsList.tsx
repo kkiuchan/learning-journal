@@ -145,7 +145,6 @@ export function UnitsList({ userId }: UnitsListProps) {
     try {
       const response = await fetch(`/api/units/${unitId}/like`, {
         method: isCurrentlyLiked ? "DELETE" : "POST",
-        next: { tags: [`unit-${unitId}`, "unit", "unit-list"] },
       });
 
       if (!response.ok) {

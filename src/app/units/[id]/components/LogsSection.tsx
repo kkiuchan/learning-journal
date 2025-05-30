@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
-import { CACHE_TAGS } from "@/utils/cache";
 import { List, Plus, Wand2 } from "lucide-react";
 import { Session } from "next-auth";
 import { useState } from "react";
@@ -110,15 +109,6 @@ export function LogsSection({
           tags: formData.tags,
           resources: formData.resources,
         }),
-        next: {
-          tags: [
-            `${CACHE_TAGS.UNIT}-${unitId}`,
-            CACHE_TAGS.UNIT,
-            CACHE_TAGS.UNIT_LIST,
-            CACHE_TAGS.LOG,
-            CACHE_TAGS.LOG_LIST,
-          ],
-        },
       });
 
       if (!response.ok) {
@@ -162,16 +152,6 @@ export function LogsSection({
           tags: formData.tags,
           resources: formData.resources,
         }),
-        next: {
-          tags: [
-            `${CACHE_TAGS.UNIT}-${unitId}`,
-            CACHE_TAGS.UNIT,
-            CACHE_TAGS.UNIT_LIST,
-            CACHE_TAGS.LOG,
-            CACHE_TAGS.LOG_LIST,
-            `${CACHE_TAGS.LOG}-${logId}`,
-          ],
-        },
       });
 
       if (!response.ok) {
@@ -198,16 +178,6 @@ export function LogsSection({
     try {
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "DELETE",
-        next: {
-          tags: [
-            `${CACHE_TAGS.UNIT}-${unitId}`,
-            CACHE_TAGS.UNIT,
-            CACHE_TAGS.UNIT_LIST,
-            CACHE_TAGS.LOG,
-            CACHE_TAGS.LOG_LIST,
-            `${CACHE_TAGS.LOG}-${logId}`,
-          ],
-        },
       });
 
       if (!response.ok) {

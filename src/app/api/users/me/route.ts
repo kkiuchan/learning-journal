@@ -5,7 +5,7 @@ import { ApiResponse } from "@/types";
 import { ApiUser } from "@/types/user";
 import { revalidateUserData } from "@/utils/server-cache";
 import { getServerSession } from "next-auth";
-// import { revalidateTag } from "next/cache";
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 

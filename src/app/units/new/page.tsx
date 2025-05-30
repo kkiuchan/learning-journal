@@ -1,73 +1,14 @@
-"use client";
+import { authConfig } from "@/auth.config";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { NewUnitClient } from "./components/NewUnitClient";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import UnitForm, { UnitFormValues } from "./UnitForm";
+export default async function NewUnitPage() {
+  const session = await getServerSession(authConfig);
 
-export default function NewUnitPage() {
-  const router = useRouter();
-  const { data: session } = useSession();
-  const [isComposing, setIsComposing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [formValues, setFormValues] = useState<UnitFormValues>({
-    title: "",
-    learningGoal: "",
-    preLearningState: "",
-    reflection: "",
-    nextAction: "",
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: "",
-    status: "PLANNED",
-    tags: [],
-  });
+  if (!session) {
+    redirect("/auth/login");
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!session?.user) return;
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/units", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formValues,
-          tags: formValues.tags.map((tag) => tag.name),
-        }),
-      });
-      if (response.ok) {
-        const data = await response.json();
-        router.push(`/units/${data.data.id}`);
-      } else {
-        const error = await response.json();
-        console.error("ユニットの作成に失敗しました:", error);
-      }
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="container mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>新規ユニット作成</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <UnitForm
-            values={formValues}
-            setValues={setFormValues}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <NewUnitClient />;
 }

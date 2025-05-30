@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import useSWR from "swr";
 import { z } from "zod";
 
 const profileFormSchema = z.object({
@@ -44,6 +45,9 @@ export function ProfileForm() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // SWRでプロフィールデータを取得
+  const { data: profileData, error, mutate } = useSWR("/api/users/me");
+
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -57,43 +61,28 @@ export function ProfileForm() {
     },
   });
 
+  // プロフィールデータが取得できたらフォームに設定
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await fetch("/api/users/me", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache, no-store, must-revalidate",
-            Pragma: "no-cache",
-            Expires: "0",
-          },
-        } as RequestInit);
-        if (!response.ok) throw new Error("プロフィールの取得に失敗しました");
-        const data = await response.json();
+    if (profileData?.data) {
+      form.reset({
+        name: profileData.data.name || "",
+        selfIntroduction: profileData.data.selfIntroduction || "",
+        age: profileData.data.age,
+        ageVisible: profileData.data.ageVisible,
+        skills: profileData.data.skills.map(
+          (skill: { name: string }) => skill.name
+        ),
+        interests: profileData.data.interests.map(
+          (interest: { name: string }) => interest.name
+        ),
+        image: profileData.data.image || null,
+      });
 
-        form.reset({
-          name: data.data.name || "",
-          selfIntroduction: data.data.selfIntroduction || "",
-          age: data.data.age,
-          ageVisible: data.data.ageVisible,
-          skills: data.data.skills.map((skill: { name: string }) => skill.name),
-          interests: data.data.interests.map(
-            (interest: { name: string }) => interest.name
-          ),
-          image: data.data.image || null,
-        });
-
-        if (data.data.image) {
-          setPreviewUrl(data.data.image);
-        }
-      } catch (error) {
-        console.error("プロフィール取得エラー:", error);
-        toast.error("プロフィールの取得に失敗しました");
+      if (profileData.data.image) {
+        setPreviewUrl(profileData.data.image);
       }
-    };
-
-    fetchProfile();
-  }, [form]);
+    }
+  }, [profileData, form]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,6 +124,9 @@ export function ProfileForm() {
 
       const responseData = await response.json();
 
+      // SWRキャッシュを更新
+      await mutate();
+
       // セッション情報を更新
       if (session) {
         await updateSession({
@@ -158,6 +150,27 @@ export function ProfileForm() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // ローディング状態の表示
+  if (!profileData && !error) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  // エラー状態の表示
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-600">プロフィールの読み込みに失敗しました</p>
+        <Button onClick={() => mutate()} className="mt-4">
+          再試行
+        </Button>
+      </div>
+    );
   }
 
   return (
