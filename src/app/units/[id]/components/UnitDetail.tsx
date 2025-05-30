@@ -1,9 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { useComments } from "@/hooks/useComments";
+import { useUnitLike } from "@/hooks/useUnitLike";
 import { UnitDTO } from "@/types/unit";
-import { Link } from "lucide-react";
 import { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -54,6 +53,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     limit: 10,
   });
 
+  const { handleLike: handleUnitLike } = useUnitLike();
+
   useEffect(() => {
     setCurrentUrl(window.location.href);
   }, []);
@@ -66,71 +67,6 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       toast.success("URLをコピーしました");
     } catch (error) {
       toast.error("URLのコピーに失敗しました");
-    }
-  };
-
-  const handleLike = async () => {
-    if (!unit) return;
-    if (!sessionData?.user) {
-      toast.error(
-        <div className="flex flex-col gap-2">
-          <p>いいねするにはログインが必要です</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/auth/login" className="text-sm">
-              ログインする
-            </Link>
-          </Button>
-        </div>
-      );
-      return;
-    }
-
-    const isCurrentlyLiked = unit.isLiked;
-    const previousData = { data: unit };
-
-    // 楽観的更新
-    await mutateUnit(
-      {
-        data: {
-          ...unit,
-          isLiked: !isCurrentlyLiked,
-          _count: {
-            ...unit._count,
-            unitLikes: isCurrentlyLiked
-              ? unit._count.unitLikes - 1
-              : unit._count.unitLikes + 1,
-          },
-        },
-      },
-      false
-    );
-
-    try {
-      const response = await fetch(`/api/units/${id}/like`, {
-        method: isCurrentlyLiked ? "DELETE" : "POST",
-      });
-
-      if (!response.ok) {
-        // エラーの場合、前の状態に戻す
-        await mutateUnit(previousData, false);
-        const data = await response.json();
-        throw new Error(data.error || "いいねの更新に失敗しました");
-      }
-
-      // APIレスポンス後に再検証を行う
-      await mutateUnit();
-
-      // 成功メッセージを表示
-      toast.success(
-        isCurrentlyLiked ? "いいねを解除しました" : "いいねしました"
-      );
-    } catch (error) {
-      // エラーの場合、前の状態に戻す
-      await mutateUnit(previousData, false);
-      console.error("いいねの更新中にエラーが発生しました:", error);
-      toast.error(
-        error instanceof Error ? error.message : "いいねの更新に失敗しました"
-      );
     }
   };
 
@@ -270,6 +206,31 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     } finally {
       setIsDeletingComment(false);
     }
+  };
+
+  const handleLike = async () => {
+    if (!unit) return;
+
+    // 楽観的更新
+    const previousData = { data: unit };
+    await mutateUnit(
+      {
+        data: {
+          ...unit,
+          isLiked: !unit.isLiked,
+          _count: {
+            ...unit._count,
+            unitLikes: unit.isLiked
+              ? unit._count.unitLikes - 1
+              : unit._count.unitLikes + 1,
+          },
+        },
+      },
+      false
+    );
+
+    // 共通フックを使用
+    await handleUnitLike(parseInt(id), unit.isLiked, mutateUnit);
   };
 
   if (error) {

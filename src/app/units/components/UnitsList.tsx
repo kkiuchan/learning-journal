@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loading } from "@/components/ui/loading";
 import {
@@ -12,12 +11,11 @@ import {
 } from "@/components/ui/select";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useUnitLike } from "@/hooks/useUnitLike";
 import { useUnits } from "@/hooks/useUnits";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { UnitCard } from "./UnitCard";
 
 interface UnitsListProps {
@@ -45,6 +43,13 @@ export function UnitsList({ userId }: UnitsListProps) {
     searchQuery,
     statusFilter,
     userId,
+  });
+
+  // いいね機能のフック
+  const { handleLike: handleUnitLike } = useUnitLike({
+    onSuccess: (wasLiked) => {
+      // 楽観的更新のための処理は既にuseUnitsで処理済み
+    },
   });
 
   const debouncedSearchInput = useDebouncedValue(searchInput, 500);
@@ -92,36 +97,19 @@ export function UnitsList({ userId }: UnitsListProps) {
 
   // いいねハンドラー
   const handleLike = async (unitId: number) => {
-    if (!session?.user) {
-      toast.error(
-        <div className="flex flex-col gap-2">
-          <p>いいねするにはログインが必要です</p>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/auth/login" className="text-sm">
-              ログインする
-            </Link>
-          </Button>
-        </div>
-      );
-      return;
-    }
-
     const targetUnit = units.find((unit) => unit.id === unitId);
     if (!targetUnit) return;
-
-    const isCurrentlyLiked = targetUnit.isLiked;
 
     // 楽観的更新
     const updatedUnits = units.map((unit) => {
       if (unit.id === unitId) {
         return {
           ...unit,
-          isLiked: !isCurrentlyLiked,
+          isLiked: !unit.isLiked,
           _count: {
             logs: unit._count?.logs || 0,
             comments: unit._count?.comments || 0,
-            unitLikes:
-              (unit._count?.unitLikes || 0) + (isCurrentlyLiked ? -1 : 1),
+            unitLikes: (unit._count?.unitLikes || 0) + (unit.isLiked ? -1 : 1),
           },
         };
       }
@@ -133,37 +121,14 @@ export function UnitsList({ userId }: UnitsListProps) {
       {
         data: {
           units: updatedUnits,
-          pagination: {
-            totalPages,
-            currentPage,
-          },
+          pagination: { totalPages, currentPage },
         },
       },
       false
     );
 
-    try {
-      const response = await fetch(`/api/units/${unitId}/like`, {
-        method: isCurrentlyLiked ? "DELETE" : "POST",
-      });
-
-      if (!response.ok) {
-        // エラーの場合は元の状態に戻す
-        await mutate();
-        const data = await response.json();
-        throw new Error(data.error || "いいねの更新に失敗しました");
-      }
-
-      // 成功メッセージを表示
-      toast.success(
-        isCurrentlyLiked ? "いいねを解除しました" : "いいねしました"
-      );
-    } catch (error) {
-      console.error("いいねの更新中にエラーが発生しました:", error);
-      toast.error(
-        error instanceof Error ? error.message : "いいねの更新に失敗しました"
-      );
-    }
+    // 共通フックを使用
+    await handleUnitLike(unitId, targetUnit.isLiked, mutate);
   };
 
   return (
