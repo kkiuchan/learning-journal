@@ -215,8 +215,8 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/api/auth/signout"
-                      onClick={() => handleLinkClick("/api/auth/logout")}
+                      href="/auth/logout"
+                      onClick={() => handleLinkClick("/auth/logout")}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>ログアウト</span>

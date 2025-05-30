@@ -41,6 +41,7 @@ export default async function SitemapPage() {
         href: session?.user?.id ? `/users/${session.user.id}` : "/auth/login",
       },
       { label: "設定", href: "/settings" },
+      { label: "ログアウト", href: "/auth/logout" },
     ],
     リソース: [
       {
