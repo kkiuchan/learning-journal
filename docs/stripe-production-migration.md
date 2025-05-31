@@ -43,8 +43,8 @@
 
 1. **開発者** → **API キー**
 2. **本番環境用のキー** をメモ:
-   - 公開可能キー（例: `pk_live_xxxxxxx`）
-   - シークレットキー（例: `sk_live_xxxxxxx`）
+   - 公開可能キー（例: `pk_live_[公開キー]`）
+   - シークレットキー（例: `sk_live_[シークレットキー]`）
 
 ## 2. 環境変数の更新
 
@@ -54,14 +54,14 @@
 
 ```bash
 # Stripe本番環境設定
-STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxxxxxx
-STRIPE_PRO_PRICE_ID=price_xxxxxxxxxxxxxxxxxxxxxxxx
+STRIPE_SECRET_KEY=sk_live_[本番用シークレットキー]
+STRIPE_PUBLISHABLE_KEY=pk_live_[本番用公開キー]
+STRIPE_WEBHOOK_SECRET=whsec_[Webhookシークレット]
+STRIPE_PRO_PRICE_ID=price_[プロプランPrice ID]
 
 # その他の環境変数も確認
-DATABASE_URL=postgresql://...（本番用）
-NEXTAUTH_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx（本番用）
+DATABASE_URL=postgresql://[本番用データベースURL]
+NEXTAUTH_SECRET=[本番用認証シークレット]
 NEXTAUTH_URL=https://your-domain.com
 ```
 

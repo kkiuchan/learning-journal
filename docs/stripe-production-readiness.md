@@ -83,18 +83,18 @@
    - [ ] 署名シークレット取得: `whsec_xxxxx`
 
 3. **APIキー取得**
-   - [ ] 本番用シークレットキー: `sk_live_xxxxx`
-   - [ ] 本番用公開キー: `pk_live_xxxxx`
+   - [ ] 本番用シークレットキー: `sk_live_[シークレットキー]`
+   - [ ] 本番用公開キー: `pk_live_[公開キー]`
 
 ### ステップ3: 本番環境変数設定
 
 1. **Vercelダッシュボードで設定**
 
    ```
-   STRIPE_SECRET_KEY=sk_live_xxxxxx
-   STRIPE_PUBLISHABLE_KEY=pk_live_xxxxxx
-   STRIPE_WEBHOOK_SECRET=whsec_xxxxxx
-   STRIPE_PRO_PRICE_ID=price_xxxxxx
+   STRIPE_SECRET_KEY=sk_live_[シークレットキー]
+   STRIPE_PUBLISHABLE_KEY=pk_live_[公開キー]
+   STRIPE_WEBHOOK_SECRET=whsec_[Webhookシークレット]
+   STRIPE_PRO_PRICE_ID=price_[Price ID]
    ```
 
 2. **その他の環境変数も確認**
