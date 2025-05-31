@@ -17,7 +17,7 @@ interface LogData {
   date: string;
   duration: number | null;
   content: string | null;
-  unitId: number;
+  unitId: string;
   unitTitle: string;
 }
 

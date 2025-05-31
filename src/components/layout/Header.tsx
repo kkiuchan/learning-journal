@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   BookOpen,
+  Crown,
   Home,
   LayoutDashboard,
   LogIn,
@@ -93,6 +94,11 @@ export function Header() {
       href: "/users",
       icon: Search,
       label: "ユーザー検索",
+    },
+    {
+      href: "/pricing",
+      icon: Crown,
+      label: "料金プラン",
     },
   ];
 

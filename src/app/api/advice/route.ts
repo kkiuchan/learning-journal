@@ -1,6 +1,7 @@
 import { authConfig } from "@/auth.config";
 import { MAX_TOKENS, OPENAI_MODEL, TEMPERATURE } from "@/config/constants";
 import { prisma } from "@/lib/prisma";
+import { canUseAIFeatures, createPlanLimitResponse } from "@/lib/stripe";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -38,6 +39,13 @@ export async function POST(request: Request) {
     const session = await getServerSession(authConfig);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // プラン制限チェック
+    const canUseAI = await canUseAIFeatures(session.user.id);
+    if (!canUseAI) {
+      const limitResponse = createPlanLimitResponse("AIアドバイス機能");
+      return NextResponse.json(limitResponse, { status: 403 });
     }
 
     // リクエストボディの取得

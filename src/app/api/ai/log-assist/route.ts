@@ -2,6 +2,7 @@ import { authConfig } from "@/auth.config";
 import { MAX_TOKENS, OPENAI_MODEL, TEMPERATURE } from "@/config/constants";
 import { createErrorResponse } from "@/lib/api-utils";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { canUseAIFeatures, createPlanLimitResponse } from "@/lib/stripe";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -44,6 +45,13 @@ export async function POST(
     const session = await getServerSession(authConfig);
     if (!session?.user?.email) {
       return createErrorResponse("認証が必要です", 401);
+    }
+
+    // プラン制限チェック
+    const canUseAI = await canUseAIFeatures(session.user.id);
+    if (!canUseAI) {
+      const limitResponse = createPlanLimitResponse("AI学習サジェスト機能");
+      return NextResponse.json(limitResponse, { status: 403 });
     }
 
     const body: LogAssistRequest = await request.json();

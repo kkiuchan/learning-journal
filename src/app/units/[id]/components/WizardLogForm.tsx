@@ -3,6 +3,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -14,14 +22,15 @@ import { format } from "date-fns";
 import {
   ChevronLeft,
   ChevronRight,
+  Crown,
   Eye,
   EyeOff,
   Lightbulb,
   Star,
   Upload,
-  Wand2,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -88,6 +97,7 @@ export default function WizardLogForm({
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isPlanLimitDialogOpen, setIsPlanLimitDialogOpen] = useState(false);
 
   // フォームデータ
   const [title, setTitle] = useState("");
@@ -135,10 +145,22 @@ export default function WizardLogForm({
           const data: AIAssistResponse = await response.json();
           setAiSuggestions(data.suggestions);
           toast.success("AI提案を取得しました！");
+        } else {
+          const errorData = await response.json();
+
+          // プラン制限エラーの場合
+          if (errorData.code === "PLAN_LIMIT_EXCEEDED") {
+            setIsPlanLimitDialogOpen(true);
+            return;
+          }
+
+          throw new Error(errorData.error || "AI提案の取得に失敗しました");
         }
       } catch (error) {
         console.error("AI assistance error:", error);
-        toast.error("AI提案の取得に失敗しました");
+        toast.error(
+          error instanceof Error ? error.message : "AI提案の取得に失敗しました"
+        );
       } finally {
         setAiLoading(false);
       }
@@ -255,6 +277,26 @@ export default function WizardLogForm({
     }
   };
 
+  const renderAIAssistButton = (
+    step: number,
+    label: string,
+    disabled?: boolean
+  ) => (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => getAIAssistance(step)}
+      disabled={aiLoading || disabled}
+      className="flex items-center gap-2 relative"
+    >
+      <Lightbulb className="h-4 w-4" />
+      {aiLoading ? "提案中..." : label}
+      <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[8px] font-bold px-1 py-0.5 rounded-full">
+        PRO
+      </span>
+    </Button>
+  );
+
   // ステップコンテンツ
   const renderStepContent = () => {
     switch (currentStep) {
@@ -265,16 +307,7 @@ export default function WizardLogForm({
               <h3 className="text-lg font-semibold">
                 基本情報を入力してください
               </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => getAIAssistance(1)}
-                disabled={aiLoading}
-                className="flex items-center gap-2"
-              >
-                <Lightbulb className="h-4 w-4" />
-                {aiLoading ? "提案中..." : "学習内容提案"}
-              </Button>
+              {renderAIAssistButton(1, "学習内容提案")}
             </div>
 
             <div className="space-y-4">
@@ -363,16 +396,7 @@ export default function WizardLogForm({
                 学習内容を記述してください
               </h3>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => getAIAssistance(2)}
-                  disabled={aiLoading || !title.trim()}
-                  className="flex items-center gap-2"
-                >
-                  <Lightbulb className="h-4 w-4" />
-                  {aiLoading ? "分析中..." : "学習ガイド"}
-                </Button>
+                {renderAIAssistButton(2, "学習ガイド", !title.trim())}
                 <Button
                   variant="outline"
                   size="sm"
@@ -570,16 +594,7 @@ export default function WizardLogForm({
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">タグと参考資料を追加</h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => getAIAssistance(4)}
-                disabled={aiLoading}
-                className="flex items-center gap-2"
-              >
-                <Wand2 className="h-4 w-4" />
-                {aiLoading ? "提案中..." : "タグ提案"}
-              </Button>
+              {renderAIAssistButton(4, "タグ提案")}
             </div>
 
             <div className="space-y-6">
@@ -844,95 +859,145 @@ export default function WizardLogForm({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>学習ログを作成</CardTitle>
-          <Button variant="ghost" onClick={onCancel}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* プログレスバー */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>
-              ステップ {currentStep} / {steps.length}
-            </span>
-            <span>{Math.round((currentStep / steps.length) * 100)}%</span>
+    <>
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>学習ログを作成</CardTitle>
+            <Button variant="ghost" onClick={onCancel}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Progress value={(currentStep / steps.length) * 100} />
-        </div>
 
-        {/* ステップ表示 */}
-        <div className="flex justify-between">
-          {steps.map((step) => (
-            <div
-              key={step.id}
-              className={cn(
-                "flex flex-col items-center text-center flex-1",
-                step.id === currentStep
-                  ? "text-primary"
-                  : "text-muted-foreground",
-                step.id < currentStep ? "text-green-600" : ""
-              )}
-            >
+          {/* プログレスバー */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>
+                ステップ {currentStep} / {steps.length}
+              </span>
+              <span>{Math.round((currentStep / steps.length) * 100)}%</span>
+            </div>
+            <Progress value={(currentStep / steps.length) * 100} />
+          </div>
+
+          {/* ステップ表示 */}
+          <div className="flex justify-between">
+            {steps.map((step) => (
               <div
+                key={step.id}
                 className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-1",
+                  "flex flex-col items-center text-center flex-1",
                   step.id === currentStep
-                    ? "bg-primary text-primary-foreground"
-                    : step.id < currentStep
-                      ? "bg-green-600 text-white"
-                      : "bg-muted"
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                  step.id < currentStep ? "text-green-600" : ""
                 )}
               >
-                {step.id}
+                <div
+                  className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-1",
+                    step.id === currentStep
+                      ? "bg-primary text-primary-foreground"
+                      : step.id < currentStep
+                        ? "bg-green-600 text-white"
+                        : "bg-muted"
+                  )}
+                >
+                  {step.id}
+                </div>
+                <div className="text-xs font-medium">{step.title}</div>
+                <div className="text-xs text-muted-foreground hidden sm:block">
+                  {step.description}
+                </div>
               </div>
-              <div className="text-xs font-medium">{step.title}</div>
-              <div className="text-xs text-muted-foreground hidden sm:block">
-                {step.description}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardHeader>
+            ))}
+          </div>
+        </CardHeader>
 
-      <CardContent>
-        <div className="min-h-[400px]">{renderStepContent()}</div>
+        <CardContent>
+          <div className="min-h-[400px]">{renderStepContent()}</div>
 
-        {/* ナビゲーションボタン */}
-        <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            前へ
-          </Button>
-
-          {currentStep === steps.length ? (
+          {/* ナビゲーションボタン */}
+          <div className="flex justify-between mt-8">
             <Button
-              onClick={handleSubmit}
-              disabled={isSubmitting || !canProceed(currentStep)}
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
               className="flex items-center gap-2"
             >
-              {isSubmitting ? "作成中..." : "ログを作成"}
+              <ChevronLeft className="h-4 w-4" />
+              前へ
             </Button>
-          ) : (
+
+            {currentStep === steps.length ? (
+              <Button
+                onClick={handleSubmit}
+                disabled={isSubmitting || !canProceed(currentStep)}
+                className="flex items-center gap-2"
+              >
+                {isSubmitting ? "作成中..." : "ログを作成"}
+              </Button>
+            ) : (
+              <Button
+                onClick={nextStep}
+                disabled={!canProceed(currentStep)}
+                className="flex items-center gap-2"
+              >
+                次へ
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* プラン制限ダイアログ */}
+      <Dialog
+        open={isPlanLimitDialogOpen}
+        onOpenChange={setIsPlanLimitDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Crown className="mr-2 h-5 w-5 text-yellow-500" />
+              プロプラン限定機能
+            </DialogTitle>
+            <DialogDescription>
+              AI学習サジェスト機能はプロプランの限定機能です。
+              プロプランにアップグレードして、パーソナライズされた学習支援をご利用ください。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border border-blue-200 dark:border-blue-800">
+            <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+              AI学習サジェスト機能の特典
+            </h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+              <li>• 個別化された学習内容の提案</li>
+              <li>• 過去の学習履歴に基づくアドバイス</li>
+              <li>• 適切なタグの自動推奨</li>
+              <li>• 学習リソースの提案</li>
+              <li>• ステップバイステップの学習ガイド</li>
+            </ul>
+          </div>
+          <DialogFooter>
             <Button
-              onClick={nextStep}
-              disabled={!canProceed(currentStep)}
-              className="flex items-center gap-2"
+              variant="outline"
+              onClick={() => setIsPlanLimitDialogOpen(false)}
             >
-              次へ
-              <ChevronRight className="h-4 w-4" />
+              キャンセル
             </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+            <Button
+              asChild
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700"
+            >
+              <Link href="/pricing">
+                <Crown className="mr-2 h-4 w-4" />
+                プロプランを見る
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

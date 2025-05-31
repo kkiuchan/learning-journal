@@ -8,8 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
+import { Crown, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,6 +31,7 @@ export function AdviceButton({
   const [isOpen, setIsOpen] = useState(false);
   const [isTrialDialogOpen, setIsTrialDialogOpen] = useState(false);
   const [isAddingComment, setIsAddingComment] = useState(false);
+  const [isPlanLimitDialogOpen, setIsPlanLimitDialogOpen] = useState(false);
 
   // ユニットの所有者とセッションユーザーが一致するか確認
   const isOwner = session?.user?.id === userId;
@@ -45,8 +47,8 @@ export function AdviceButton({
       return;
     }
 
-    // 毎回トライアル確認ダイアログを表示
-    setIsTrialDialogOpen(true);
+    // プラン制限の確認なしに直接実行（APIで制限チェック）
+    fetchAdvice();
   };
 
   const fetchAdvice = async () => {
@@ -65,6 +67,14 @@ export function AdviceButton({
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        // プラン制限エラーの場合
+        if (errorData.code === "PLAN_LIMIT_EXCEEDED") {
+          setIsOpen(false);
+          setIsPlanLimitDialogOpen(true);
+          return;
+        }
+
         throw new Error(errorData.error || "アドバイスの取得に失敗しました");
       }
 
@@ -159,7 +169,7 @@ export function AdviceButton({
               </>
             )}
             <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[8px] sm:text-[10px] font-bold px-1 sm:px-1.5 py-0.5 rounded-full">
-              無料
+              PRO
             </span>
           </Button>
         </DialogTrigger>
@@ -217,34 +227,50 @@ export function AdviceButton({
         </DialogContent>
       </Dialog>
 
-      {/* トライアル確認用ダイアログ */}
-      <Dialog open={isTrialDialogOpen} onOpenChange={setIsTrialDialogOpen}>
+      {/* プラン制限ダイアログ */}
+      <Dialog
+        open={isPlanLimitDialogOpen}
+        onOpenChange={setIsPlanLimitDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>AIアドバイス機能（無料トライアル）</DialogTitle>
+            <DialogTitle className="flex items-center">
+              <Crown className="mr-2 h-5 w-5 text-yellow-500" />
+              プロプラン限定機能
+            </DialogTitle>
             <DialogDescription>
-              AIアシスタントが学習内容を分析し、改善のためのアドバイスを提供します。
-              この機能は現在、無料トライアルとしてご提供しています。
-              期間中は自由にお試しいただけますが、今後有料機能となる可能性があります。
-              ぜひご活用ください！
+              AIアドバイス機能はプロプランの限定機能です。
+              プロプランにアップグレードして、AI powered
+              な学習体験をお楽しみください。
             </DialogDescription>
           </DialogHeader>
+          <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
+            <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-2">
+              プロプランの特典
+            </h4>
+            <ul className="text-sm text-yellow-800 dark:text-yellow-200 space-y-1">
+              <li>• AIアドバイス機能</li>
+              <li>• AI学習サジェスト機能</li>
+              <li>• 無制限の学習ユニット・ログ</li>
+              <li>• 詳細分析・レポート機能</li>
+              <li>• プライベートユニット作成</li>
+            </ul>
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setIsTrialDialogOpen(false);
-                setIsOpen(false);
-              }}
+              onClick={() => setIsPlanLimitDialogOpen(false)}
             >
               キャンセル
             </Button>
             <Button
-              onClick={handleTrialConfirm}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300"
+              asChild
+              className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white font-medium shadow-lg hover:from-yellow-600 hover:to-orange-700"
             >
-              <Sparkles className="mr-2 h-4 w-4" />
-              今すぐ試す
+              <Link href="/pricing">
+                <Crown className="mr-2 h-4 w-4" />
+                プロプランを見る
+              </Link>
             </Button>
           </DialogFooter>
         </DialogContent>

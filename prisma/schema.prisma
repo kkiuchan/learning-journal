@@ -13,32 +13,38 @@ datasource db {
 }
 
 model User {
-  id                 String         @id @default(cuid())
-  name               String?
-  topImage           String?
-  age                Int?
-  ageVisible         Boolean        @default(true)
-  email              String         @unique
-  hashedPassword     String?
-  primaryAuthMethod  String
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
-  subscriptionStatus String?
-  subscriptionPlan   String?
-  subscriptionStart  DateTime?
-  subscriptionEnd    DateTime?
-  emailVerified      DateTime?
-  image              String?
-  selfIntroduction   String?
-  accounts           Account[]
-  comments           Comment[]
-  logs               Log[]
-  sessions           Session[]
-  units              Unit[]
-  unitLikes          UnitLike[]
-  userInterests      UserInterest[]
-  providers          UserProvider[]
-  userSkills         UserSkill[]
+  id                   String           @id @default(cuid())
+  name                 String?
+  topImage             String?
+  age                  Int?
+  ageVisible           Boolean          @default(true)
+  email                String           @unique
+  hashedPassword       String?
+  primaryAuthMethod    String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  subscriptionStatus   String?
+  subscriptionPlan     String?
+  subscriptionStart    DateTime?
+  subscriptionEnd      DateTime?
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean?         @default(false)
+  canceledAt           DateTime?
+  emailVerified        DateTime?
+  image                String?
+  selfIntroduction     String?
+  stripeCustomerId     String?          @unique
+  stripePriceId        String?
+  stripeSubscriptionId String?          @unique
+  accounts             Account[]
+  comments             Comment[]
+  logs                 Log[]
+  sessions             Session[]
+  units                Unit[]
+  unitLikes            UnitLike[]
+  userInterests        UserInterest[]
+  providers            UserProvider[]
+  userSkills           UserSkill[]
 }
 
 model UserProvider {

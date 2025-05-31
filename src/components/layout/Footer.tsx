@@ -23,6 +23,7 @@ const footerLinks: Record<string, FooterSection> = {
       { label: "使い方ガイド", href: "/guide" },
       { label: "プライバシーポリシー", href: "/privacy" },
       { label: "利用規約", href: "/terms" },
+      { label: "特定商取引法に基づく表示", href: "/legal" },
     ],
   },
   resources: {

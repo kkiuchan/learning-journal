@@ -9,6 +9,14 @@
     {
       "path": "/api/cron/cleanup",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/subscriptions/check-expiry",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/subscriptions/check-expiry-warnings",
+      "schedule": "0 9 * * *"
     }
   ]
 }

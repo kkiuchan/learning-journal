@@ -111,9 +111,26 @@ export async function middleware(req: NextRequest) {
     const adminPaths = ["/admin"];
     const isAdminPath = adminPaths.some((path) => pathname.startsWith(path));
 
-    if (isAdminPath && token.role !== "admin") {
-      console.log(`[Edge] Non-admin access attempt to admin path`);
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (isAdminPath) {
+      console.log(`[Edge] Admin path access - token.email:`, token.email);
+      console.log(`[Edge] Admin path access - token.role:`, token.role);
+
+      // 管理者メールアドレスリスト
+      const adminEmails = [
+        "bandman.gh.bs.dk.lav@gmail.com",
+        // 他の管理者メールアドレスをここに追加
+      ];
+
+      const isAdmin =
+        token.email && adminEmails.includes(token.email as string);
+      console.log(`[Edge] Is admin:`, isAdmin);
+
+      if (!isAdmin) {
+        console.log(`[Edge] Non-admin access attempt to admin path`);
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+
+      console.log(`[Edge] Admin access granted`);
     }
 
     console.log(`[Edge] Access granted for user: ${token.sub}`);

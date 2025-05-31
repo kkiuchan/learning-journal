@@ -5,7 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 
 interface UnitData {
-  id: number;
+  id: string;
   title: string;
   progress: number;
   learningGoal: string | null;

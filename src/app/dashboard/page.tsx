@@ -1,9 +1,5 @@
 import { authConfig } from "@/auth.config";
-import { ActiveUnits } from "@/components/dashboard/active-units";
-import { DashboardHeader } from "@/components/dashboard/header";
-import { LearningProgress } from "@/components/dashboard/learning-progress";
-import { RecentLogs } from "@/components/dashboard/recent-logs";
-import { DashboardStats } from "@/components/dashboard/stats";
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
 import { getServerSession } from "next-auth";
@@ -228,19 +224,35 @@ export default async function DashboardPage() {
 
   const data = await getDashboardData(session.user.id);
 
+  // ユーザーのサブスクリプション情報を取得
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      subscriptionStatus: true,
+      subscriptionEnd: true,
+      trialEnd: true, // トライアル期間終了日も取得
+    },
+  });
+
+  // 型変換（Prismaの型をコンポーネントで期待される型に合わせる）
+  const formattedData = {
+    ...data,
+    activeUnits: data.activeUnits.map((unit) => ({
+      ...unit,
+      id: String(unit.id), // number を string に変換
+    })),
+    recentLogs: data.recentLogs.map((log) => ({
+      ...log,
+      unitId: String(log.unitId), // number を string に変換
+    })),
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <DashboardHeader />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <DashboardStats data={data.stats} />
-        <LearningProgress data={data.progressData} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActiveUnits data={data.activeUnits} />
-        <RecentLogs data={data.recentLogs} />
-      </div>
-    </div>
+    <DashboardClient
+      data={formattedData}
+      subscriptionStatus={user?.subscriptionStatus || null}
+      subscriptionEnd={user?.subscriptionEnd?.toISOString() || null}
+      trialEnd={user?.trialEnd?.toISOString() || null}
+    />
   );
 }
