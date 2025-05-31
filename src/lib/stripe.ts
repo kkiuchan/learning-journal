@@ -98,12 +98,44 @@ export async function createCustomerPortalSession(
 ) {
   if (!stripe) throw new Error("Stripe not initialized");
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: customerId,
-    return_url: returnUrl,
-  });
+  try {
+    console.log("🏪 Creating customer portal session:", {
+      customerId,
+      returnUrl,
+      environment: stripeEnvironment,
+    });
 
-  return session;
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+
+    console.log("✅ Customer portal session created successfully:", {
+      id: session.id,
+      url: session.url,
+    });
+
+    return session;
+  } catch (error) {
+    console.error("❌ Customer portal session creation failed:", {
+      customerId,
+      returnUrl,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    // Stripeエラーの詳細ログ
+    if (error instanceof Stripe.errors.StripeError) {
+      console.error("🔴 Stripe Error Details:", {
+        type: error.type,
+        code: error.code,
+        message: error.message,
+        requestId: error.requestId,
+      });
+    }
+
+    throw error;
+  }
 }
 
 // ユーザーのサブスクリプション情報を取得
