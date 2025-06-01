@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Book, Briefcase, Code, GraduationCap } from "lucide-react";
+import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 
 interface UseCaseCardProps {
@@ -10,6 +11,7 @@ interface UseCaseCardProps {
   description: string;
   examples: string[];
   index: number;
+  demoPath: string;
 }
 
 function UseCaseCard({
@@ -18,6 +20,7 @@ function UseCaseCard({
   description,
   examples,
   index,
+  demoPath,
 }: UseCaseCardProps) {
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -27,19 +30,15 @@ function UseCaseCard({
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-      animate={
-        inView
-          ? { opacity: 1, x: 0 }
-          : { opacity: 0, x: index % 2 === 0 ? -50 : 50 }
-      }
-      transition={{ duration: 0.8, delay: index * 0.2 }}
-      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-      className="p-6 rounded-lg border bg-card relative group"
+      initial={{ opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      transition={{ duration: 0.5, delay: index * 0.2 }}
+      whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+      className="p-6 rounded-lg border bg-card transition-all hover:shadow-lg relative group cursor-pointer hover:border-primary/50"
     >
       <motion.div
         initial={{ scale: 1 }}
-        animate={{ scale: [1, 1.1, 1] }}
+        animate={{ scale: [1, 1.2, 1] }}
         transition={{
           duration: 2,
           repeat: Infinity,
@@ -50,39 +49,25 @@ function UseCaseCard({
       >
         {icon}
       </motion.div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+        {title}
+      </h3>
       <p className="text-muted-foreground mb-4">{description}</p>
-      <motion.ul
-        initial="hidden"
-        animate={inView ? "visible" : "hidden"}
-        variants={{
-          visible: {
-            transition: {
-              staggerChildren: 0.1,
-            },
-          },
-        }}
-        className="space-y-2"
-      >
-        {examples.map((example, i) => (
-          <motion.li
-            key={i}
-            variants={{
-              hidden: { opacity: 0, x: -20 },
-              visible: { opacity: 1, x: 0 },
-            }}
-            className="flex items-center text-sm"
-          >
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: i * 0.1 + 0.5 }}
-              className="w-1.5 h-1.5 rounded-full bg-primary mr-2"
-            />
+      <ul className="text-sm text-muted-foreground space-y-1">
+        {examples.map((example, idx) => (
+          <li key={idx} className="flex items-center">
+            <span className="w-2 h-2 bg-primary/60 rounded-full mr-2 flex-shrink-0"></span>
             {example}
-          </motion.li>
+          </li>
         ))}
-      </motion.ul>
+      </ul>
+
+      {/* デモ表示のヒント */}
+      <div className="mt-4 pt-4 border-t border-border/50">
+        <p className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          クリックしてデモを見る →
+        </p>
+      </div>
 
       {/* 装飾的な背景要素 */}
       <motion.div
@@ -111,6 +96,7 @@ export function UseCasesSection() {
         "プロジェクト開発の記録",
         "技術書の読書記録",
       ],
+      demoPath: "/demo/programming",
     },
     {
       icon: <GraduationCap className="w-6 h-6 text-primary" />,
@@ -121,6 +107,7 @@ export function UseCasesSection() {
         "模擬試験の結果記録",
         "苦手分野の克服状況",
       ],
+      demoPath: "/demo/exam",
     },
     {
       icon: <Briefcase className="w-6 h-6 text-primary" />,
@@ -131,6 +118,7 @@ export function UseCasesSection() {
         "コミュニケーション能力",
         "リーダーシップ開発",
       ],
+      demoPath: "/demo/business",
     },
     {
       icon: <Book className="w-6 h-6 text-primary" />,
@@ -141,6 +129,7 @@ export function UseCasesSection() {
         "リーディング・リスニング練習",
         "会話練習の記録",
       ],
+      demoPath: "/demo/language",
     },
   ];
 
@@ -204,7 +193,9 @@ export function UseCasesSection() {
 
         <div className="grid md:grid-cols-2 gap-8">
           {useCases.map((useCase, index) => (
-            <UseCaseCard key={index} {...useCase} index={index} />
+            <Link key={index} href={useCase.demoPath}>
+              <UseCaseCard {...useCase} index={index} />
+            </Link>
           ))}
         </div>
       </div>

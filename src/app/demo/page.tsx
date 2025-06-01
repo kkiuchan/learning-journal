@@ -2,174 +2,71 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, BookOpen, LineChart, Users } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Target } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-// サンプルの学習ログデータ
-const sampleLogs = [
-  {
-    id: "demo-1",
-    title: "React Hooksの基礎",
-    content:
-      "useStateとuseEffectの使い方について学習。状態管理の基本を理解できた。",
-    category: "プログラミング",
-    createdAt: "2024-03-20",
-  },
-  {
-    id: "demo-2",
-    title: "Next.js App Routerの実践",
-    content:
-      "サーバーコンポーネントとクライアントコンポーネントの使い分けについて学習。",
-    category: "プログラミング",
-    createdAt: "2024-03-19",
-  },
-  {
-    id: "demo-3",
-    title: "TypeScriptの型システム",
-    content:
-      "ジェネリクスと型推論について深く学習。型安全なコードの書き方を習得。",
-    category: "プログラミング",
-    createdAt: "2024-03-18",
-  },
-];
+export default function DemoRedirectPage() {
+  const router = useRouter();
 
-// サンプルの統計データ
-const sampleStats = {
-  totalStudyHours: 24,
-  totalLogs: 15,
-  streakDays: 7,
-  categories: ["プログラミング", "英語", "資格試験"],
-};
+  // 3秒後に自動リダイレクト
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push("/demo/unit");
+    }, 3000);
 
-export default function DemoPage() {
+    return () => clearTimeout(timer);
+  }, [router]);
+
   return (
-    <main className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold">Learning Journal デモ</h1>
-      </div>
+    <main className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
+      <Card className="max-w-2xl w-full p-8 text-center">
+        <div className="mb-6">
+          <BookOpen className="h-16 w-16 mx-auto text-primary mb-4" />
+          <h1 className="text-3xl font-bold mb-4">Learning Journal デモ</h1>
+          <p className="text-muted-foreground mb-6">
+            実際のユニット詳細画面と同じUIでサンプルデータをご確認いただけます
+          </p>
+        </div>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">概要</TabsTrigger>
-          <TabsTrigger value="logs">学習ログ</TabsTrigger>
-          <TabsTrigger value="stats">統計</TabsTrigger>
-        </TabsList>
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          <div className="flex flex-col items-center p-4">
+            <BookOpen className="h-8 w-8 text-primary mb-2" />
+            <span className="text-sm font-medium">学習ログ</span>
+            <span className="text-xs text-muted-foreground">実際の記録例</span>
+          </div>
+          <div className="flex flex-col items-center p-4">
+            <Target className="h-8 w-8 text-primary mb-2" />
+            <span className="text-sm font-medium">達成度管理</span>
+            <span className="text-xs text-muted-foreground">進捗の可視化</span>
+          </div>
+          <div className="flex flex-col items-center p-4">
+            <Clock className="h-8 w-8 text-primary mb-2" />
+            <span className="text-sm font-medium">学習時間</span>
+            <span className="text-xs text-muted-foreground">時間の記録</span>
+          </div>
+        </div>
 
-        <TabsContent value="overview" className="space-y-4">
-          <Card className="p-6">
-            <h2 className="text-2xl font-semibold mb-4">
-              デモアカウントの概要
-            </h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3">
-                <BookOpen className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">総学習ログ</p>
-                  <p className="text-2xl font-bold">
-                    {sampleStats.totalLogs}件
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <LineChart className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">総学習時間</p>
-                  <p className="text-2xl font-bold">
-                    {sampleStats.totalStudyHours}時間
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">継続日数</p>
-                  <p className="text-2xl font-bold">
-                    {sampleStats.streakDays}日
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            3秒後に自動的にデモページに移動します...
+          </p>
 
-          <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">学習カテゴリー</h3>
-            <div className="flex gap-2 flex-wrap">
-              {sampleStats.categories.map((category) => (
-                <span
-                  key={category}
-                  className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm"
-                >
-                  {category}
-                </span>
-              ))}
-            </div>
-          </Card>
-        </TabsContent>
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/demo/unit" className="flex items-center gap-2">
+              今すぐデモを見る
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
 
-        <TabsContent value="logs" className="space-y-4">
-          {sampleLogs.map((log) => (
-            <Card key={log.id} className="p-6">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-semibold">{log.title}</h3>
-                <span className="text-sm text-muted-foreground">
-                  {log.createdAt}
-                </span>
-              </div>
-              <p className="text-muted-foreground mb-3">{log.content}</p>
-              <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm">
-                {log.category}
-              </span>
-            </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="stats" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">学習統計</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">総学習時間</span>
-                <span className="font-semibold">
-                  {sampleStats.totalStudyHours}時間
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">総学習ログ数</span>
-                <span className="font-semibold">{sampleStats.totalLogs}件</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b">
-                <span className="text-muted-foreground">継続日数</span>
-                <span className="font-semibold">
-                  {sampleStats.streakDays}日
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-muted-foreground">学習カテゴリー数</span>
-                <span className="font-semibold">
-                  {sampleStats.categories.length}
-                </span>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <div className="mt-8 text-center">
-        <p className="text-muted-foreground mb-4">
-          デモを体験いただきありがとうございます。
-          <br />
-          実際に使ってみませんか？
-        </p>
-        <Button asChild size="lg">
-          <Link href="/auth/register">無料で始める</Link>
-        </Button>
-      </div>
+          <div className="pt-4">
+            <Button variant="outline" asChild>
+              <Link href="/">ホームに戻る</Link>
+            </Button>
+          </div>
+        </div>
+      </Card>
     </main>
   );
 }

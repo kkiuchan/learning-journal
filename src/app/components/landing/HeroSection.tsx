@@ -342,18 +342,14 @@ export function HeroSection() {
                   <Button
                     variant="outline"
                     size="lg"
-                    onClick={() =>
-                      handleNavigation("/users/cm9pij88r0000bogga3i0qogr")
-                    }
+                    onClick={() => handleNavigation("/demo/unit")}
                     className={`${buttonBaseClass} ${
-                      isLoading === "/users/cm9pij88r0000bogga3i0qogr"
-                        ? buttonLoadingClass
-                        : ""
+                      isLoading === "/demo/unit" ? buttonLoadingClass : ""
                     }`}
                     disabled={isLoading !== null}
                   >
                     <div className="flex items-center gap-2">
-                      {isLoading === "/users/cm9pij88r0000bogga3i0qogr" && (
+                      {isLoading === "/demo/unit" && (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       )}
                       デモを見る
