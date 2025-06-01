@@ -26,6 +26,7 @@ export interface UnitFormValues {
   startDate: string;
   endDate: string;
   status: string;
+  displayFlag: boolean;
   tags: Tag[];
 }
 
@@ -153,6 +154,43 @@ export default function UnitForm({
             <SelectItem value="PLANNED">未着手</SelectItem>
             <SelectItem value="IN_PROGRESS">進行中</SelectItem>
             <SelectItem value="COMPLETED">完了</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="displayFlag">公開設定</Label>
+        <Select
+          value={values.displayFlag ? "public" : "private"}
+          onValueChange={(v) =>
+            setValues((prev) => ({ ...prev, displayFlag: v === "public" }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="公開設定を選択" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="public">
+              <div className="flex items-center gap-2">
+                <span className="text-green-600">🌐</span>
+                <div>
+                  <div className="font-medium">公開</div>
+                  <div className="text-xs text-muted-foreground">
+                    他のユーザーも閲覧可能
+                  </div>
+                </div>
+              </div>
+            </SelectItem>
+            <SelectItem value="private">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600">🔒</span>
+                <div>
+                  <div className="font-medium">非公開</div>
+                  <div className="text-xs text-muted-foreground">
+                    自分のみ閲覧可能
+                  </div>
+                </div>
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>

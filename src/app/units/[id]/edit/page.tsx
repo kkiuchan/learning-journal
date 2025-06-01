@@ -5,8 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { UnitForm, UnitFormValues } from "./components/UnitForm";
 import { mutate } from "swr";
+import { UnitForm, UnitFormValues } from "./components/UnitForm";
 
 type Unit = {
   id: number;
@@ -18,6 +18,7 @@ type Unit = {
   startDate: Date | null;
   endDate: Date | null;
   status: string;
+  displayFlag: boolean;
   unitTags: {
     tag: {
       id: number;
@@ -77,6 +78,7 @@ export default function EditUnitPage({
           startDate: values.startDate || null,
           endDate: values.endDate || null,
           status: values.status,
+          displayFlag: values.displayFlag,
           unitTags: values.tags.map((tag) => tag.name),
         }),
       });
@@ -116,6 +118,7 @@ export default function EditUnitPage({
       ? new Date(unit.endDate).toISOString().split("T")[0]
       : "",
     status: unit.status,
+    displayFlag: unit.displayFlag,
     tags: unit.unitTags.map((ut) => ({
       id: ut.tag.id,
       name: ut.tag.name,

@@ -19,6 +19,7 @@ export function NewUnitClient() {
     startDate: format(new Date(), "yyyy-MM-dd"),
     endDate: "",
     status: "PLANNED",
+    displayFlag: true,
     tags: [],
   });
 

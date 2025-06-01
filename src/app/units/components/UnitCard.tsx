@@ -5,7 +5,7 @@ import { UnitDTO } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { FileText, Heart, MessageCircle } from "lucide-react";
+import { FileText, Globe, Heart, Lock, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 interface UnitCardProps {
@@ -25,6 +25,23 @@ export function UnitCard({ unit, onLike, showMenu = true }: UnitCardProps) {
             </Link>
           </CardTitle>
           <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
+            <div
+              className={`
+                flex items-center justify-center w-5 h-5 rounded-full
+                ${
+                  unit.displayFlag
+                    ? "bg-green-100 text-green-600"
+                    : "bg-orange-100 text-orange-600"
+                }
+              `}
+              title={unit.displayFlag ? "公開" : "非公開"}
+            >
+              {unit.displayFlag ? (
+                <Globe className="w-3 h-3" />
+              ) : (
+                <Lock className="w-3 h-3" />
+              )}
+            </div>
             <Badge
               variant={
                 unit.status === "COMPLETED"

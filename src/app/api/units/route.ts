@@ -290,6 +290,9 @@ export const GET = withApiSecurity(
  *                 enum: [PLANNED, IN_PROGRESS, COMPLETED]
  *                 default: PLANNED
  *                 description: ステータス
+ *               displayFlag:
+ *                 type: boolean
+ *                 description: 公開フラグ
  *               tags:
  *                 type: array
  *                 items:
@@ -351,6 +354,7 @@ export const POST = withApiSecurity(
         startDate,
         endDate,
         status = "PLANNED",
+        displayFlag = true,
         tags = [],
       } = body;
 
@@ -370,6 +374,7 @@ export const POST = withApiSecurity(
           endDate: endDate ? new Date(endDate) : null,
           status,
           userId,
+          displayFlag,
           unitTags: {
             create: tags.map((tag: string) => ({
               tag: {
