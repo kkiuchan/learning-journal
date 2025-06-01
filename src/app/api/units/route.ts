@@ -121,6 +121,13 @@ export const GET = withApiSecurity(
       // 検索条件の構築
       const where: Prisma.UnitWhereInput = {
         AND: [
+          // 公開設定フィルター
+          // 1. userIdが指定されていない場合：公開ユニットのみ
+          // 2. userIdが指定されているが、現在のユーザーと異なる場合：公開ユニットのみ
+          // 3. userIdが指定されていて、現在のユーザーと同じ場合：すべて（公開・非公開）
+          !userId || (userId && userId !== currentUserId)
+            ? { displayFlag: true }
+            : {},
           // 検索キーワード
           query
             ? {

@@ -24,7 +24,7 @@ export default async function UnitsPage() {
         )}
       </div>
       <Suspense fallback={<Loading text="ユニットを読み込み中..." />}>
-        <UnitsList userId={session?.user?.id} />
+        <UnitsList />
       </Suspense>
     </div>
   );

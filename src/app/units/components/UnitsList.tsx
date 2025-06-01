@@ -35,6 +35,7 @@ export function UnitsList({ userId }: UnitsListProps) {
   // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
   const statusFilter = searchParams.get("status") || "all";
+  const userIdFilter = searchParams.get("userId") || undefined;
   const page = parseInt(searchParams.get("page") || "1");
 
   // SWRを使用してユニットを取得
@@ -42,7 +43,7 @@ export function UnitsList({ userId }: UnitsListProps) {
     page,
     searchQuery,
     statusFilter,
-    userId,
+    userId: userIdFilter,
   });
 
   // いいね機能のフック
@@ -161,6 +162,33 @@ export function UnitsList({ userId }: UnitsListProps) {
             </SelectContent>
           </Select>
         </div>
+        {session && (
+          <div className="w-full md:w-48">
+            <Select
+              value={userIdFilter === session.user?.id ? "mine" : "all"}
+              onValueChange={(value) => {
+                const newUserId =
+                  value === "mine" ? session.user?.id : undefined;
+                updateSearchParams(undefined, undefined, 1); // Reset to page 1
+                router.push(
+                  `/units?${new URLSearchParams({
+                    ...(searchQuery && { q: searchQuery }),
+                    ...(statusFilter !== "all" && { status: statusFilter }),
+                    ...(newUserId && { userId: newUserId }),
+                  }).toString()}`
+                );
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="作成者で絞り込み" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべてのユーザー</SelectItem>
+                <SelectItem value="mine">自分のユニットのみ</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
