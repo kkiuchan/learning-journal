@@ -26,9 +26,10 @@ const footerLinks: Record<string, FooterSection> = {
       { label: "特定商取引法に基づく表示", href: "/legal" },
     ],
   },
-  resources: {
-    title: "リソース",
+  support: {
+    title: "サポート",
     items: [
+      { label: "お問い合わせ", href: "/contact" },
       {
         label: "ソースコード",
         href: "https://github.com/kkiuchan/learning-journal",
