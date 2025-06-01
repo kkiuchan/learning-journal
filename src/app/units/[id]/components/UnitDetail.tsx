@@ -100,8 +100,47 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     }
   }, []);
 
-  const handleAddAIComment = () => {
-    // Implementation of handleAddAIComment function
+  const handleAddAIComment = async (comment: string) => {
+    if (!sessionData?.user) return;
+
+    try {
+      // 楽観的更新
+      const optimisticComment = {
+        id: Date.now(),
+        comment: comment,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: "ai-assistant",
+          name: "AIアシスタント",
+          image: "/images/ai-assistant.png",
+        },
+      };
+
+      await optimisticUpdate("create", optimisticComment);
+
+      const response = await fetch(`/api/units/${id}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          comment: comment,
+          isAI: true,
+        }),
+      });
+
+      if (!response.ok) {
+        mutateComments();
+        const data = await response.json();
+        throw new Error(data.error || "コメントの追加に失敗しました");
+      }
+    } catch (error) {
+      console.error("Error adding AI comment:", error);
+      toast.error(
+        error instanceof Error ? error.message : "コメントの追加に失敗しました"
+      );
+      mutateComments();
+    }
   };
 
   const handleCreateComment = async (comment: string) => {

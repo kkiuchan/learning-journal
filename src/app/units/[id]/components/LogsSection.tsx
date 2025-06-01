@@ -27,7 +27,7 @@ interface LogsSectionProps {
   session: Session | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
-  onAIAdvice?: () => void;
+  onAIAdvice?: (comment: string) => void;
 }
 
 // WizardLogFormのResource型と一致させる
