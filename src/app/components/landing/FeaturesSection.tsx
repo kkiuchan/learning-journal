@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BookOpen, LineChart, Sparkles, Users } from "lucide-react";
+import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 
 interface FeatureCardProps {
@@ -9,23 +10,42 @@ interface FeatureCardProps {
   title: string;
   description: string;
   index: number;
+  href?: string;
+  comingSoon?: boolean;
 }
 
-function FeatureCard({ icon, title, description, index }: FeatureCardProps) {
+function FeatureCard({
+  icon,
+  title,
+  description,
+  index,
+  href,
+  comingSoon,
+}: FeatureCardProps) {
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1,
   });
 
-  return (
+  const CardContent = (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
       animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ duration: 0.5, delay: index * 0.2 }}
       whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-      className="p-6 rounded-lg border bg-card transition-all hover:shadow-lg relative group"
+      className={`p-6 rounded-lg border bg-card transition-all hover:shadow-lg relative group ${
+        href ? "cursor-pointer" : ""
+      } ${comingSoon ? "opacity-75" : ""}`}
     >
+      {comingSoon && (
+        <div className="absolute top-3 right-3 z-10">
+          <span className="bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+            実装予定
+          </span>
+        </div>
+      )}
+
       <motion.div
         initial={{ scale: 1 }}
         animate={{ scale: [1, 1.2, 1] }}
@@ -35,12 +55,32 @@ function FeatureCard({ icon, title, description, index }: FeatureCardProps) {
           repeatType: "reverse",
           delay: index * 0.2,
         }}
-        className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20"
+        className={`w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 ${
+          comingSoon ? "opacity-60" : ""
+        }`}
       >
         {icon}
       </motion.div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
+
+      {href && !comingSoon && (
+        <div className="mt-3 text-sm text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          デモを見る →
+        </div>
+      )}
+
+      {href && comingSoon && (
+        <div className="mt-3 text-sm text-orange-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          デモを見る（開発中）→
+        </div>
+      )}
+
+      {!href && comingSoon && (
+        <div className="mt-3 text-sm text-orange-600 font-medium">
+          近日公開予定
+        </div>
+      )}
 
       {/* 装飾的な背景要素 */}
       <motion.div
@@ -51,6 +91,16 @@ function FeatureCard({ icon, title, description, index }: FeatureCardProps) {
       />
     </motion.div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {CardContent}
+      </Link>
+    );
+  }
+
+  return CardContent;
 }
 
 export function FeaturesSection() {
@@ -65,24 +115,29 @@ export function FeaturesSection() {
       title: "学習ログ管理",
       description:
         "日々の学習内容を記録し、簡単に振り返ることができます。学びを整理し、知識を定着させましょう。",
+      href: "/demo/language",
     },
     {
       icon: <LineChart className="w-6 h-6 text-primary" />,
       title: "進捗の可視化",
       description:
         "学習の進み具合をグラフで分かりやすく表示。モチベーション維持に役立ちます。",
+      href: "/demo/dashboard",
     },
     {
       icon: <Users className="w-6 h-6 text-primary" />,
       title: "仲間との共有",
       description:
         "学習仲間と進捗を共有し、互いに刺激し合いながら成長できます。",
+      href: "/demo/share",
+      comingSoon: true,
     },
     {
       icon: <Sparkles className="w-6 h-6 text-primary" />,
       title: "AI支援機能",
       description:
-        "AIがあなたの学習記録を分析し、より効果的な学習方法を提案します。",
+        "AI支援ウィザードフォームで学習記録作成をサポート。各ステップで適切な提案を受けながら効果的な学習ログを作成できます。",
+      href: "/demo/ai-assist",
     },
   ];
 
