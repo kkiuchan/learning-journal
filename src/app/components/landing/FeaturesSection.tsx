@@ -152,7 +152,7 @@ export function FeaturesSection() {
   };
 
   return (
-    <section className="py-20 relative overflow-hidden">
+    <section id="features-section" className="py-20 relative overflow-hidden">
       {/* 装飾的な背景要素 */}
       <motion.div
         className="absolute top-0 left-0 w-full h-full pointer-events-none"

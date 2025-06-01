@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,6 +28,16 @@ export function CTASection() {
     }
   };
 
+  const scrollToFeatures = () => {
+    const featuresSection = document.querySelector("#features-section");
+    if (featuresSection) {
+      featuresSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
     <section className="py-20 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
@@ -44,7 +54,7 @@ export function CTASection() {
           <p className="text-lg text-muted-foreground mb-8">
             Learning Journalで、学習の記録と振り返りを始めましょう。
             <br />
-            まずは他のユーザーの学習記録を見てみましょう。
+            まずは機能をチェックして、あなたの学習スタイルに合うか確認してみましょう。
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -66,16 +76,11 @@ export function CTASection() {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() =>
-                    handleNavigation("/users/cm9pij88r0000bogga3i0qogr")
-                  }
-                  disabled={isLoading !== null}
+                  onClick={scrollToFeatures}
                   className="w-full sm:w-auto"
                 >
-                  {isLoading === "/users/cm9pij88r0000bogga3i0qogr" ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : null}
-                  他のユーザーの学習記録を見る
+                  <Eye className="w-4 h-4 mr-2" />
+                  機能を確認する
                 </Button>
               </>
             ) : (
