@@ -27,10 +27,10 @@ export default function LegalPage() {
 
             <div>
               <h3 className="font-semibold text-gray-700">所在地</h3>
-              <p>〒641-0002 和歌山県和歌山市</p>
-              <p className="text-sm text-gray-600">
+              <p>〒641-0002 和歌山県和歌山市新中島152-18</p>
+              {/* <p className="text-sm text-gray-600">
                 ※具体的な住所は別途お問い合わせください
-              </p>
+              </p> */}
             </div>
 
             <div>
