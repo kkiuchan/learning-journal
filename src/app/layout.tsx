@@ -8,6 +8,7 @@ import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
 import { cn } from "@/lib/utils";
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Inter } from "next/font/google";
@@ -160,6 +161,7 @@ export default function RootLayout({
             </ModalProvider>
           </MenuProvider>
         </NextThemesProvider>
+        <Analytics />
       </body>
     </html>
   );
