@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Book, Briefcase, Code, GraduationCap } from "lucide-react";
+import {
+  Book,
+  Briefcase,
+  Code,
+  GraduationCap,
+  Palette,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 
@@ -131,6 +138,28 @@ export function UseCasesSection() {
       ],
       demoPath: "/demo/language",
     },
+    {
+      icon: <Users className="w-6 h-6 text-primary" />,
+      title: "教員の教材研究",
+      description: "授業改善と教材開発のための研究記録",
+      examples: [
+        "教材開発のプロセス記録",
+        "授業実践の振り返り",
+        "学習者の反応分析",
+      ],
+      demoPath: "/demo/education",
+    },
+    {
+      icon: <Palette className="w-6 h-6 text-primary" />,
+      title: "デザイン学習",
+      description: "デザインスキル向上のための学習とポートフォリオ管理",
+      examples: [
+        "デザインツールの習得",
+        "作品制作プロセス記録",
+        "デザイン理論の学習",
+      ],
+      demoPath: "/demo/design",
+    },
   ];
 
   const containerVariants = {
@@ -191,13 +220,19 @@ export function UseCasesSection() {
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* ユースケース一覧 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {useCases.map((useCase, index) => (
             <Link key={index} href={useCase.demoPath}>
               <UseCaseCard {...useCase} index={index} />
             </Link>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
