@@ -888,9 +888,9 @@ export default function DemoAIAssistPage() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="border-white text-white hover:bg-white/10 px-8"
+                      className="border-white/70 bg-transparent text-white hover:bg-white hover:text-purple-600 hover:border-white transition-all duration-200 px-8 font-medium shadow-lg"
                     >
-                      詳細を見る
+                      他の機能も確認する
                     </Button>
                   </Link>
                 </div>
