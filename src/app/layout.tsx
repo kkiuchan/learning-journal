@@ -1,3 +1,4 @@
+import { GlobalModals } from "@/app/components/GlobalModals";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
@@ -8,12 +9,11 @@ import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
 import { cn } from "@/lib/utils";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
-import { GlobalModals } from "./components/GlobalModals";
 import "./globals.css";
 
 const inter = Inter({
