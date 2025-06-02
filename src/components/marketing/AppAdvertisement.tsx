@@ -175,11 +175,11 @@ export function AppAdvertisement({
   if (style === "live") {
     return (
       <div
-        className={`w-full max-w-6xl mx-auto ${currentStyle.background} p-8 rounded-2xl shadow-2xl mt-8`}
+        className={`w-full max-w-full mx-auto ${currentStyle.background} p-16 rounded-2xl shadow-2xl mt-8`}
       >
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-4 pt-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-16 pt-20">
           {/* 左側: ブランドとキャッチフレーズ */}
-          <div className="flex-1 text-center lg:text-left max-w-md lg:pl-24">
+          <div className="flex-1 text-center lg:text-left max-w-md lg:pl-16">
             <h1
               className={`text-5xl lg:text-7xl font-bold ${currentStyle.titleColor} mb-6`}
             >
@@ -197,12 +197,31 @@ export function AppAdvertisement({
 
           {/* 右側: リアルなアプリ画面モックアップ */}
           <div className="flex-1 flex items-center justify-center relative">
-            {/* メインアプリ画面 - ダッシュボード */}
-            <div className="relative z-10 w-full max-w-lg">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-2 shadow-2xl ring-1 ring-gray-700/50">
-                <div className="bg-white rounded-lg overflow-hidden">
+            {/* MacBook Pro モックアップ */}
+            <div className="relative z-10 w-full max-w-8xl">
+              {/* MacBook Pro 背景画像 */}
+              <div
+                className="relative w-full h-auto"
+                style={{
+                  backgroundImage: `url('/images/—Pngtree—macbook pro 16_9011850.png')`,
+                  backgroundSize: "contain",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                  aspectRatio: "16/10",
+                }}
+              >
+                {/* 画面エリア - MacBook の画面部分に合わせて位置調整 */}
+                <div
+                  className="absolute bg-black rounded-lg overflow-hidden"
+                  style={{
+                    top: "6%",
+                    left: "11%",
+                    width: "78%",
+                    height: "79%",
+                  }}
+                >
                   {/* 実際のダッシュボードページを埋め込み */}
-                  <div className="aspect-[16/11] relative overflow-hidden">
+                  <div className="w-full h-full relative overflow-hidden">
                     {!iframesLoaded && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                         <div className="text-center">
@@ -215,7 +234,7 @@ export function AppAdvertisement({
                     )}
                     <iframe
                       src="/dashboard"
-                      className={`w-full h-full border-0 transition-opacity duration-500 ${
+                      className={`w-full h-full border-0 transition-opacity duration-500 rounded-lg ${
                         iframesLoaded ? "opacity-100" : "opacity-0"
                       }`}
                       style={{
@@ -370,17 +389,36 @@ export function AppAdvertisement({
 
         {/* 右側: リアルなアプリ画面モックアップ */}
         <div className="flex-1 flex items-center justify-center relative">
-          {/* メインアプリ画面 - ダッシュボード */}
-          <div className="relative z-10">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-1.5 shadow-2xl ring-1 ring-gray-700/50">
-              <div className="bg-white rounded overflow-hidden">
+          {/* MacBook Pro モックアップ */}
+          <div className="relative z-10 w-full max-w-8xl">
+            {/* MacBook Pro 背景画像 */}
+            <div
+              className="relative w-full h-auto"
+              style={{
+                backgroundImage: `url('/images/—Pngtree—macbook pro 16_9011850.png')`,
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "center",
+                aspectRatio: "16/10",
+              }}
+            >
+              {/* 画面エリア - MacBook の画面部分に合わせて位置調整 */}
+              <div
+                className="absolute bg-black rounded-lg overflow-hidden"
+                style={{
+                  top: "7%",
+                  left: "12%",
+                  width: "76%",
+                  height: "68%",
+                }}
+              >
                 {/* 実際のダッシュボードページを埋め込み */}
-                <div className="aspect-[16/11] relative overflow-hidden">
+                <div className="w-full h-full relative overflow-hidden">
                   {!iframesLoaded && (
                     <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                       <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-                        <div className="text-sm text-gray-500">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                        <div className="text-lg text-gray-500">
                           読み込み中...
                         </div>
                       </div>
@@ -388,7 +426,7 @@ export function AppAdvertisement({
                   )}
                   <iframe
                     src="/dashboard"
-                    className={`w-full h-full border-0 transition-opacity duration-500 ${
+                    className={`w-full h-full border-0 transition-opacity duration-500 rounded-lg ${
                       iframesLoaded ? "opacity-100" : "opacity-0"
                     }`}
                     style={{
