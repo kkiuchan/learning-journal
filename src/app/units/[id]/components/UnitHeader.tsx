@@ -17,7 +17,6 @@ import { ja } from "date-fns/locale";
 import {
   Copy,
   Heart,
-  Loader2,
   MessageCircle,
   MoreHorizontal,
   Pencil,
@@ -28,6 +27,7 @@ import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { EditUnitModal } from "./EditUnitModa";
 
 interface UnitHeaderProps {
   unit: UnitDTO;
@@ -50,7 +50,7 @@ export function UnitHeader({
   const [currentUrl, setCurrentUrl] = useState("");
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
   const buttonRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
-  const [isEditLoading, setIsEditLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -344,25 +344,18 @@ export function UnitHeader({
                     <button
                       className="w-full text-left px-4 py-2 text-foreground hover:bg-muted/30 flex items-center gap-2 transition-colors duration-200"
                       onClick={() => {
-                        setIsEditLoading(true);
-                        router.push(`/units/${unit.id}/edit`);
+                        setIsEditModalOpen(true);
+                        setOpenMenuId(null);
                       }}
-                      disabled={isEditLoading || isDeleting}
+                      disabled={isDeleting}
                     >
                       <Pencil className="h-4 w-4" />
-                      {isEditLoading ? (
-                        <>
-                          <Loader2 className="animate-spin h-4 w-4 mr-1" />
-                          遷移中...
-                        </>
-                      ) : (
-                        "編集"
-                      )}
+                      編集
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-destructive hover:bg-destructive/10 flex items-center gap-2 transition-colors duration-200"
                       onClick={handleDelete}
-                      disabled={isEditLoading || isDeleting}
+                      disabled={isDeleting}
                     >
                       <Trash2 className="h-4 w-4" />
                       {isDeleting ? "削除中..." : "削除"}
@@ -406,6 +399,12 @@ export function UnitHeader({
           <span className="text-sm">{unit._count?.comments ?? 0}</span>
         </button>
       </div>
+      <EditUnitModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        unit={unit}
+        onSave={onMutate}
+      />
     </Card>
   );
 }

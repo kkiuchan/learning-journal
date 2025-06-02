@@ -3,6 +3,7 @@ import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
 import { Providers } from "@/components/providers";
 import { MenuProvider } from "@/contexts/MenuContext";
+import { ModalProvider } from "@/contexts/ModalContext";
 import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
@@ -11,6 +12,7 @@ import type { Metadata, Viewport } from "next";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { GlobalModals } from "./components/GlobalModals";
 import "./globals.css";
 
 const inter = Inter({
@@ -143,16 +145,19 @@ export default function RootLayout({
           enableSystem
         >
           <MenuProvider>
-            <Providers>
-              <div className="flex flex-col flex-1">
-                <Header />
-                <main className="flex-1 flex flex-col">
-                  <AnimatedLayout>{children}</AnimatedLayout>
-                </main>
-                <Footer />
-              </div>
-            </Providers>
-            <Toaster />
+            <ModalProvider>
+              <Providers>
+                <div className="flex flex-col flex-1">
+                  <Header />
+                  <main className="flex-1 flex flex-col">
+                    <AnimatedLayout>{children}</AnimatedLayout>
+                  </main>
+                  <Footer />
+                </div>
+              </Providers>
+              <GlobalModals />
+              <Toaster />
+            </ModalProvider>
           </MenuProvider>
         </NextThemesProvider>
       </body>

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
+import { useModal } from "@/contexts/ModalContext";
 import { BookOpen, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -9,6 +10,7 @@ import { useState } from "react";
 export function HomeContent({ session }: { session: any }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingLink, setLoadingLink] = useState<string | null>(null);
+  const { openCreateUnitModal } = useModal();
 
   const handleLinkClick = (link: string) => {
     setIsLoading(true);
@@ -89,15 +91,13 @@ export function HomeContent({ session }: { session: any }) {
       </div>
 
       <div className="text-center mt-8 sm:mt-12">
-        <Link
-          href="/units/new"
-          prefetch={true}
-          onClick={() => handleLinkClick("/units/new")}
+        <Button
+          size="lg"
+          className="w-full sm:w-auto"
+          onClick={openCreateUnitModal}
         >
-          <Button size="lg" className="w-full sm:w-auto">
-            学習を始める
-          </Button>
-        </Link>
+          学習を始める
+        </Button>
       </div>
     </div>
   );

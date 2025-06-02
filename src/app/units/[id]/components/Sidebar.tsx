@@ -12,8 +12,8 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Session } from "next-auth";
-import Link from "next/link";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { EditUnitModal } from "./EditUnitModa";
 
 interface SidebarProps {
   unit: UnitDTO;
@@ -52,6 +52,7 @@ export function Sidebar({
 }: SidebarProps) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -172,15 +173,16 @@ export function Sidebar({
               }`}
             >
               <div className="py-1">
-                <Link href={`/units/${id}/edit`}>
-                  <button
-                    className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
-                    onClick={() => setOpenMenuId(null)}
-                  >
-                    <Pencil className="h-3 w-3" />
-                    編集
-                  </button>
-                </Link>
+                <button
+                  className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2"
+                  onClick={() => {
+                    setIsEditModalOpen(true);
+                    setOpenMenuId(null);
+                  }}
+                >
+                  <Pencil className="h-3 w-3" />
+                  編集
+                </button>
                 <button
                   className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2"
                   onClick={() => {
@@ -196,6 +198,12 @@ export function Sidebar({
           </div>
         )}
       </div>
+      <EditUnitModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        unit={unit}
+        onSave={onMutate}
+      />
     </aside>
   );
 }

@@ -3,12 +3,6 @@
 import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
 import { List, Plus, Wand2 } from "lucide-react";
@@ -16,7 +10,7 @@ import { Session } from "next-auth";
 import { useState } from "react";
 import { toast } from "sonner";
 import CreateLogForm from "./CreateLogForm";
-import EditLogForm from "./EditLogForm";
+import { EditLogModal } from "./EditLogModal";
 import LogCard from "./LogCard";
 import { TableOfContents } from "./TableOfContents";
 import WizardLogForm from "./WizardLogForm";
@@ -311,32 +305,23 @@ export function LogsSection({
           </div>
 
           {/* 編集モーダル */}
-          <Dialog
-            open={editingLogId !== null}
-            onOpenChange={(open) => !open && setEditingLogId(null)}
-          >
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>学習ログを編集</DialogTitle>
-              </DialogHeader>
-              {editingLogId && (
-                <EditLogForm
-                  log={logs.find((log) => log.id === editingLogId)!}
-                  unitId={unitId}
-                  onCancel={() => setEditingLogId(null)}
-                  onUpdate={() => {
-                    setEditingLogId(null);
-                    mutateLogs();
-                  }}
-                  onSubmit={(form) => handleEditLogSubmit(editingLogId, form)}
-                  tags={editTags}
-                  setTags={setEditTags}
-                  resources={editResources}
-                  setResources={setEditResources}
-                />
-              )}
-            </DialogContent>
-          </Dialog>
+          {editingLogId && (
+            <EditLogModal
+              open={editingLogId !== null}
+              onOpenChange={(open) => !open && setEditingLogId(null)}
+              log={logs.find((log) => log.id === editingLogId)!}
+              unitId={unitId}
+              onUpdate={() => {
+                setEditingLogId(null);
+                mutateLogs();
+              }}
+              onSubmit={(form) => handleEditLogSubmit(editingLogId, form)}
+              tags={editTags}
+              setTags={setEditTags}
+              resources={editResources}
+              setResources={setEditResources}
+            />
+          )}
 
           {logs.length > 0 && <TableOfContents logs={logs} />}
         </>

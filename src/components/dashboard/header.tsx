@@ -3,6 +3,7 @@
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
+import { useModal } from "@/contexts/ModalContext";
 import { User } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,7 @@ import { useState } from "react";
 export function DashboardHeader() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { openCreateUnitModal } = useModal();
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
   const handleNavigation = async (path: string) => {
@@ -36,15 +38,8 @@ export function DashboardHeader() {
       </div>
 
       <div className="flex items-center gap-4">
-        <Button
-          onClick={() => handleNavigation("/units/new")}
-          disabled={loadingPath !== null}
-        >
-          {loadingPath === "/units/new" ? (
-            <Loading className="mr-2" size="sm" />
-          ) : (
-            <Icons.book className="mr-2 h-4 w-4" />
-          )}
+        <Button onClick={openCreateUnitModal}>
+          <Icons.book className="mr-2 h-4 w-4" />
           新規ユニット
         </Button>
         {profilePath && (

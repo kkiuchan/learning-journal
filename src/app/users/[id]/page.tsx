@@ -9,6 +9,7 @@ import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import UserAvatar from "./components/UserAvatar";
+import { UserProfileActions } from "./components/UserProfileActions";
 
 interface Skill {
   id: number;
@@ -249,11 +250,10 @@ export default async function UserPage({ params }: Props) {
         <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 mb-4">
           <h2 className="text-xl sm:text-2xl font-bold">学習ユニット一覧</h2>
           <div className="text-xs text-muted-foreground"></div>
-          {currentUserId === id && (
-            <Link href="/units/new">
-              <Button>新規作成</Button>
-            </Link>
-          )}
+          <UserProfileActions
+            currentUserId={currentUserId}
+            profileUserId={id}
+          />
         </div>
 
         {/* UnitsListコンポーネントを使用 */}
