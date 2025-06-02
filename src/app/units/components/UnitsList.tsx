@@ -38,12 +38,15 @@ export function UnitsList({ userId }: UnitsListProps) {
   const userIdFilter = searchParams.get("userId") || undefined;
   const page = parseInt(searchParams.get("page") || "1");
 
+  // プロフィール画面での使用の場合はuserIdを優先、そうでなければクエリパラメータのuserIdFilterを使用
+  const effectiveUserId = userId || userIdFilter;
+
   // SWRを使用してユニットを取得
   const { units, isLoading, mutate, totalPages, currentPage } = useUnits({
     page,
     searchQuery,
     statusFilter,
-    userId: userIdFilter,
+    userId: effectiveUserId,
   });
 
   // いいね機能のフック
@@ -134,62 +137,65 @@ export function UnitsList({ userId }: UnitsListProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1">
-          <Input
-            type="text"
-            placeholder="ユニット名・タグで検索"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onCompositionStart={onCompositionStart}
-            onCompositionEnd={onCompositionEnd}
-            className="w-full"
-          />
-        </div>
-        <div className="w-full md:w-48">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => updateSearchParams(undefined, value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ステータスで絞り込み" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">すべて</SelectItem>
-              <SelectItem value="PLANNED">計画中</SelectItem>
-              <SelectItem value="IN_PROGRESS">進行中</SelectItem>
-              <SelectItem value="COMPLETED">完了</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {session && (
+      {/* プロフィール画面での使用の場合は検索・フィルタ機能を非表示 */}
+      {!userId && (
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="ユニット名・タグで検索"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onCompositionStart={onCompositionStart}
+              onCompositionEnd={onCompositionEnd}
+              className="w-full"
+            />
+          </div>
           <div className="w-full md:w-48">
             <Select
-              value={userIdFilter === session.user?.id ? "mine" : "all"}
-              onValueChange={(value) => {
-                const newUserId =
-                  value === "mine" ? session.user?.id : undefined;
-                updateSearchParams(undefined, undefined, 1); // Reset to page 1
-                router.push(
-                  `/units?${new URLSearchParams({
-                    ...(searchQuery && { q: searchQuery }),
-                    ...(statusFilter !== "all" && { status: statusFilter }),
-                    ...(newUserId && { userId: newUserId }),
-                  }).toString()}`
-                );
-              }}
+              value={statusFilter}
+              onValueChange={(value) => updateSearchParams(undefined, value)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="作成者で絞り込み" />
+                <SelectValue placeholder="ステータスで絞り込み" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">すべてのユーザー</SelectItem>
-                <SelectItem value="mine">自分のユニットのみ</SelectItem>
+                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="PLANNED">計画中</SelectItem>
+                <SelectItem value="IN_PROGRESS">進行中</SelectItem>
+                <SelectItem value="COMPLETED">完了</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        )}
-      </div>
+          {session && (
+            <div className="w-full md:w-48">
+              <Select
+                value={userIdFilter === session.user?.id ? "mine" : "all"}
+                onValueChange={(value) => {
+                  const newUserId =
+                    value === "mine" ? session.user?.id : undefined;
+                  updateSearchParams(undefined, undefined, 1); // Reset to page 1
+                  router.push(
+                    `/units?${new URLSearchParams({
+                      ...(searchQuery && { q: searchQuery }),
+                      ...(statusFilter !== "all" && { status: statusFilter }),
+                      ...(newUserId && { userId: newUserId }),
+                    }).toString()}`
+                  );
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="作成者で絞り込み" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">すべてのユーザー</SelectItem>
+                  <SelectItem value="mine">自分のユニットのみ</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
 
       {isLoading ? (
         <Loading text="ユニットを読み込み中..." className="min-h-[200px]" />
