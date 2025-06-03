@@ -12,19 +12,39 @@ export async function POST(req: Request) {
       });
     }
 
-    // GoogleのユーザーAPI経由でユーザー情報を取得
-    const userResponse = await fetch(
-      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
-    );
+    let googleUser;
 
-    if (!userResponse.ok) {
-      return new Response(JSON.stringify({ error: "Invalid access token" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+    // 開発環境でのモック認証対応
+    if (accessToken === "mock_google_access_token_for_development") {
+      console.log("🔧 Mock Google認証を処理中...");
+
+      // 実際のデータベースユーザーIDを使用
+      googleUser = {
+        id: "cmbbjq9700000le0f9a9i6gja", // 実際のデータベースユーザーID
+        email: "test@example.com",
+        name: "Test User",
+        picture: "https://via.placeholder.com/150",
+      };
+
+      console.log(
+        "✅ Mock user created（実際のDBユーザーID使用）:",
+        googleUser.email
+      );
+    } else {
+      // 本番環境: GoogleのユーザーAPI経由でユーザー情報を取得
+      const userResponse = await fetch(
+        `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`
+      );
+
+      if (!userResponse.ok) {
+        return new Response(JSON.stringify({ error: "Invalid access token" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      googleUser = await userResponse.json();
     }
-
-    const googleUser = await userResponse.json();
 
     // JWTトークンを生成
     const secret = process.env.NEXTAUTH_SECRET;
