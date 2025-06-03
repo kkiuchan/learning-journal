@@ -2,10 +2,10 @@ import { mobileAuthSessions } from "../../../signin/route";
 
 export async function GET(
   req: Request,
-  { params }: { params: { mobileId: string } }
+  { params }: { params: Promise<{ mobileId: string }> }
 ) {
   try {
-    const { mobileId } = params;
+    const { mobileId } = await params;
 
     if (!mobileId) {
       return new Response(JSON.stringify({ error: "Missing mobile_id" }), {
