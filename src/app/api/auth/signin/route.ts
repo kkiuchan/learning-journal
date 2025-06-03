@@ -33,13 +33,14 @@ export async function GET(req: Request) {
       completed: false,
     });
 
-    // 認証URLを生成（開発環境ではネットワークIPを使用）
+    // 認証URLを生成（Next-AuthのGoogle認証エンドポイントを使用）
     const isDevelopment = process.env.NODE_ENV === "development";
     const baseUrl = isDevelopment
       ? "http://192.168.1.10:3000" // 開発環境：ネットワークIP
       : process.env.NEXTAUTH_URL || "http://localhost:3000"; // 本番環境
 
-    const authUrl = `${baseUrl}/api/auth/signin/${provider}?mobile_id=${mobileId}`;
+    // Next-AuthのGoogle認証エンドポイントにmobile_idをstateとして渡す
+    const authUrl = `${baseUrl}/api/auth/signin/google?callbackUrl=${encodeURIComponent(`${baseUrl}/api/auth/mobile/callback?mobile_id=${mobileId}`)}`;
 
     return new Response(
       JSON.stringify({
