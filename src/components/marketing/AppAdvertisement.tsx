@@ -175,7 +175,7 @@ export function AppAdvertisement({
   if (style === "live") {
     return (
       <div
-        className={`w-full max-w-full mx-auto ${currentStyle.background} p-16 rounded-2xl shadow-2xl mt-8`}
+        className={`w-full max-w-full mx-auto ${currentStyle.background} p-8 rounded-2xl shadow-2xl mt-8`}
       >
         <div className="flex flex-col lg:flex-row items-center justify-between gap-16 pt-20">
           {/* 左側: ブランドとキャッチフレーズ */}
@@ -331,7 +331,7 @@ export function AppAdvertisement({
                 振り返り
               </h3>
               <p className={`text-base ${currentStyle.subtitleColor}`}>
-                学習の振り返りと改善
+                メタ認知を促す振り返り
               </p>
             </div>
 
@@ -357,7 +357,7 @@ export function AppAdvertisement({
                 AIアドバイス
               </h3>
               <p className={`text-base ${currentStyle.subtitleColor}`}>
-                AIによる学習提案
+                AIによる学習提案と効率化
               </p>
             </div>
           </div>
