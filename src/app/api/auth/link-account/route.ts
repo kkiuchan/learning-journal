@@ -1,12 +1,12 @@
 import bcryptjs from "bcryptjs";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-
-import { authConfig } from "@/auth.config";
-import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { ApiResponse } from "@/types";
 import { z } from "zod";
+
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getSupabaseServerUser } from "@/lib/auth-helpers";
+import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { updatePassword } from "@/lib/supabase-auth";
+import { ApiResponse } from "@/types";
 
 /**
  * @swagger
@@ -121,14 +121,14 @@ export async function POST(
 ): Promise<NextResponse<ApiResponse<{ message: string }>>> {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
+    const user = await getSupabaseServerUser();
 
     // セッション情報の検証
-    if (!session?.user) {
+    if (!user) {
       return createErrorResponse("認証が必要です", 401);
     }
 
-    if (!session.user.email) {
+    if (!user.email) {
       return createErrorResponse("メールアドレスが見つかりません", 400);
     }
 
@@ -144,22 +144,22 @@ export async function POST(
     const validatedData = linkAccountSchema.parse(rawData);
 
     // メールアドレスの一致を確認
-    if (validatedData.email !== session.user.email) {
+    if (validatedData.email !== user.email) {
       return createErrorResponse("メールアドレスが一致しません");
     }
 
     // ユーザーの取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email },
       select: { hashedPassword: true },
     });
 
-    if (!user) {
+    if (!dbUser) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
     // パスワード変更の場合
-    if (user.hashedPassword) {
+    if (dbUser.hashedPassword) {
       if (!validatedData.currentPassword) {
         return createErrorResponse("現在のパスワードを入力してください");
       }
@@ -167,19 +167,28 @@ export async function POST(
       // 現在のパスワードの検証
       const isValid = await bcryptjs.compare(
         validatedData.currentPassword,
-        user.hashedPassword
+        dbUser.hashedPassword
       );
       if (!isValid) {
         return createErrorResponse("現在のパスワードが正しくありません");
       }
     }
 
-    // パスワードのハッシュ化
+    // Supabaseでパスワードを更新
+    const { error: supabaseError } = await updatePassword(
+      validatedData.newPassword
+    );
+    if (supabaseError) {
+      console.error("Supabase password update error:", supabaseError);
+      return createErrorResponse("パスワードの更新に失敗しました", 500);
+    }
+
+    // パスワードのハッシュ化（ローカルDBにも保存）
     const hashedPassword = await bcryptjs.hash(validatedData.newPassword, 10);
 
     // ユーザーの更新
     await prisma.user.update({
-      where: { email: session.user.email },
+      where: { email: user.email },
       data: {
         hashedPassword,
         primaryAuthMethod: "email",

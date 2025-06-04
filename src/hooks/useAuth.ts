@@ -1,21 +1,21 @@
-import { useSession } from "next-auth/react";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function useAuth(requireAuth: boolean = true) {
-  const { data: session, status } = useSession();
+  const { user, session, loading } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (requireAuth && status === "unauthenticated") {
-      router.push("/login");
+    if (requireAuth && !loading && !user) {
+      router.push("/auth/supabase-login");
     }
-  }, [status, requireAuth, router]);
+  }, [user, loading, requireAuth, router]);
 
   return {
+    user,
     session,
-    status,
-    isAuthenticated: status === "authenticated",
-    isLoading: status === "loading",
+    isAuthenticated: !!user,
+    isLoading: loading,
   };
 }

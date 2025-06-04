@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidateUnitDataAction } from "@/app/actions/revalidate";
-import { useSession } from "next-auth/react";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ export default function EditUnitPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { user } = useSupabaseAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [unit, setUnit] = useState<Unit | null>(null);
   const { id } = use(params);
@@ -60,7 +60,7 @@ export default function EditUnitPage({
   };
 
   const handleSubmit = async (values: UnitFormValues) => {
-    if (!session?.user || !unit) return;
+    if (!user || !unit) return;
 
     try {
       setIsLoading(true);

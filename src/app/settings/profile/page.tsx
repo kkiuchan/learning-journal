@@ -1,12 +1,11 @@
-import { authConfig } from "@/auth.config";
-import { getServerSession } from "next-auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "./components/ProfileForm";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authConfig);
-  if (!session?.user) {
-    redirect("/auth/signin");
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/auth/supabase-login");
   }
 
   return (

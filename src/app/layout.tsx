@@ -155,8 +155,8 @@ export default function RootLayout({
                   </main>
                   <Footer />
                 </div>
+                <GlobalModals />
               </Providers>
-              <GlobalModals />
               <Toaster />
             </ModalProvider>
           </MenuProvider>

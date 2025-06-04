@@ -1,12 +1,11 @@
-import { authConfig } from "@/auth.config";
-import { getServerSession } from "next-auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 
 export default async function NewUnitPage() {
-  const session = await getServerSession(authConfig);
+  const user = await getCurrentUser();
 
-  if (!session) {
-    redirect("/auth/login");
+  if (!user) {
+    redirect("/auth/supabase-login");
   }
 
   // ユニット一覧ページにリダイレクト（モーダルで作成するため）

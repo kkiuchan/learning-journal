@@ -1,8 +1,7 @@
-import { authConfig } from "@/auth.config";
 import { MAX_TOKENS, OPENAI_MODEL, TEMPERATURE } from "@/config/constants";
+import { getSupabaseServerUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { canUseAIFeatures, createPlanLimitResponse } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -35,14 +34,15 @@ function createPrompt(unit: any, role: "expert" | "mentor" = "expert"): string {
 
 export async function POST(request: Request) {
   try {
-    // セッションの確認
-    const session = await getServerSession(authConfig);
-    if (!session) {
+    // Supabase認証の確認
+    const user = await getSupabaseServerUser();
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // プラン制限チェック
-    const canUseAI = await canUseAIFeatures(session.user.id);
+    const canUseAI = await canUseAIFeatures(user.id);
     if (!canUseAI) {
       const limitResponse = createPlanLimitResponse("AIアドバイス機能");
       return NextResponse.json(limitResponse, { status: 403 });
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
     }
 
     // ユニットの所有者とセッションユーザーが一致するか確認
-    if (unit.userId !== session.user.id) {
+    if (unit.userId !== user.id) {
       return NextResponse.json(
         { error: "You can only get advice for your own units" },
         { status: 403 }

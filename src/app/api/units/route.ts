@@ -1,10 +1,9 @@
-import { authConfig } from "@/auth.config";
 import { withApiSecurity } from "@/lib/api-security";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
-import { getServerSession } from "next-auth";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -114,9 +113,9 @@ export const GET = withApiSecurity(
       const page = parseInt(searchParams.get("page") || "1");
       const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 50);
 
-      // セッションの取得
-      const session = await getServerSession(authConfig);
-      const currentUserId = session?.user?.id;
+      // 現在のユーザーを取得（認証不要だがログイン状態は確認）
+      const currentUser = await getCurrentUserUnified();
+      const currentUserId = currentUser?.id;
 
       // 検索条件の構築
       const where: Prisma.UnitWhereInput = {
@@ -330,18 +329,43 @@ export const GET = withApiSecurity(
  *               $ref: '#/components/schemas/Error'
  */
 export const POST = withApiSecurity(
-  async (req: NextRequest) => {
+  async (req: NextRequest, userOrContext?: any) => {
     await ensurePrismaConnected();
     try {
-      const session = await getServerSession(authConfig);
+      // デバッグ: リクエスト情報とユーザー情報を詳細にログ出力
+      console.log("[POST /api/units] Request headers:", {
+        authorization: req.headers.get("authorization")
+          ? req.headers.get("authorization")?.substring(0, 20) + "..."
+          : "no auth header",
+        contentType: req.headers.get("content-type"),
+        userAgent: req.headers.get("user-agent")?.substring(0, 50),
+      });
 
-      // セッションとユーザーIDの存在確認
-      if (!session?.user?.id) {
-        console.error("セッション情報が不正です:", { session });
+      console.log("[POST /api/units] userOrContext from withApiSecurity:", {
+        userOrContext,
+        userType: typeof userOrContext,
+        hasUser: !!userOrContext,
+        userId: userOrContext?.id,
+        userKeys: userOrContext ? Object.keys(userOrContext) : "no user",
+      });
+
+      // withApiSecurityから認証済みユーザーを受け取る
+      const user = userOrContext?.user || userOrContext;
+
+      console.log("[POST /api/units] Extracted user:", {
+        user,
+        hasUser: !!user,
+        userId: user?.id,
+        userType: typeof user,
+      });
+
+      // ユーザーIDの存在確認
+      if (!user?.id) {
+        console.error("認証情報が不正です:", { user, userOrContext });
         return createErrorResponse("認証情報が不正です", 401);
       }
 
-      const userId = session.user.id;
+      const userId = user.id;
       const body = await req.json();
 
       // 必須フィールドのバリデーション

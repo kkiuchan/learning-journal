@@ -1,13 +1,12 @@
-import { authConfig } from "@/auth.config";
-import { getServerSession } from "next-auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { AccountClient } from "./components/AccountClient";
 
 export default async function AccountPage() {
-  const session = await getServerSession(authConfig);
+  const user = await getCurrentUser();
 
-  if (!session) {
-    redirect("/auth/login");
+  if (!user) {
+    redirect("/auth/supabase-login");
   }
 
   return <AccountClient />;

@@ -1,19 +1,18 @@
-import { authConfig } from "@/auth.config";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   await ensurePrismaConnected();
   try {
     // 認証チェック（管理者のみアクセス可能）
-    const session = await getServerSession(authConfig);
-    if (!session?.user) {
+    const user = await getCurrentUserUnified();
+    if (!user) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
     // 将来的に管理者ロールを実装する場合はここでチェック
-    // if (session.user.role !== "ADMIN") {
+    // if (user.role !== "ADMIN") {
     //   return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     // }
 

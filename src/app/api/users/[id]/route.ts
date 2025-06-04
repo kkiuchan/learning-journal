@@ -1,8 +1,7 @@
-import { authConfig } from "@/auth.config";
 import { createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { PublicUserResponse } from "@/types/api";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 // キャッシュの有効期限を60秒に設定
@@ -232,6 +231,7 @@ export async function GET(
   await ensurePrismaConnected();
   try {
     const { id } = await context.params;
+    const currentUser = await getCurrentUserUnified();
 
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
@@ -241,24 +241,26 @@ export async function GET(
     );
     const sort = searchParams.get("sort") || "newest";
 
-    // セッション情報を取得（いいね状態の確認用）
-    const session = await getServerSession(authConfig);
-    const currentUserId = session?.user?.id;
-
-    // ユーザー基本情報の取得
-    const user = await prisma.user.findFirst({
-      where: {
-        id: id,
-        OR: [{ emailVerified: { not: null } }, { accounts: { some: {} } }],
-      },
+    // ユーザー情報を取得
+    const user = await prisma.user.findUnique({
+      where: { id },
       select: {
         id: true,
         name: true,
         image: true,
         topImage: true,
+        selfIntroduction: true,
         age: true,
         ageVisible: true,
         createdAt: true,
+        _count: {
+          select: {
+            units: true,
+            logs: true,
+            comments: true,
+            unitLikes: true,
+          },
+        },
         userSkills: {
           select: {
             tag: {
@@ -279,17 +281,22 @@ export async function GET(
             },
           },
         },
-        _count: {
-          select: {
-            units: true,
-          },
-        },
       },
     });
 
     if (!user) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
+
+    // プライバシー設定に基づいて年齢を表示するかどうか決定
+    const responseUser = {
+      ...user,
+      age: user.ageVisible || currentUser?.id === user.id ? user.age : null,
+      skills: user.userSkills.map((skill) => skill.tag),
+      interests: user.userInterests.map((interest) => interest.tag),
+      userSkills: undefined,
+      userInterests: undefined,
+    };
 
     // ユニット一覧の取得（ページネーション付き）
     const skip = (page - 1) * perPage;
@@ -357,10 +364,10 @@ export async function GET(
               },
             },
           },
-          unitLikes: currentUserId
+          unitLikes: currentUser
             ? {
                 where: {
-                  userId: currentUserId,
+                  userId: currentUser.id,
                 },
                 take: 1,
               }
@@ -411,14 +418,7 @@ export async function GET(
     const response = NextResponse.json(
       {
         data: {
-          user: {
-            ...user,
-            skills: user.userSkills.map((skill) => skill.tag),
-            interests: user.userInterests.map((interest) => interest.tag),
-            _count: {
-              units: user._count.units,
-            },
-          },
+          user: responseUser,
           units: {
             data: unitsWithTotalTime,
             pagination: {

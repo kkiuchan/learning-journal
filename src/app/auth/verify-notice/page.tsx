@@ -1,5 +1,8 @@
 "use client";
 
+import { resendConfirmationEmail } from "@/lib/supabase-auth";
+import { CheckCircle, Mail } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
@@ -10,26 +13,23 @@ function VerifyNoticeContent() {
   const [isResending, setIsResending] = useState(false);
 
   const handleResendEmail = async () => {
-    if (!email) return;
+    if (!email) {
+      toast.error("メールアドレスが見つかりません");
+      return;
+    }
 
     try {
       setIsResending(true);
-      const response = await fetch("/api/auth/verify-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
 
-      const data = await response.json();
+      const { error } = await resendConfirmationEmail(email);
 
-      if (data.error) {
-        throw new Error(data.error.message);
+      if (error) {
+        throw new Error(error.message);
       }
 
       toast.success("確認メールを再送信しました");
     } catch (error) {
+      console.error("確認メール再送信エラー:", error);
       toast.error(
         error instanceof Error
           ? error.message
@@ -41,39 +41,64 @@ function VerifyNoticeContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md w-full space-y-8 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-foreground">
-            メールを確認してください
-          </h2>
-          <div className="mt-4 text-muted-foreground">
-            <p>{email} 宛に確認メールを送信しました。</p>
-            <p className="mt-2">
-              メール内のリンクをクリックして、メールアドレスの確認を完了してください。
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+            <CheckCircle className="h-6 w-6 text-green-600" />
+          </div>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            確認メールを送信しました
+          </h1>
+
+          <div className="mb-6">
+            <Mail className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+            <p className="text-gray-600 mb-4">
+              ご登録いただいたメールアドレスに確認メールを送信しました。
+              メール内のリンクをクリックして、アカウントを有効化してください。
             </p>
-            <p className="mt-2">
-              確認が完了するまで、ログインすることはできません。
+            <p className="text-sm text-gray-500">
+              ※ メールが届かない場合は、迷惑メールフォルダもご確認ください。
             </p>
           </div>
 
-          <div className="mt-8 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              メールが届いていない場合は、以下のボタンから再送信できます。
-            </p>
-            <button
-              onClick={handleResendEmail}
-              disabled={isResending}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+          {email && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 mb-3">
+                メールが届かない場合は、再送信できます：
+              </p>
+              <button
+                onClick={handleResendEmail}
+                disabled={isResending}
+                className="w-full inline-flex justify-center items-center py-2 px-4 border border-blue-300 rounded-md shadow-sm text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isResending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    送信中...
+                  </>
+                ) : (
+                  "確認メールを再送信"
+                )}
+              </button>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <Link
+              href="/auth/supabase-login"
+              className="w-full inline-flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {isResending ? "送信中..." : "確認メールを再送信"}
-            </button>
-          </div>
+              ログインページに戻る
+            </Link>
 
-          <div className="mt-8 text-sm">
-            <p className="text-muted-foreground">
-              ※ 確認メールが届かない場合は、迷惑メールフォルダもご確認ください。
-            </p>
+            <Link
+              href="/"
+              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              ホームページに戻る
+            </Link>
           </div>
         </div>
       </div>

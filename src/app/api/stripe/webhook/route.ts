@@ -8,6 +8,10 @@ import {
 } from "@/lib/email-templates";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { isProduction, stripe } from "@/lib/stripe";
+import {
+  getUserByStripeCustomer,
+  getUserByStripeSubscription,
+} from "@/lib/stripe-utils";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -251,9 +255,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
 async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const sub = subscription as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeSubscriptionId: sub.id },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeSubscription(sub.id);
 
   if (!user) {
     console.error("User not found for subscription:", sub.id);
@@ -369,9 +373,9 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const inv = invoice as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeCustomerId: inv.customer as string },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeCustomer(inv.customer as string);
 
   if (!user) {
     console.error("User not found for customer:", inv.customer);
@@ -397,9 +401,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const inv = invoice as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeCustomerId: inv.customer as string },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeCustomer(inv.customer as string);
 
   if (!user) {
     console.error("User not found for customer:", inv.customer);
@@ -428,9 +432,9 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const sub = subscription as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeSubscriptionId: sub.id },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeSubscription(sub.id);
 
   if (!user) {
     console.error("User not found for subscription:", sub.id);
@@ -465,9 +469,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
 async function handleUpcomingInvoice(invoice: Stripe.Invoice) {
   const inv = invoice as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeCustomerId: inv.customer as string },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeCustomer(inv.customer as string);
 
   if (!user) {
     console.error("User not found for customer:", inv.customer);
@@ -481,9 +485,9 @@ async function handleUpcomingInvoice(invoice: Stripe.Invoice) {
 
 async function handleTrialWillEnd(subscription: Stripe.Subscription) {
   const sub = subscription as any;
-  const user = await prisma.user.findUnique({
-    where: { stripeSubscriptionId: sub.id },
-  });
+
+  // 新しいメールベースのユーザー特定を使用
+  const user = await getUserByStripeSubscription(sub.id);
 
   if (!user) {
     console.error("User not found for subscription:", sub.id);

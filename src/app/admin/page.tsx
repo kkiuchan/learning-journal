@@ -1,6 +1,5 @@
-import { authConfig } from "@/auth.config";
 import { AdminClient } from "@/components/admin/admin-client";
-import { getServerSession } from "next-auth";
+import { getCurrentUser, isCurrentUserAdmin } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 
 // 管理者権限チェック
@@ -22,22 +21,21 @@ function isAdmin(email: string): boolean {
 }
 
 export default async function AdminPage() {
-  const session = await getServerSession(authConfig);
+  const user = await getCurrentUser();
   console.log("=== 管理者ページデバッグ ===");
-  console.log("session?.user?.email:", session?.user?.email);
-  console.log("session全体:", JSON.stringify(session, null, 2));
+  console.log("user?.email:", user?.email);
+  console.log("user全体:", JSON.stringify(user, null, 2));
 
-  if (!session?.user?.email) {
+  if (!user?.email) {
     console.log(
-      "セッションまたはemailが存在しません - ログインページにリダイレクト"
+      "ユーザーまたはemailが存在しません - ログインページにリダイレクト"
     );
-    redirect("/auth/login");
+    redirect("/auth/supabase-login");
   }
 
-  const userEmail = session.user.email;
-  const adminResult = isAdmin(userEmail);
-  console.log("isAdmin結果:", adminResult);
-  console.log("チェック対象メール:", userEmail);
+  const adminResult = await isCurrentUserAdmin();
+  console.log("isCurrentUserAdmin結果:", adminResult);
+  console.log("チェック対象メール:", user.email);
 
   if (!adminResult) {
     console.log("管理者権限なし - ダッシュボードにリダイレクト");
@@ -54,7 +52,7 @@ export default async function AdminPage() {
           ユーザーのライフタイムプロプラン管理
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          ログイン中: {userEmail}
+          ログイン中: {user.email}
         </p>
       </div>
 

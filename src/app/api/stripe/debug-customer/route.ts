@@ -1,24 +1,20 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
-  console.log("🔍 Debug customer info started");
-
+export async function GET(request: NextRequest) {
   await ensurePrismaConnected();
-
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.email) {
+    const user = await getCurrentUserUnified();
+    if (!user?.email) {
       return createErrorResponse("認証が必要です", 401);
     }
 
-    // データベースからユーザー情報を取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    // ユーザー情報を取得
+    const userInfo = await prisma.user.findUnique({
+      where: { id: user.id },
       select: {
         id: true,
         email: true,
@@ -26,10 +22,13 @@ export async function GET(req: NextRequest) {
         stripeCustomerId: true,
         subscriptionStatus: true,
         subscriptionPlan: true,
+        subscriptionStart: true,
+        subscriptionEnd: true,
+        trialEnd: true,
       },
     });
 
-    if (!user) {
+    if (!userInfo) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
@@ -37,9 +36,11 @@ export async function GET(req: NextRequest) {
     let stripeError = null;
 
     // Stripe Customerが存在する場合、Stripeから情報を取得
-    if (user.stripeCustomerId && stripe) {
+    if (userInfo.stripeCustomerId && stripe) {
       try {
-        stripeCustomer = await stripe.customers.retrieve(user.stripeCustomerId);
+        stripeCustomer = await stripe.customers.retrieve(
+          userInfo.stripeCustomerId
+        );
       } catch (error) {
         stripeError = error instanceof Error ? error.message : String(error);
         console.error("❌ Stripe customer retrieval error:", error);
@@ -53,12 +54,12 @@ export async function GET(req: NextRequest) {
         ? "live"
         : "test",
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        stripeCustomerId: user.stripeCustomerId,
-        subscriptionStatus: user.subscriptionStatus,
-        subscriptionPlan: user.subscriptionPlan,
+        id: userInfo.id,
+        email: userInfo.email,
+        name: userInfo.name,
+        stripeCustomerId: userInfo.stripeCustomerId,
+        subscriptionStatus: userInfo.subscriptionStatus,
+        subscriptionPlan: userInfo.subscriptionPlan,
       },
       stripeCustomer: stripeCustomer
         ? {
@@ -76,9 +77,19 @@ export async function GET(req: NextRequest) {
 
     console.log("🔍 Debug customer info:", debugInfo);
 
-    return createApiResponse(debugInfo);
+    return createApiResponse({
+      user: userInfo,
+      debug: {
+        hasStripeCustomer: !!userInfo.stripeCustomerId,
+        subscriptionActive: userInfo.subscriptionStatus === "active",
+        trialUsed: !!userInfo.trialEnd,
+      },
+    });
   } catch (error) {
-    console.error("❌ Debug customer error:", error);
-    return createErrorResponse("デバッグ情報の取得に失敗しました", 500);
+    console.error("デバッグ情報取得エラー:", error);
+    return createErrorResponse(
+      "デバッグ情報の取得中にエラーが発生しました",
+      500
+    );
   }
 }

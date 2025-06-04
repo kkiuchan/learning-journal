@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AuthSession } from "@/types/auth";
 import type { UnitDTO } from "@/types/unit";
 import {
   Copy,
@@ -11,13 +12,12 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import type { Session } from "next-auth";
 import React, { useEffect, useRef, useState } from "react";
 import { EditUnitModal } from "./EditUnitModa";
 
 interface SidebarProps {
   unit: UnitDTO;
-  session: Session | null;
+  session: AuthSession | null;
   id: string;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;

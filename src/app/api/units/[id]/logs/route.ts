@@ -1,9 +1,8 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,8 +14,8 @@ export async function POST(
 ) {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user) {
+    const user = await getCurrentUserUnified();
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -29,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: "Unit not found" }, { status: 404 });
     }
 
-    if (unit.userId !== session.user.id) {
+    if (unit.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -39,7 +38,7 @@ export async function POST(
     const log = await prisma.log.create({
       data: {
         unitId: unit.id,
-        userId: session.user.id,
+        userId: user.id,
         title: validatedData.title,
         learningTime: validatedData.learningTime,
         note: validatedData.note,
@@ -102,9 +101,9 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // セッションの取得（オプショナル）
-    const session = await getServerSession(authConfig);
-    const currentUserId = session?.user?.id;
+    // 現在のユーザーを取得（オプショナル）
+    const user = await getCurrentUserUnified();
+    const currentUserId = user?.id;
 
     const logs = await prisma.log.findMany({
       where: {

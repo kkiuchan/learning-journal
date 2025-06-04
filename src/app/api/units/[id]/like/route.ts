@@ -1,9 +1,9 @@
-import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
+import { NextRequest } from "next/server";
 // import { revalidateTag } from "next/cache";
-import { NextResponse } from "next/server";
 
 /**
  * @swagger
@@ -61,51 +61,55 @@ import { NextResponse } from "next/server";
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensurePrismaConnected();
-  const { id } = await params;
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    const { id } = await params;
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
-    const unitId = parseInt(id);
-    if (isNaN(unitId)) {
-      return NextResponse.json(
-        { error: "無効なユニットIDです" },
-        { status: 400 }
-      );
+    // ユニットの存在確認
+    const unit = await prisma.unit.findUnique({
+      where: { id: parseInt(id) },
+      select: { id: true, displayFlag: true },
+    });
+
+    if (!unit) {
+      return createErrorResponse("ユニットが見つかりません", 404);
     }
 
-    // いいねが既に存在するかチェック
+    // 非公開ユニットはいいねできない
+    if (!unit.displayFlag) {
+      return createErrorResponse("非公開ユニットにはいいねできません", 403);
+    }
+
+    // 既にいいねしているかチェック
     const existingLike = await prisma.unitLike.findFirst({
       where: {
-        userId: session.user.id,
-        unitId: unitId,
+        AND: [{ unitId: parseInt(id) }, { userId: user.id }],
       },
     });
 
     if (existingLike) {
-      return NextResponse.json(
-        { error: "すでにいいねしています" },
-        { status: 409 }
-      );
+      return createErrorResponse("既にいいねしています", 400);
     }
 
     // いいねを作成
     const like = await prisma.unitLike.create({
       data: {
-        userId: session.user.id,
-        unitId: unitId,
+        unitId: parseInt(id),
+        userId: user.id,
       },
     });
 
     // ユニットのいいね数を更新
     await prisma.unit.update({
-      where: { id: unitId },
+      where: { id: parseInt(id) },
       data: {
         likesCount: {
           increment: 1,
@@ -119,13 +123,10 @@ export async function POST(
     // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
     revalidateUnitData(id);
 
-    return NextResponse.json({ data: like });
+    return createApiResponse(like);
   } catch (error) {
-    console.error("いいねの作成に失敗しました:", error);
-    return NextResponse.json(
-      { error: "いいねの作成に失敗しました" },
-      { status: 500 }
-    );
+    console.error("Error creating like:", error);
+    return createErrorResponse("いいねの追加中にエラーが発生しました", 500);
   }
 }
 
@@ -179,53 +180,42 @@ export async function POST(
  *               $ref: '#/components/schemas/Error'
  */
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   await ensurePrismaConnected();
-  const { id } = await params;
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    const { id } = await params;
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
-    const unitId = parseInt(id);
-    if (isNaN(unitId)) {
-      return NextResponse.json(
-        { error: "無効なユニットIDです" },
-        { status: 400 }
-      );
-    }
-
-    // いいねが存在するかチェック
-    const existingLike = await prisma.unitLike.findFirst({
+    // いいねの存在確認
+    const like = await prisma.unitLike.findFirst({
       where: {
-        userId: session.user.id,
-        unitId: unitId,
+        AND: [{ unitId: parseInt(id) }, { userId: user.id }],
       },
     });
 
-    if (!existingLike) {
-      return NextResponse.json(
-        { error: "いいねが存在しません" },
-        { status: 404 }
-      );
+    if (!like) {
+      return createErrorResponse("いいねが見つかりません", 404);
     }
 
     // いいねを削除
     await prisma.unitLike.delete({
       where: {
         userId_unitId: {
-          userId: session.user.id,
-          unitId: unitId,
+          userId: user.id,
+          unitId: parseInt(id),
         },
       },
     });
 
     // ユニットのいいね数を更新
     await prisma.unit.update({
-      where: { id: unitId },
+      where: { id: parseInt(id) },
       data: {
         likesCount: {
           decrement: 1,
@@ -238,12 +228,10 @@ export async function DELETE(
     // revalidateTag(CACHE_TAGS.UNIT_LIST);
     // revalidateTag(`${CACHE_TAGS.UNIT}-${id}`);
     revalidateUnitData(id);
-    return NextResponse.json({ message: "いいねを削除しました" });
+
+    return createApiResponse({ userId: user.id, unitId: parseInt(id) });
   } catch (error) {
-    console.error("いいねの削除に失敗しました:", error);
-    return NextResponse.json(
-      { error: "いいねの削除に失敗しました" },
-      { status: 500 }
-    );
+    console.error("Error deleting like:", error);
+    return createErrorResponse("いいねの削除中にエラーが発生しました", 500);
   }
 }

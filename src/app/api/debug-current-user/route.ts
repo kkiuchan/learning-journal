@@ -1,46 +1,20 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { getUserPlan } from "@/lib/plans";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
+import { ensurePrismaConnected } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
   await ensurePrismaConnected();
 
   try {
-    const session = await getServerSession(authConfig);
+    const user = await getCurrentUser();
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return createApiResponse({
-        hasSession: false,
-        message: "セッションが存在しません",
+        hasUser: false,
+        message: "ユーザーが存在しません",
       });
-    }
-
-    // 現在ログインしているユーザーの詳細情報を取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        subscriptionStatus: true,
-        subscriptionPlan: true,
-        subscriptionStart: true,
-        subscriptionEnd: true,
-        trialEnd: true,
-        cancelAtPeriodEnd: true,
-        canceledAt: true,
-        stripeCustomerId: true,
-        stripeSubscriptionId: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    if (!user) {
-      return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
     // getUserPlan関数の動作をテスト
@@ -57,8 +31,8 @@ export async function GET(req: NextRequest) {
         user.subscriptionEnd &&
         new Date(user.subscriptionEnd) > now) ||
       (user.subscriptionStatus === "trialing" &&
-        ((user.trialEnd && new Date(user.trialEnd) > now) ||
-          (user.subscriptionEnd && new Date(user.subscriptionEnd) > now)));
+        user.subscriptionEnd &&
+        new Date(user.subscriptionEnd) > now);
 
     // 期限チェック詳細
     const subscriptionEndCheck = user.subscriptionEnd
@@ -80,12 +54,20 @@ export async function GET(req: NextRequest) {
     const isProActive = currentPlan === "PRO" && isActive;
 
     return createApiResponse({
-      session: {
-        userEmail: session.user.email,
-        userName: session.user.name,
-        hasSession: true,
+      user: {
+        userEmail: user.email,
+        userName: user.name,
+        hasUser: true,
+        id: user.id,
+        primaryAuthMethod: user.primaryAuthMethod,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionStart: user.subscriptionStart,
+        subscriptionEnd: user.subscriptionEnd,
+        stripeCustomerId: user.stripeCustomerId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
-      user: user,
       calculations: {
         currentPlan,
         isActive,
@@ -96,7 +78,7 @@ export async function GET(req: NextRequest) {
           shouldShowManageButton: isCurrentPlan && isProActive,
           shouldShowProButton: !isCurrentPlan || !isProActive,
           expectedButtonText:
-            user.trialEnd !== null
+            user.subscriptionEnd !== null
               ? "プロプランを始める（即開始）"
               : "7日間無料でお試し",
         },
@@ -108,11 +90,8 @@ export async function GET(req: NextRequest) {
         subscriptionPlan: user.subscriptionPlan,
         subscriptionStart: user.subscriptionStart,
         subscriptionEnd: user.subscriptionEnd,
-        trialEnd: user.trialEnd,
         isLifetime: user.subscriptionStatus === "lifetime",
-        hasStripeSubscription: !!user.stripeSubscriptionId,
-        cancelAtPeriodEnd: user.cancelAtPeriodEnd,
-        canceledAt: user.canceledAt,
+        hasStripeSubscription: !!user.stripeCustomerId,
       },
       timestamp: now.toISOString(),
     });

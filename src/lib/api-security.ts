@@ -1,5 +1,4 @@
-import { authConfig } from "@/auth.config";
-import { getServerSession } from "next-auth";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createErrorResponse } from "./api-utils";
@@ -56,10 +55,7 @@ export function applyRateLimit(
  * @returns セキュリティが適用された API ハンドラ関数
  */
 export function withApiSecurity(
-  handler: (
-    req: NextRequest,
-    sessionOrContext?: unknown
-  ) => Promise<NextResponse>,
+  handler: (req: NextRequest, userOrContext?: unknown) => Promise<NextResponse>,
   options: {
     requireAuth?: boolean;
     rateLimit?: {
@@ -86,15 +82,15 @@ export function withApiSecurity(
 
     // 認証チェック
     if (options.requireAuth) {
-      const session = await getServerSession(authConfig);
-      if (!session) {
+      const user = await getCurrentUserUnified();
+      if (!user) {
         return createErrorResponse("認証が必要です", 401);
       }
 
-      // 認証済みセッションをハンドラに渡す（コンテキストがあれば併せて渡す）
+      // 認証済みユーザーをハンドラに渡す（コンテキストがあれば併せて渡す）
       return context
-        ? handler(req, { ...(context as object), session })
-        : handler(req, session);
+        ? handler(req, { ...(context as object), user })
+        : handler(req, user);
     }
 
     // 通常のハンドラ実行（コンテキストがあれば優先して渡す）
@@ -144,10 +140,13 @@ export function createSafeResponse<T extends Record<string, unknown>>(
   status: number = 200
 ): NextResponse {
   // 文字列値のサニタイズ
-  const sanitizedData = Object.entries(data).reduce((acc, [key, value]) => {
-    acc[key] = typeof value === "string" ? sanitizeString(value) : value;
-    return acc;
-  }, {} as Record<string, unknown>);
+  const sanitizedData = Object.entries(data).reduce(
+    (acc, [key, value]) => {
+      acc[key] = typeof value === "string" ? sanitizeString(value) : value;
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
 
   return NextResponse.json(sanitizedData, { status });
 }

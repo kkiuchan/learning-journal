@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { AuthSession } from "@/types/auth";
 import { UnitDTO } from "@/types/unit";
 import { translateUnitStatus } from "@/utils/i18n";
 import { format } from "date-fns";
@@ -23,7 +24,6 @@ import {
   Share2,
   Trash2,
 } from "lucide-react";
-import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -31,7 +31,7 @@ import { EditUnitModal } from "./EditUnitModa";
 
 interface UnitHeaderProps {
   unit: UnitDTO;
-  session: Session | null;
+  session: AuthSession | null;
   onMutate: () => void;
   handleLike: () => void;
   scrollToComments: () => void;

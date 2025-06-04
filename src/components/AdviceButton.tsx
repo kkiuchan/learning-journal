@@ -8,8 +8,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { AuthSession } from "@/types/auth";
 import { Crown, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,7 +26,27 @@ export function AdviceButton({
   onAddComment,
   userId,
 }: AdviceButtonProps) {
-  const { data: session } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
+
   const [isLoading, setIsLoading] = useState(false);
   const [advice, setAdvice] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -57,11 +78,18 @@ export function AdviceButton({
       setAdvice("");
       setIsOpen(true);
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabaseセッションのアクセストークンを追加
+      if (supabaseSession?.access_token) {
+        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch("/api/advice", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({ unitId }),
       });
 

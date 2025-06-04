@@ -4,9 +4,10 @@ import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useLogs } from "@/hooks/useLogs";
+import { AuthSession } from "@/types/auth";
 import { List, Plus, Wand2 } from "lucide-react";
-import { Session } from "next-auth";
 import { useState } from "react";
 import { toast } from "sonner";
 import CreateLogForm from "./CreateLogForm";
@@ -18,7 +19,7 @@ import WizardLogForm from "./WizardLogForm";
 interface LogsSectionProps {
   unitId: string;
   userId: string;
-  session: Session | null;
+  session: AuthSession | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
   onAIAdvice?: (comment: string) => void;
@@ -75,6 +76,8 @@ export function LogsSection({
     }[]
   >([]);
 
+  const { session: supabaseSession } = useSupabaseAuth();
+
   const { logs, isLoading, mutate: mutateLogs } = useLogs(unitId);
 
   const handleCreateLogSubmit = async (formData: {
@@ -88,11 +91,18 @@ export function LogsSection({
     resources: CreateLogResource[];
   }) => {
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabase認証トークンを追加
+      if (supabaseSession?.access_token) {
+        headers.Authorization = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch(`/api/units/${unitId}/logs`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           title: formData.title,
           learningTime: formData.learningTime,
@@ -131,11 +141,18 @@ export function LogsSection({
     }
   ) => {
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabase認証トークンを追加
+      if (supabaseSession?.access_token) {
+        headers.Authorization = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           title: formData.title,
           learningTime: formData.learningTime,

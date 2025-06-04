@@ -9,11 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useUnitLike } from "@/hooks/useUnitLike";
 import { useUnits } from "@/hooks/useUnits";
-import { useSession } from "next-auth/react";
+import { AuthSession } from "@/types/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { UnitCard } from "./UnitCard";
@@ -25,7 +26,26 @@ interface UnitsListProps {
 export function UnitsList({ userId }: UnitsListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
 
   // 検索入力の状態を管理
   const [searchInput, setSearchInput] = useState(searchParams.get("q") || "");
@@ -50,11 +70,14 @@ export function UnitsList({ userId }: UnitsListProps) {
   });
 
   // いいね機能のフック
-  const { handleLike: handleUnitLike } = useUnitLike({
-    onSuccess: (wasLiked) => {
-      // 楽観的更新のための処理は既にuseUnitsで処理済み
+  const { handleLike: handleUnitLike } = useUnitLike(
+    {
+      onSuccess: (wasLiked) => {
+        // 楽観的更新のための処理は既にuseUnitsで処理済み
+      },
     },
-  });
+    session
+  );
 
   const debouncedSearchInput = useDebouncedValue(searchInput, 500);
 

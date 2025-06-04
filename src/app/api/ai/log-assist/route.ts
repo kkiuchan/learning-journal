@@ -1,9 +1,8 @@
-import { authConfig } from "@/auth.config";
 import { MAX_TOKENS, OPENAI_MODEL, TEMPERATURE } from "@/config/constants";
 import { createErrorResponse } from "@/lib/api-utils";
+import { getSupabaseServerUser } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { canUseAIFeatures, createPlanLimitResponse } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
@@ -42,13 +41,15 @@ export async function POST(
   await ensurePrismaConnected();
 
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.email) {
+    // Supabase認証の確認
+    const user = await getSupabaseServerUser();
+
+    if (!user?.email) {
       return createErrorResponse("認証が必要です", 401);
     }
 
     // プラン制限チェック
-    const canUseAI = await canUseAIFeatures(session.user.id);
+    const canUseAI = await canUseAIFeatures(user.id);
     if (!canUseAI) {
       const limitResponse = createPlanLimitResponse("AI学習サジェスト機能");
       return NextResponse.json(limitResponse, { status: 403 });
@@ -101,7 +102,7 @@ export async function POST(
     });
 
     // ユーザーの学習履歴統計
-    const userStats = await getUserLearningStats(session.user.id);
+    const userStats = await getUserLearningStats(user.id);
 
     // OpenAI APIを使用して提案を生成
     const suggestions = await generateAISuggestions(

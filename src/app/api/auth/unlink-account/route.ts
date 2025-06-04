@@ -1,8 +1,7 @@
-import { authConfig } from "@/auth.config";
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
+import { getSupabaseServerUser } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { UnlinkAccountRequest } from "@/types/api";
-import { getServerSession } from "next-auth";
 
 /**
  * @swagger
@@ -82,9 +81,9 @@ import { getServerSession } from "next-auth";
 export async function POST(request: Request) {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
+    const user = await getSupabaseServerUser();
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return createErrorResponse("認証が必要です", 401);
     }
 
@@ -99,21 +98,21 @@ export async function POST(request: Request) {
     }
 
     // ユーザーの取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email },
       include: {
         accounts: true,
       },
     });
 
-    if (!user) {
+    if (!dbUser) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
     // 認証方法の数を確認
     const authMethods = [
-      user.hashedPassword,
-      ...user.accounts.map((account) => account.provider),
+      dbUser.hashedPassword,
+      ...dbUser.accounts.map((account) => account.provider),
     ].filter(Boolean);
 
     if (authMethods.length <= 1) {
@@ -123,7 +122,7 @@ export async function POST(request: Request) {
     // アカウントの削除
     await prisma.account.deleteMany({
       where: {
-        userId: user.id,
+        userId: dbUser.id,
         provider: requestData.provider,
       },
     });
@@ -135,7 +134,7 @@ export async function POST(request: Request) {
     const newPrimaryMethod = remainingMethods[0] || "email";
 
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: dbUser.id },
       data: { primaryAuthMethod: newPrimaryMethod },
     });
 

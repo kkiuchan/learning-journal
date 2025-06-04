@@ -1,12 +1,12 @@
 "use client";
 
+import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
 import { SWRProvider } from "@/lib/swr";
-import { SessionProvider } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <SessionProvider>
+    <SupabaseAuthProvider>
       <SWRProvider>{children}</SWRProvider>
-    </SessionProvider>
+    </SupabaseAuthProvider>
   );
 }

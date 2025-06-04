@@ -1,17 +1,17 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { PlanId, SUBSCRIPTION_PLANS } from "@/lib/plans";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { createCheckoutSession, createStripeCustomer } from "@/lib/stripe";
-import { getServerSession } from "next-auth";
+import { createCheckoutSession } from "@/lib/stripe";
+import { createOrRetrieveStripeCustomer } from "@/lib/stripe-utils";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   await ensurePrismaConnected();
 
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.email) {
+    const user = await getCurrentUserUnified();
+    if (!user?.email) {
       return createErrorResponse("認証が必要です", 401);
     }
 
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ユーザーを取得
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const userInfo = await prisma.user.findUnique({
+      where: { id: user.id },
       select: {
         id: true,
         email: true,
@@ -41,36 +41,25 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!user) {
+    if (!userInfo) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
     // トライアル利用履歴をチェック
-    const hasUsedTrial = user.trialEnd !== null;
+    const hasUsedTrial = userInfo.trialEnd !== null;
 
     console.log("🔍 Trial eligibility check:", {
-      userId: user.id,
-      email: user.email,
+      userId: userInfo.id,
+      email: userInfo.email,
       hasUsedTrial,
-      previousTrialEnd: user.trialEnd?.toISOString(),
+      previousTrialEnd: userInfo.trialEnd?.toISOString(),
     });
 
-    // Stripeカスタマーの作成/取得
-    let customerId = user.stripeCustomerId;
-
-    if (!customerId) {
-      const customer = await createStripeCustomer(
-        user.email,
-        user.name || undefined
-      );
-      customerId = customer.id;
-
-      // DBにカスタマーIDを保存
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { stripeCustomerId: customerId },
-      });
-    }
+    // 改善されたStripeカスタマーの作成/取得
+    const customer = await createOrRetrieveStripeCustomer(
+      userInfo.email,
+      userInfo.name || undefined
+    );
 
     // プランがPROの場合のstripePriceIdを取得
     if (planId !== "PRO" || !("stripePriceId" in plan)) {
@@ -79,12 +68,12 @@ export async function POST(req: NextRequest) {
 
     // チェックアウトセッションを作成
     const checkoutSession = await createCheckoutSession({
-      customerId,
+      customerId: customer.id,
       priceId: plan.stripePriceId,
       successUrl: `${req.nextUrl.origin}/dashboard?success=true&plan=${planId}`,
       cancelUrl: `${req.nextUrl.origin}/pricing?canceled=true`,
       metadata: {
-        userId: user.id,
+        userId: userInfo.id,
         planId,
       },
       trialEligible: !hasUsedTrial, // トライアル未利用の場合のみtrue

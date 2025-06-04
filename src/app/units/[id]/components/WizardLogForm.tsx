@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -94,6 +95,7 @@ export default function WizardLogForm({
   onSuccess,
   onSubmit,
 }: WizardLogFormProps) {
+  const { session: supabaseSession } = useSupabaseAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -131,9 +133,18 @@ export default function WizardLogForm({
     async (step: number) => {
       setAiLoading(true);
       try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        // Supabaseセッションのアクセストークンを追加
+        if (supabaseSession?.access_token) {
+          headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+        }
+
         const response = await fetch("/api/ai/log-assist", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             step,
             data: { title, note, learningTime, effectScore, effectType, tags },
@@ -165,7 +176,16 @@ export default function WizardLogForm({
         setAiLoading(false);
       }
     },
-    [title, note, learningTime, effectScore, effectType, tags, unitId]
+    [
+      title,
+      note,
+      learningTime,
+      effectScore,
+      effectType,
+      tags,
+      unitId,
+      supabaseSession?.access_token,
+    ]
   );
 
   // ステップ進行

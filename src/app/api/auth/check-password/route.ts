@@ -1,9 +1,7 @@
-import { getServerSession } from "next-auth";
-
-import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getSupabaseServerUser } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { CheckPasswordResponse } from "@/types/api";
-import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 
 /**
  * @swagger
@@ -51,23 +49,23 @@ import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 export async function GET() {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
+    const user = await getSupabaseServerUser();
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return createErrorResponse("認証が必要です", 401);
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email },
       select: { hashedPassword: true },
     });
 
-    if (!user) {
+    if (!dbUser) {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
     const response: CheckPasswordResponse = {
-      hasPassword: !!user.hashedPassword,
+      hasPassword: !!dbUser.hashedPassword,
     };
 
     return createApiResponse(response);

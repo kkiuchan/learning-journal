@@ -9,11 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { SUBSCRIPTION_PLANS } from "@/lib/plans";
-import { Check, Crown, Settings, Star, Zap } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { AuthSession } from "@/types/auth";
+import { Check, Crown, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface SubscriptionInfo {
@@ -32,39 +33,82 @@ interface SubscriptionInfo {
 }
 
 export function PricingClient() {
-  const { data: session } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換（useMemoで最適化）
+  const session: AuthSession | null = useMemo(() => {
+    if (!supabaseSession) return null;
+
+    return {
+      user: {
+        id: supabaseSession.user.id,
+        email: supabaseSession.user.email || "",
+        name:
+          supabaseSession.user.user_metadata?.name ||
+          supabaseSession.user.user_metadata?.full_name ||
+          "",
+        image:
+          supabaseSession.user.user_metadata?.avatar_url ||
+          supabaseSession.user.user_metadata?.picture ||
+          "",
+      },
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
+  }, [
+    supabaseSession?.user?.id,
+    supabaseSession?.user?.email,
+    supabaseSession?.user?.user_metadata?.name,
+    supabaseSession?.user?.user_metadata?.full_name,
+    supabaseSession?.user?.user_metadata?.avatar_url,
+    supabaseSession?.user?.user_metadata?.picture,
+  ]);
+
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
   const [subscriptionInfo, setSubscriptionInfo] =
     useState<SubscriptionInfo | null>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(true);
 
-  // サブスクリプション情報を取得
-  useEffect(() => {
-    if (session) {
-      fetchSubscriptionInfo();
-    } else {
+  // サブスクリプション情報を取得（useCallbackで最適化）
+  const fetchSubscriptionInfo = useCallback(async () => {
+    if (!supabaseSession?.access_token) {
       setLoadingSubscription(false);
+      return;
     }
-  }, [session]);
 
-  const fetchSubscriptionInfo = async () => {
     try {
-      const response = await fetch("/api/user/subscription");
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${supabaseSession.access_token}`,
+      };
+
+      const response = await fetch("/api/auth/user/subscription", { headers });
+
       if (response.ok) {
         const data = await response.json();
-        setSubscriptionInfo(data.data);
+        if (data.success) {
+          setSubscriptionInfo(data.data);
+        }
       }
     } catch (error) {
       console.error("サブスクリプション情報取得エラー:", error);
     } finally {
       setLoadingSubscription(false);
     }
-  };
+  }, [supabaseSession?.access_token]);
+
+  // ユーザーIDが変更された時のみサブスクリプション情報を取得
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchSubscriptionInfo();
+    } else {
+      setLoadingSubscription(false);
+      setSubscriptionInfo(null);
+    }
+  }, [session?.user?.id, fetchSubscriptionInfo]);
 
   const handleSubscribe = async (planId: string) => {
     if (!session) {
-      router.push("/auth/login");
+      router.push("/auth/supabase-login");
       return;
     }
 
@@ -84,9 +128,18 @@ export function PricingClient() {
         // Customer Portalにリダイレクト
         setLoading("cancel");
         try {
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+
+          // Supabaseセッションのアクセストークンを追加
+          if (supabaseSession?.access_token) {
+            headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+          }
+
           const response = await fetch("/api/stripe/create-portal-session", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
           });
 
           const data = await response.json();
@@ -112,9 +165,18 @@ export function PricingClient() {
     setLoading(planId);
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabaseセッションのアクセストークンを追加
+      if (supabaseSession?.access_token) {
+        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ planId }),
       });
 
@@ -142,9 +204,18 @@ export function PricingClient() {
     setLoading("manage");
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabaseセッションのアクセストークンを追加
+      if (supabaseSession?.access_token) {
+        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch("/api/stripe/create-portal-session", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
       });
 
       const data = await response.json();
@@ -173,7 +244,7 @@ export function PricingClient() {
         <Button
           className="w-full"
           variant={planId === "PRO" ? "default" : "outline"}
-          onClick={() => router.push("/auth/login")}
+          onClick={() => router.push("/auth/supabase-login")}
         >
           ログインして開始
         </Button>
@@ -198,119 +269,84 @@ export function PricingClient() {
     const isTrialing = subscriptionInfo?.subscriptionStatus === "trialing";
 
     if (planId === "FREE") {
-      if (isCurrentPlan && !isProActive && !isLifetime) {
+      if (isCurrentPlan && !isProActive) {
         return (
           <Button className="w-full" variant="outline" disabled>
             現在のプラン
           </Button>
         );
-      } else {
-        const buttonText =
-          isProActive || isLifetime ? "プランを解約" : "無料プランに戻る";
+      } else if (isProActive) {
         return (
           <Button
             className="w-full"
             variant="outline"
-            onClick={() => handleSubscribe("FREE")}
-            disabled={loading !== null || isLifetime} // ライフタイムプロは解約不可
+            onClick={() => handleSubscribe(planId)}
+            disabled={loading !== null}
           >
-            {loading === "cancel" ? (
-              <>
-                <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-                処理中...
-              </>
-            ) : isLifetime ? (
-              "ライフタイムプロ（解約不可）"
-            ) : (
-              buttonText
-            )}
+            {loading === "cancel" ? "処理中..." : "無料プランに戻る"}
           </Button>
         );
       }
+      // 未ログインまたは未登録の場合
+      return (
+        <Button
+          className="w-full"
+          variant="outline"
+          onClick={() => router.push("/auth/supabase-login")}
+        >
+          無料で始める
+        </Button>
+      );
     }
 
-    if (planId === "PRO") {
-      if (isCurrentPlan && (isProActive || isLifetime)) {
-        if (isLifetime) {
-          return (
-            <Button className="w-full" variant="outline" disabled>
-              ライフタイムプロプラン
-            </Button>
-          );
-        } else {
-          // キャンセル予約済みの場合は異なる表示
-          if (isCancelScheduled) {
-            return (
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={handleManageSubscription}
-                disabled={loading !== null}
-              >
-                {loading === "manage" ? (
-                  <>
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-                    処理中...
-                  </>
-                ) : (
-                  <>
-                    <Settings className="w-4 h-4 mr-2" />
-                    {isTrialing ? "解約予約を管理" : "解約予約済み - 管理"}
-                  </>
-                )}
-              </Button>
-            );
-          } else {
-            return (
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={handleManageSubscription}
-                disabled={loading !== null}
-              >
-                {loading === "manage" ? (
-                  <>
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" />
-                    処理中...
-                  </>
-                ) : (
-                  <>
-                    <Settings className="w-4 h-4 mr-2" />
-                    プラン管理
-                  </>
-                )}
-              </Button>
-            );
-          }
-        }
-      } else {
-        // トライアル利用履歴を確認
-        const hasUsedTrial = subscriptionInfo?.trialEnd !== null;
-        const buttonText = hasUsedTrial
-          ? "プロプランを始める（即開始）"
-          : "7日間無料でお試し";
-
+    // PRO プランの場合
+    if (isCurrentPlan && isProActive) {
+      if (isLifetime) {
+        return (
+          <Button className="w-full" variant="outline" disabled>
+            ライフタイムプラン
+          </Button>
+        );
+      } else if (isCancelScheduled) {
         return (
           <Button
             className="w-full"
-            onClick={() => handleSubscribe("PRO")}
+            variant="default"
+            onClick={() => handleSubscribe(planId)}
             disabled={loading !== null}
           >
-            {loading === "PRO" ? (
-              <>
-                <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                処理中...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                {buttonText}
-              </>
-            )}
+            {loading === planId ? "処理中..." : "再購読する"}
+          </Button>
+        );
+      } else {
+        return (
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={handleManageSubscription}
+            disabled={loading !== null}
+          >
+            {loading === "manage" ? "処理中..." : "管理"}
           </Button>
         );
       }
     }
+
+    // プロプランではない場合、またはアクティブでない場合
+    return (
+      <Button
+        className="w-full"
+        variant="default"
+        onClick={() => handleSubscribe(planId)}
+        disabled={loading !== null}
+      >
+        {loading === planId
+          ? "処理中..."
+          : isTrialing
+            ? "プロプランに変更"
+            : "プロプランを始める"}
+      </Button>
+    );
   };
 
   const getCurrentPlanBadge = (planId: "FREE" | "PRO") => {

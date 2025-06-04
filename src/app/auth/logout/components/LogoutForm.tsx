@@ -1,34 +1,54 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { AuthSession } from "@/types/auth";
 import { ArrowLeft, Home, LogOut } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function LogoutForm() {
-  const { data: session, status } = useSession();
+  const { session: supabaseSession, loading } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
+
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   // 未ログインの場合はログインページにリダイレクト
   useEffect(() => {
-    if (status === "loading") return; // まだ読み込み中
-    if (status === "unauthenticated") {
-      router.push("/auth/login");
+    if (loading) return; // まだ読み込み中
+    if (!session) {
+      router.push("/auth/supabase-login");
     }
-  }, [status, router]);
+  }, [session, loading, router]);
 
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      await signOut({
-        callbackUrl: "/",
-        redirect: true,
-      });
+      const { supabase } = await import("@/lib/supabase-auth");
+      await supabase.auth.signOut();
       toast.success("ログアウトしました");
+      router.push("/");
     } catch (error) {
       console.error("ログアウトエラー:", error);
       toast.error("ログアウト中にエラーが発生しました");
@@ -41,7 +61,7 @@ export function LogoutForm() {
   };
 
   // ローディング中の表示
-  if (status === "loading") {
+  if (loading) {
     return (
       <div className="space-y-6 text-center">
         <div className="text-muted-foreground">読み込み中...</div>
@@ -50,7 +70,7 @@ export function LogoutForm() {
   }
 
   // 未ログインの場合の表示（リダイレクト前の一瞬表示される可能性がある）
-  if (status === "unauthenticated") {
+  if (!session) {
     return (
       <div className="space-y-6 text-center">
         <div className="text-muted-foreground">ログインしていません</div>

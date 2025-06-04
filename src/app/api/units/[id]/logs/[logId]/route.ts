@@ -1,10 +1,10 @@
-import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 export const revalidate = 60;
 
@@ -14,9 +14,9 @@ export async function DELETE(
 ) {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await getCurrentUserUnified();
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
     const { id, logId } = await params;
@@ -27,11 +27,11 @@ export async function DELETE(
     });
 
     if (!log) {
-      return NextResponse.json({ error: "Log not found" }, { status: 404 });
+      return createErrorResponse("ログが見つかりません", 404);
     }
 
-    if (log.userId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (log.unit.userId !== user.id) {
+      return createErrorResponse("このログを削除する権限がありません", 403);
     }
 
     // トランザクションを使用して、関連するリソースも一緒に削除する
@@ -63,13 +63,10 @@ export async function DELETE(
     revalidateUnitData(id);
 
     revalidatePath(`/units/${id}`);
-    return NextResponse.json({ data: { id: logId } });
+    return createApiResponse({ id: logId });
   } catch (error) {
     console.error("Error deleting log:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return createErrorResponse("ログの削除中にエラーが発生しました", 500);
   }
 }
 
@@ -79,27 +76,35 @@ export async function PUT(
 ) {
   await ensurePrismaConnected();
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { id, logId } = await params;
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
-    const { id, logId } = await params;
-    const body = await request.json();
-    const validatedData = logRequestSchema.parse(body);
-
-    const log = await prisma.log.findUnique({
+    // ログの存在確認と権限チェック
+    const existingLog = await prisma.log.findUnique({
       where: { id: parseInt(logId) },
-      include: { unit: true },
+      include: {
+        unit: {
+          select: {
+            userId: true,
+          },
+        },
+      },
     });
 
-    if (!log) {
-      return NextResponse.json({ error: "Log not found" }, { status: 404 });
+    if (!existingLog) {
+      return createErrorResponse("ログが見つかりません", 404);
     }
 
-    if (log.userId !== session.user.id) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (existingLog.unit.userId !== user.id) {
+      return createErrorResponse("このログを更新する権限がありません", 403);
     }
+
+    const body = await request.json();
+    const validatedData = logRequestSchema.parse(body);
 
     const updatedLog = await prisma.log.update({
       where: { id: parseInt(logId) },
@@ -153,13 +158,10 @@ export async function PUT(
     revalidateUnitData(id);
 
     revalidatePath(`/units/${id}`);
-    return NextResponse.json({ data: updatedLog });
+    return createApiResponse(updatedLog);
   } catch (error) {
     console.error("Error updating log:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return createErrorResponse("ログの更新中にエラーが発生しました", 500);
   }
 }
 
@@ -169,57 +171,47 @@ export async function GET(
 ) {
   await ensurePrismaConnected();
   try {
-    const { id, logId } = await params;
+    const { logId } = await params;
+    const user = await getCurrentUserUnified();
 
-    // セッションの取得（オプショナル）
-    const session = await getServerSession(authConfig);
-
-    // ログデータの取得
+    // ログを取得
     const log = await prisma.log.findUnique({
       where: { id: parseInt(logId) },
       include: {
-        resources: true,
         logTags: {
           include: {
             tag: true,
           },
         },
+        resources: true,
+        unit: {
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
-    // ログが存在しない場合はエラー
     if (!log) {
-      return NextResponse.json({ error: "Log not found" }, { status: 404 });
+      return createErrorResponse("ログが見つかりません", 404);
     }
 
-    // ユニットの所有者確認（非公開ログへのアクセス制限）
-    const unit = await prisma.unit.findUnique({
-      where: { id: parseInt(id) },
-      select: { userId: true, displayFlag: true },
-    });
-
-    if (!unit) {
-      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+    // 権限チェック（自分のユニットのログのみ表示可能）
+    if (user?.id !== log.unit.userId) {
+      return createErrorResponse("このログを表示する権限がありません", 403);
     }
 
-    // 非表示ユニットの場合、所有者のみアクセス可能
-    if (!unit.displayFlag && (!session || session.user.id !== unit.userId)) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // レスポンスの加工
-    const { logTags, ...restLog } = log;
+    // タグの整形
     const formattedLog = {
-      ...restLog,
-      tags: logTags.map((lt) => lt.tag),
+      ...log,
+      tags: log.logTags.map((logTag) => logTag.tag),
+      logTags: undefined,
+      unit: undefined,
     };
 
-    return NextResponse.json({ data: formattedLog });
+    return createApiResponse(formattedLog);
   } catch (error) {
-    console.error("Error fetching log:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("ログ取得エラー:", error);
+    return createErrorResponse("ログの取得中にエラーが発生しました", 500);
   }
 }

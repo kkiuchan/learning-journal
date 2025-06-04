@@ -1,10 +1,10 @@
 "use client";
 
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useComments } from "@/hooks/useComments";
 import { useUnitLike } from "@/hooks/useUnitLike";
+import { AuthSession } from "@/types/auth";
 import { UnitDTO } from "@/types/unit";
-import { Session } from "next-auth";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -17,14 +17,49 @@ import { UnitHeader } from "./UnitHeader";
 
 interface UnitDetailProps {
   id: string;
-  session: Session | null;
+  session: AuthSession | null;
 }
 
 // const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function UnitDetail({ id, session }: UnitDetailProps) {
   const router = useRouter();
-  const { data: sessionData } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  console.log("UnitDetail session state:", {
+    serverSession: session,
+    supabaseSession,
+    hasServerSession: !!session,
+    hasSupabaseSession: !!supabaseSession,
+  });
+
+  // サーバーサイドのsessionまたはクライアントサイドのsessionを使用
+  const sessionData =
+    session ||
+    (supabaseSession
+      ? {
+          user: {
+            id: supabaseSession.user.id,
+            email: supabaseSession.user.email || "",
+            name:
+              supabaseSession.user.user_metadata?.name ||
+              supabaseSession.user.user_metadata?.full_name ||
+              "",
+            image:
+              supabaseSession.user.user_metadata?.avatar_url ||
+              supabaseSession.user.user_metadata?.picture ||
+              "",
+          },
+          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        }
+      : null);
+
+  console.log("UnitDetail final sessionData:", {
+    sessionData,
+    hasUser: !!sessionData?.user,
+    userId: sessionData?.user?.id,
+  });
+
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const menuRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
@@ -53,7 +88,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     limit: 10,
   });
 
-  const { handleLike: handleUnitLike } = useUnitLike();
+  const { handleLike: handleUnitLike } = useUnitLike({}, sessionData);
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -124,7 +159,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          comment: comment,
+          content: comment,
           isAI: true,
         }),
       });
@@ -167,7 +202,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          comment,
+          content: comment,
         }),
       });
 
@@ -197,7 +232,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          comment: content,
+          content: content,
         }),
       });
 

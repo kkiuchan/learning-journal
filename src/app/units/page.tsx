@@ -1,9 +1,8 @@
-import { authConfig } from "@/auth.config";
-import { getServerSession } from "next-auth";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { UnitsPageClient } from "./components/UnitsPageClient";
 
 export default async function UnitsPage() {
-  const session = await getServerSession(authConfig);
+  const user = await getCurrentUser();
 
-  return <UnitsPageClient session={session} />;
+  return <UnitsPageClient user={user} />;
 }

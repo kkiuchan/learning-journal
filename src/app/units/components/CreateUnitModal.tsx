@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -67,6 +68,20 @@ export function CreateUnitModal({
 }: CreateUnitModalProps) {
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
+  const { session } = useSupabaseAuth();
+
+  // デバッグ: useSupabaseAuth の結果を確認
+  console.log("[CreateUnitModal] useSupabaseAuth result:", {
+    session,
+    hasSession: !!session,
+    sessionType: typeof session,
+    sessionKeys: session ? Object.keys(session) : "no session",
+    accessToken: session?.access_token,
+    hasAccessToken: !!session?.access_token,
+    user: session?.user,
+    userId: session?.user?.id,
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [values, setValues] = useState<UnitFormValues>({
@@ -107,16 +122,59 @@ export function CreateUnitModal({
     setIsLoading(true);
 
     try {
+      console.log("[CreateUnitModal] handleSubmit start - session details:", {
+        sessionExists: !!session,
+        sessionType: typeof session,
+        sessionNull: session === null,
+        sessionUndefined: session === undefined,
+        sessionFalsy: !session,
+        sessionTruthy: !!session,
+        accessTokenExists: !!session?.access_token,
+        accessTokenValue: session?.access_token
+          ? session.access_token.substring(0, 20) + "..."
+          : "no access token",
+        userExists: !!session?.user,
+        userId: session?.user?.id,
+      });
+
+      console.log("[CreateUnitModal] Session state:", {
+        hasSession: !!session,
+        hasAccessToken: !!session?.access_token,
+        sessionUserId: session?.user?.id,
+      });
+
+      if (!session) {
+        console.error("[CreateUnitModal] No session available");
+        toast.error("認証が必要です");
+        return;
+      }
+
+      if (!session.access_token) {
+        console.error("[CreateUnitModal] No access token in session");
+        toast.error("認証トークンが見つかりません");
+        return;
+      }
+
+      const requestHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      };
+
+      console.log("[CreateUnitModal] Making API request with headers:", {
+        ...requestHeaders,
+        Authorization: `Bearer ${session.access_token.substring(0, 20)}...`,
+      });
+
       const response = await fetch("/api/units", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: requestHeaders,
         body: JSON.stringify({
           ...values,
           tags: values.tags.map((tag) => tag.name),
         }),
       });
+
+      console.log("[CreateUnitModal] API response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();

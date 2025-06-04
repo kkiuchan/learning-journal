@@ -1,7 +1,8 @@
-import { auth } from "@/auth";
 import { Loading } from "@/components/ui/loading";
 import { MenuProvider } from "@/contexts/MenuContext";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { AuthSession } from "@/types/auth";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import UnitDetail from "./components/UnitDetail";
@@ -86,9 +87,22 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function UnitPage({ params }: Props) {
-  const session = await auth();
+  const currentUser = await getCurrentUserUnified();
   const resolvedParams = await params;
   const { id } = resolvedParams;
+
+  // SupabaseユーザーをAuthSession型に変換
+  const session: AuthSession | null = currentUser
+    ? {
+        user: {
+          id: currentUser.id,
+          email: currentUser.email,
+          name: currentUser.name || "",
+          image: currentUser.image || "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24時間後
+      }
+    : null;
 
   return (
     <MenuProvider>

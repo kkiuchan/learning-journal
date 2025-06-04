@@ -1,8 +1,7 @@
-import { authConfig } from "@/auth.config";
 import { DashboardClient } from "@/components/dashboard/dashboard-client";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
@@ -217,42 +216,74 @@ function calculateUnitProgress(unit: any): number {
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authConfig);
-  if (!session?.user) {
-    redirect("/login");
+  try {
+    console.log("[Dashboard] Checking user authentication...");
+
+    const user = await getCurrentUser();
+    console.log(
+      "[Dashboard] User:",
+      user ? `${user.email} (${user.id})` : "None"
+    );
+
+    if (!user) {
+      console.log("[Dashboard] No user found, redirecting to login");
+      redirect("/auth/supabase-login");
+    }
+
+    console.log("[Dashboard] Fetching dashboard data...");
+    const data = await getDashboardData(user.id);
+
+    // ユーザーのサブスクリプション情報を取得
+    const userDetails = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        subscriptionStatus: true,
+        subscriptionEnd: true,
+        trialEnd: true, // トライアル期間終了日も取得
+      },
+    });
+
+    console.log("[Dashboard] User details:", userDetails);
+
+    // 型変換（Prismaの型をコンポーネントで期待される型に合わせる）
+    const formattedData = {
+      ...data,
+      activeUnits: data.activeUnits.map((unit) => ({
+        ...unit,
+        id: String(unit.id), // number を string に変換
+      })),
+      recentLogs: data.recentLogs.map((log) => ({
+        ...log,
+        unitId: String(log.unitId), // number を string に変換
+      })),
+    };
+
+    console.log("[Dashboard] Data formatted successfully");
+
+    return (
+      <DashboardClient
+        data={formattedData}
+        subscriptionStatus={userDetails?.subscriptionStatus || null}
+        subscriptionEnd={userDetails?.subscriptionEnd?.toISOString() || null}
+        trialEnd={userDetails?.trialEnd?.toISOString() || null}
+      />
+    );
+  } catch (error) {
+    console.error("[Dashboard] Error:", error);
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-red-600 mb-4">
+          エラーが発生しました
+        </h1>
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-700">
+            ダッシュボードの読み込み中にエラーが発生しました。
+          </p>
+          <pre className="mt-2 text-sm text-red-600 overflow-auto">
+            {error instanceof Error ? error.message : String(error)}
+          </pre>
+        </div>
+      </div>
+    );
   }
-
-  const data = await getDashboardData(session.user.id);
-
-  // ユーザーのサブスクリプション情報を取得
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      subscriptionStatus: true,
-      subscriptionEnd: true,
-      trialEnd: true, // トライアル期間終了日も取得
-    },
-  });
-
-  // 型変換（Prismaの型をコンポーネントで期待される型に合わせる）
-  const formattedData = {
-    ...data,
-    activeUnits: data.activeUnits.map((unit) => ({
-      ...unit,
-      id: String(unit.id), // number を string に変換
-    })),
-    recentLogs: data.recentLogs.map((log) => ({
-      ...log,
-      unitId: String(log.unitId), // number を string に変換
-    })),
-  };
-
-  return (
-    <DashboardClient
-      data={formattedData}
-      subscriptionStatus={user?.subscriptionStatus || null}
-      subscriptionEnd={user?.subscriptionEnd?.toISOString() || null}
-      trialEnd={user?.trialEnd?.toISOString() || null}
-    />
-  );
 }

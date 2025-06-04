@@ -1,8 +1,7 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
 // import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 
@@ -109,9 +108,9 @@ export async function PUT(
   await ensurePrismaConnected();
   try {
     const { id } = await params;
-    // セッションの取得
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
+    // 現在のユーザーを取得
+    const user = await getCurrentUserUnified();
+    if (!user?.id) {
       return NextResponse.json(
         { error: "認証が必要です", status: 401 },
         { status: 401 }
@@ -131,7 +130,7 @@ export async function PUT(
       );
     }
 
-    if (unit.userId !== session.user.id) {
+    if (unit.userId !== user.id) {
       return NextResponse.json(
         { error: "このユニットを更新する権限がありません", status: 403 },
         { status: 403 }
@@ -269,9 +268,9 @@ export async function DELETE(
   await ensurePrismaConnected();
   try {
     const { id } = await params;
-    const session = await getServerSession(authConfig);
+    const user = await getCurrentUserUnified();
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
     }
 
@@ -287,7 +286,7 @@ export async function DELETE(
       );
     }
 
-    if (unit.userId !== session.user.id) {
+    if (unit.userId !== user.id) {
       return NextResponse.json(
         { error: "このユニットを削除する権限がありません" },
         { status: 403 }
@@ -409,7 +408,7 @@ export async function GET(
       return createErrorResponse("無効なユニットIDです", 400);
     }
 
-    const session = await getServerSession(authConfig);
+    const user = await getCurrentUserUnified();
 
     const unit = await prisma.unit.findUnique({
       where: { id: numericId },
@@ -441,10 +440,10 @@ export async function GET(
 
     // いいね状態の確認
     let isLiked = false;
-    if (session?.user?.id) {
+    if (user?.id) {
       const like = await prisma.unitLike.findFirst({
         where: {
-          AND: [{ unitId: numericId }, { userId: session.user.id }],
+          AND: [{ unitId: numericId }, { userId: user.id }],
         },
       });
       isLiked = !!like;

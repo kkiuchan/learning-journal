@@ -1,11 +1,10 @@
 import { UnitsList } from "@/app/units/components/UnitsList";
-import { authConfig } from "@/auth.config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { getCurrentUser } from "@/lib/auth-helpers";
 import { UnitStatus } from "@/types/unit";
 import { Metadata } from "next";
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import UserAvatar from "./components/UserAvatar";
@@ -151,8 +150,8 @@ export async function generateMetadata({
 
 export default async function UserPage({ params }: Props) {
   const { id } = await params;
-  const session = await getServerSession(authConfig);
-  const currentUserId = session?.user?.id;
+  const currentUser = await getCurrentUser();
+  const currentUserId = currentUser?.id;
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_APP_URL}/api/users/${id}`,

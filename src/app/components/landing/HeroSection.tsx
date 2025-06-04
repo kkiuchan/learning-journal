@@ -1,15 +1,36 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { AuthSession } from "@/types/auth";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Brain, Clock, LineChart, Loader2 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export function HeroSection() {
-  const { data: session } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
+
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isTypingComplete, setIsTypingComplete] = useState(false);
@@ -313,15 +334,17 @@ export function HeroSection() {
               ) : (
                 <>
                   <Button
-                    onClick={() => handleNavigation("/auth/login")}
+                    onClick={() => handleNavigation("/auth/supabase-login")}
                     size="lg"
                     className={`${buttonBaseClass} group ${
-                      isLoading === "/auth/login" ? buttonLoadingClass : ""
+                      isLoading === "/auth/supabase-login"
+                        ? buttonLoadingClass
+                        : ""
                     }`}
                     disabled={isLoading !== null}
                   >
                     <div className="flex items-center gap-2">
-                      {isLoading === "/auth/login" && (
+                      {isLoading === "/auth/supabase-login" && (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       )}
                       無料で始める

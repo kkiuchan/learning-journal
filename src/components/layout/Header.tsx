@@ -17,6 +17,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { AuthSession } from "@/types/auth";
 import {
   BookOpen,
   Crown,
@@ -29,7 +31,6 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -53,12 +54,38 @@ const isValidImageUrl = (url: string | null): boolean => {
 };
 
 export function Header() {
-  const { data: session } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingLink, setLoadingLink] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
+
+  console.log("Header session state:", {
+    supabaseSession,
+    session,
+    hasSession: !!session,
+    userId: session?.user?.id,
+  });
 
   // パスが変更されたらローディング状態をリセット
   useEffect(() => {
@@ -233,8 +260,8 @@ export function Header() {
             ) : (
               <Button asChild variant="ghost" size="sm">
                 <Link
-                  href="/auth/login"
-                  onClick={() => handleLinkClick("/auth/login")}
+                  href="/auth/supabase-login"
+                  onClick={() => handleLinkClick("/auth/supabase-login")}
                 >
                   <LogIn className="mr-2 h-4 w-4" />
                   <span>ログイン</span>

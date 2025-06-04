@@ -4,13 +4,13 @@ import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
 import { useModal } from "@/contexts/ModalContext";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { User } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function DashboardHeader() {
-  const { data: session } = useSession();
+  const { session, loading } = useSupabaseAuth();
   const router = useRouter();
   const { openCreateUnitModal } = useModal();
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
@@ -27,6 +27,16 @@ export function DashboardHeader() {
   };
 
   const profilePath = session?.user?.id ? `/users/${session.user.id}` : null;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+          <Loading size="lg" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">

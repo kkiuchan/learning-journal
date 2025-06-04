@@ -1,7 +1,6 @@
-import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 // 管理者権限チェック
@@ -15,55 +14,56 @@ function isAdmin(email: string): boolean {
   return adminEmails.includes(email);
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   await ensurePrismaConnected();
-
   try {
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.email) {
+    const user = await getCurrentUserUnified();
+    if (!user) {
       return createErrorResponse("認証が必要です", 401);
     }
 
     // 管理者権限チェック
-    if (!isAdmin(session.user.email)) {
+    if (!isAdmin(user.email)) {
       return createErrorResponse("管理者権限が必要です", 403);
     }
 
-    const url = new URL(req.url);
-    const query = url.searchParams.get("q") || "";
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "20");
-
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get("q") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
     const skip = (page - 1) * limit;
 
-    // ユーザーを検索
-    const where = query
+    const whereCondition = query
       ? {
           OR: [
-            { email: { contains: query, mode: "insensitive" as const } },
             { name: { contains: query, mode: "insensitive" as const } },
+            { email: { contains: query, mode: "insensitive" as const } },
           ],
         }
       : {};
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
-        where,
+        where: whereCondition,
         select: {
           id: true,
-          email: true,
           name: true,
+          email: true,
+          image: true,
           createdAt: true,
-          subscriptionStatus: true,
-          subscriptionPlan: true,
-          subscriptionStart: true,
-          subscriptionEnd: true,
+          _count: {
+            select: {
+              units: true,
+              logs: true,
+              comments: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
         skip,
         take: limit,
       }),
-      prisma.user.count({ where }),
+      prisma.user.count({ where: whereCondition }),
     ]);
 
     return createApiResponse({
@@ -74,10 +74,9 @@ export async function GET(req: NextRequest) {
         total,
         totalPages: Math.ceil(total / limit),
       },
-      query,
     });
   } catch (error) {
     console.error("ユーザー検索エラー:", error);
-    return createErrorResponse("ユーザー検索に失敗しました", 500);
+    return createErrorResponse("ユーザー検索中にエラーが発生しました", 500);
   }
 }

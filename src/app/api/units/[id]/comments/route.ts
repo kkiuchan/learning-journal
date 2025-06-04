@@ -1,11 +1,10 @@
-import { authConfig } from "@/auth.config";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import {
   revalidateCommentData,
   revalidateUnitData,
 } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 /**
  * @swagger
@@ -241,104 +240,51 @@ export async function GET(
  *               $ref: '#/components/schemas/Error'
  */
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensurePrismaConnected();
   try {
     const { id } = await params;
-    // 認証チェック
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // ユニットの存在確認
     const unit = await prisma.unit.findUnique({
       where: { id: parseInt(id) },
-      select: { id: true },
+      select: { id: true, displayFlag: true },
     });
 
     if (!unit) {
+      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
+    }
+
+    // 非公開ユニットにはコメントできない
+    if (!unit.displayFlag) {
       return NextResponse.json(
-        { error: "ユニットが見つかりません", status: 404 },
-        { status: 404 }
+        { error: "Cannot comment on private unit" },
+        { status: 403 }
       );
     }
 
-    // リクエストボディの取得
     const body = await request.json();
-    const { comment: content, isAI } = body;
+    const { content } = body;
 
     if (!content) {
       return NextResponse.json(
-        { error: "コメントの内容は必須です", status: 400 },
+        { error: "Content is required" },
         { status: 400 }
       );
     }
 
-    // AIアシスタントのユーザーIDを使用する場合
-    if (isAI) {
-      // AIアシスタントのユーザーが存在するか確認
-      let aiUser = await prisma.user.findUnique({
-        where: { id: "ai-assistant" },
-      });
-
-      // AIアシスタントのユーザーが存在しない場合は作成
-      if (!aiUser) {
-        aiUser = await prisma.user.create({
-          data: {
-            id: "ai-assistant",
-            name: "AIアシスタント",
-            email: "ai-assistant@example.com",
-            image: "/images/ai-assistant.png",
-            primaryAuthMethod: "credentials",
-          },
-        });
-      }
-
-      // コメントの作成
-      const comment = await prisma.comment.create({
-        data: {
-          comment: content,
-          unitId: parseInt(id),
-          userId: "ai-assistant",
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
-      });
-
-      // ユニットのコメント数を更新
-      await prisma.unit.update({
-        where: { id: parseInt(id) },
-        data: {
-          commentsCount: {
-            increment: 1,
-          },
-        },
-      });
-      // キャッシュの再検証
-      revalidateUnitData(id);
-      revalidateCommentData(comment.id);
-
-      return NextResponse.json({ data: comment });
-    }
-
-    // 通常のユーザーからのコメント作成
     const comment = await prisma.comment.create({
       data: {
+        unitId: unit.id,
+        userId: user.id,
         comment: content,
-        unitId: parseInt(id),
-        userId: session.user.id,
       },
       include: {
         user: {
@@ -351,24 +297,15 @@ export async function POST(
       },
     });
 
-    // ユニットのコメント数を更新
-    await prisma.unit.update({
-      where: { id: parseInt(id) },
-      data: {
-        commentsCount: {
-          increment: 1,
-        },
-      },
-    });
     // キャッシュの再検証
-    revalidateUnitData(id);
     revalidateCommentData(comment.id);
+    revalidateUnitData(id);
 
-    return NextResponse.json({ data: comment });
+    return NextResponse.json({ data: comment }, { status: 201 });
   } catch (error) {
-    console.error("コメントの作成中にエラーが発生しました:", error);
+    console.error("Error creating comment:", error);
     return NextResponse.json(
-      { error: "コメントの作成中にエラーが発生しました", status: 500 },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

@@ -14,9 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
 import { storage } from "@/lib/supabaseClient";
+import { AuthSession } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -39,14 +40,43 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const router = useRouter();
-  const { data: session, update: updateSession } = useSession();
+  const { session: supabaseSession } = useSupabaseAuth();
+
+  // Supabaseセッションを NextAuth.js 互換形式に変換
+  const session: AuthSession | null = supabaseSession
+    ? {
+        user: {
+          id: supabaseSession.user.id,
+          email: supabaseSession.user.email || "",
+          name:
+            supabaseSession.user.user_metadata?.name ||
+            supabaseSession.user.user_metadata?.full_name ||
+            "",
+          image:
+            supabaseSession.user.user_metadata?.avatar_url ||
+            supabaseSession.user.user_metadata?.picture ||
+            "",
+        },
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }
+    : null;
+
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  // SWR fetcher with Supabase auth headers
+  const fetcher = (url: string) => {
+    const headers: Record<string, string> = {};
+    if (supabaseSession?.access_token) {
+      headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+    }
+    return fetch(url, { headers }).then((res) => res.json());
+  };
+
   // SWRでプロフィールデータを取得
-  const { data: profileData, error, mutate } = useSWR("/api/users/me");
+  const { data: profileData, error, mutate } = useSWR("/api/users/me", fetcher);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -114,11 +144,18 @@ export function ProfileForm() {
   async function onSubmit(values: ProfileFormValues) {
     setIsLoading(true);
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      // Supabaseセッションのアクセストークンを追加
+      if (supabaseSession?.access_token) {
+        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+      }
+
       const response = await fetch("/api/users/me", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify(values),
       });
 
@@ -126,17 +163,6 @@ export function ProfileForm() {
 
       // SWRキャッシュを更新
       await mutate();
-
-      // セッション情報を更新
-      if (session) {
-        await updateSession({
-          ...session,
-          user: {
-            ...session.user,
-            image: values.image,
-          },
-        });
-      }
 
       toast.success("プロフィールを更新しました");
 

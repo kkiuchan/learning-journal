@@ -6,17 +6,17 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/UserAvatar";
 import { useMenu } from "@/contexts/MenuContext";
+import { AuthSession } from "@/types/auth";
 import { CommentDTO } from "@/types/comment";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { Session } from "next-auth";
 import { useState } from "react";
 
 interface CommentsSectionProps {
   unitId: string;
   userId: string;
-  session: Session | null;
+  session: AuthSession | null;
   comments: CommentDTO[];
   pagination: {
     totalPages: number;

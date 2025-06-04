@@ -1,161 +1,190 @@
-import { getToken } from "next-auth/jwt";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { NextRequest, NextResponse } from "next/server";
 
-// 認証が不要なパス
+// 管理者メールアドレス
+const adminEmails = [
+  "bandman.gh.bs.dk.lav@gmail.com",
+  // 他の管理者メールアドレスを追加
+];
+
+// 公開パス（認証不要）
 const publicPaths = [
   "/",
-  "/demo",
-  "/units", // ユニット一覧
-  "/units/:path*", // ユニット詳細
-  "/users", // ユーザー一覧
-  "/users/:path*", // ユーザー詳細
   "/auth/login",
-  "/auth/signin",
   "/auth/register",
+  "/auth/supabase-login",
+  "/auth/supabase-register",
   "/auth/verify-notice",
-  "/auth/verify",
-  "/auth/forgot-password",
-  "/api/docs",
-  "/_next",
-  "/favicon.ico",
-  "/sw.js",
-  "/sw-register.js",
-  "/manifest.json",
-  "/offline.html",
-  "/api/auth",
+  "/auth/callback",
+  "/auth/error",
+  "/api/auth/migrate-to-supabase",
+  "/api/debug/supabase-session",
+  "/api/auth/check-email",
+  "/pricing",
+  "/contact",
+  "/terms",
+  "/privacy",
 ];
+
+function isPublicPath(pathname: string): boolean {
+  return publicPaths.some((path) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(path);
+  });
+}
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // APIルートの場合は処理をスキップ
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.next();
-  }
+  console.log(`[Supabase] Checking path: ${pathname}`);
 
-  // 詳細ページのパターンマッチング
-  const isUnitDetail = /^\/units\/[0-9]+$/.test(pathname);
-  const isUserDetail = /^\/users\/[^/]+$/.test(pathname);
-
-  // パスチェックを最適化
-  const isPublicPath =
-    publicPaths.some(
-      (path) => pathname === path || pathname.startsWith(`${path}/`)
-    ) ||
-    isUnitDetail ||
-    isUserDetail;
-
-  // --- 追加: bot判定 ---
-  const botUserAgents = [
-    "Twitterbot",
-    "facebookexternalhit",
-    "Slackbot",
-    "Discordbot",
-    "LinkedInBot",
-    "Googlebot",
-    "Bingbot",
-    "Applebot",
-    "Yeti",
-    "Yahoo! Slurp",
-    "DuckDuckBot",
-    "facebot",
-    "ia_archiver",
-  ];
-  const userAgent = req.headers.get("user-agent") || "";
-  const isBot = botUserAgents.some((bot) => userAgent.includes(bot));
-  const isTopPage = pathname === "/";
-
-  // botが対象ページにアクセスした場合は認証スキップ
-  if (isBot && (isUnitDetail || isUserDetail || isTopPage)) {
-    console.log(
-      `[Edge] Bot detected (${userAgent}) - skipping auth for ${pathname}`
-    );
-    return NextResponse.next();
-  }
-  // --- ここまで追加 ---
-
-  console.log(`[Edge] Checking path: ${pathname}`);
-  console.log(`[Edge] Is public path: ${isPublicPath}`);
-  console.log(`[Edge] NEXTAUTH_URL: ${process.env.NEXTAUTH_URL}`);
-  console.log(`[Edge] Has NEXTAUTH_SECRET: ${!!process.env.NEXTAUTH_SECRET}`);
-
-  if (isPublicPath) {
-    console.log(`[Edge] Access granted to public path: ${pathname}`);
+  if (isPublicPath(pathname)) {
+    console.log(`[Supabase] Access granted to public path: ${pathname}`);
     return NextResponse.next();
   }
 
   try {
-    // JWTトークンを手動で取得
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NODE_ENV === "production",
-      cookieName:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.session-token"
-          : "next-auth.session-token",
+    // Supabase Server Clientを作成
+    const response = NextResponse.next();
+
+    console.log(`[Supabase] Creating server client for path: ${pathname}`);
+
+    // まず、現在のCookieを確認
+    const allCookies = req.cookies.getAll();
+    console.log(
+      `[Supabase] All cookies found:`,
+      allCookies.map((c) => c.name)
+    );
+
+    const supabaseCookies = allCookies.filter(
+      (cookie) =>
+        cookie.name.includes("supabase") ||
+        cookie.name.startsWith("sb-") ||
+        cookie.name.includes("supabase-auth")
+    );
+    console.log(
+      `[Supabase] Supabase cookies:`,
+      supabaseCookies.map(
+        (c) =>
+          `${c.name}=${c.value.length > 50 ? c.value.substring(0, 50) + "..." : c.value}`
+      )
+    );
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          storageKey: "supabase-auth",
+          autoRefreshToken: false,
+          persistSession: false,
+          detectSessionInUrl: false,
+        },
+        cookies: {
+          get(name: string) {
+            const value = req.cookies.get(name)?.value;
+            if (
+              name.includes("supabase") ||
+              name.startsWith("sb-") ||
+              name.includes("supabase-auth")
+            ) {
+              console.log(
+                `[Supabase] Getting cookie ${name}:`,
+                value ? `present (length: ${value.length})` : "missing"
+              );
+            }
+            return value;
+          },
+          set(name: string, value: string, options: any) {
+            if (
+              name.includes("supabase") ||
+              name.startsWith("sb-") ||
+              name.includes("supabase-auth")
+            ) {
+              console.log(
+                `[Supabase] Setting cookie ${name}:`,
+                value ? `present (length: ${value.length})` : "empty"
+              );
+            }
+            req.cookies.set(name, value);
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: any) {
+            if (
+              name.includes("supabase") ||
+              name.startsWith("sb-") ||
+              name.includes("supabase-auth")
+            ) {
+              console.log(`[Supabase] Removing cookie ${name}`);
+            }
+            req.cookies.delete(name);
+            response.cookies.set({
+              name,
+              value: "",
+              ...options,
+            });
+          },
+        },
+      }
+    );
+
+    console.log(`[Supabase] Server client created, checking user...`);
+
+    // ユーザー認証チェック
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    console.log(`[Supabase] User check result:`, {
+      hasUser: !!user,
+      userId: user?.id || "none",
+      userEmail: user?.email || "none",
+      error: error?.message || "none",
     });
 
-    console.log(`[Edge] Cookie header:`, req.headers.get("cookie"));
-    console.log(`[Edge] Token:`, JSON.stringify(token, null, 2));
-
-    if (!token?.sub) {
-      console.log(`[Edge] No valid token - redirecting to login`);
-      const url = new URL("/auth/login", req.url);
+    if (error || !user) {
+      console.log(`[Supabase] Authentication failed - redirecting to login`);
+      const url = new URL("/auth/supabase-login", req.url);
       url.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(url);
     }
 
-    // 管理者チェック
+    // 管理者パスチェック
     const adminPaths = ["/admin"];
     const isAdminPath = adminPaths.some((path) => pathname.startsWith(path));
 
     if (isAdminPath) {
-      console.log(`[Edge] Admin path access - token.email:`, token.email);
-      console.log(`[Edge] Admin path access - token.role:`, token.role);
-
-      // 管理者メールアドレスリスト
-      const adminEmails = [
-        "bandman.gh.bs.dk.lav@gmail.com",
-        // 他の管理者メールアドレスをここに追加
-      ];
-
-      const isAdmin =
-        token.email && adminEmails.includes(token.email as string);
-      console.log(`[Edge] Is admin:`, isAdmin);
+      const isAdmin = user.email && adminEmails.includes(user.email);
 
       if (!isAdmin) {
-        console.log(`[Edge] Non-admin access attempt to admin path`);
+        console.log(
+          `[Supabase] Access denied to admin path for: ${user.email}`
+        );
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
 
-      console.log(`[Edge] Admin access granted`);
+      console.log(`[Supabase] Admin access granted for: ${user.email}`);
     }
 
-    console.log(`[Edge] Access granted for user: ${token.sub}`);
-    return NextResponse.next();
+    console.log(
+      `[Supabase] Access granted for authenticated user: ${user.email}`
+    );
+    return response;
   } catch (error) {
-    console.error(`[Edge] Error in middleware:`, error);
-    // エラーが発生した場合はログインページにリダイレクト
-    const url = new URL("/auth/login", req.url);
+    console.error("[Supabase] Middleware error:", error);
+    const url = new URL("/auth/supabase-login", req.url);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 }
 
 export const config = {
-  matcher: [
-    "/admin/:path*",
-    "/dashboard/:path*",
-    "/account/:path*",
-    {
-      source:
-        "/((?!api/|_next/|.*\\.|favicon.ico|sw.js|sw-register.js|manifest.json|offline.html).*)",
-      missing: [
-        { type: "header", key: "next-router-prefetch" },
-        { type: "header", key: "purpose", value: "prefetch" },
-      ],
-    },
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

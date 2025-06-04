@@ -1,11 +1,11 @@
-import { authConfig } from "@/auth.config";
+import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import {
   revalidateCommentData,
   revalidateUnitData,
 } from "@/utils/server-cache";
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 /**
  * @swagger
@@ -95,56 +95,42 @@ import { NextResponse } from "next/server";
  *               $ref: '#/components/schemas/Error'
  */
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   await ensurePrismaConnected();
-  const { id, commentId } = await params;
   try {
-    // 認証チェック
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+    const { id, commentId } = await params;
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
     // コメントの存在確認と権限チェック
     const comment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
-      select: { userId: true },
+      select: { userId: true, unitId: true },
     });
 
     if (!comment) {
-      return NextResponse.json(
-        { error: "コメントが見つかりません", status: 404 },
-        { status: 404 }
-      );
+      return createErrorResponse("コメントが見つかりません", 404);
     }
 
-    if (comment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "このコメントを更新する権限がありません", status: 403 },
-        { status: 403 }
-      );
+    if (comment.userId !== user.id) {
+      return createErrorResponse("このコメントを更新する権限がありません", 403);
     }
 
-    // リクエストボディの取得
     const body = await request.json();
-    const { comment: commentContent } = body;
+    const { content } = body;
 
-    if (!commentContent) {
-      return NextResponse.json(
-        { error: "コメントの内容は必須です", status: 400 },
-        { status: 400 }
-      );
+    if (!content) {
+      return createErrorResponse("コメント内容は必須です", 400);
     }
 
-    // コメントの更新
     const updatedComment = await prisma.comment.update({
       where: { id: parseInt(commentId) },
-      data: { comment: commentContent },
+      data: { comment: content },
       include: {
         user: {
           select: {
@@ -156,16 +142,14 @@ export async function PUT(
       },
     });
 
-    revalidateCommentData(commentId);
+    // キャッシュの再検証
+    revalidateCommentData(parseInt(commentId));
     revalidateUnitData(id);
 
-    return NextResponse.json({ data: updatedComment });
+    return createApiResponse(updatedComment);
   } catch (error) {
-    console.error("コメントの更新中にエラーが発生しました:", error);
-    return NextResponse.json(
-      { error: "コメントの更新中にエラーが発生しました", status: 500 },
-      { status: 500 }
-    );
+    console.error("Error updating comment:", error);
+    return createErrorResponse("コメントの更新中にエラーが発生しました", 500);
   }
 }
 
@@ -220,66 +204,43 @@ export async function PUT(
  *               $ref: '#/components/schemas/Error'
  */
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
   await ensurePrismaConnected();
-  const { id, commentId } = await params;
   try {
-    // 認証チェック
-    const session = await getServerSession(authConfig);
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "認証が必要です", status: 401 },
-        { status: 401 }
-      );
+    const { id, commentId } = await params;
+    const user = await getCurrentUserUnified();
+
+    if (!user) {
+      return createErrorResponse("認証が必要です", 401);
     }
 
     // コメントの存在確認と権限チェック
     const comment = await prisma.comment.findUnique({
       where: { id: parseInt(commentId) },
-      select: { userId: true },
+      select: { userId: true, unitId: true },
     });
 
     if (!comment) {
-      return NextResponse.json(
-        { error: "コメントが見つかりません", status: 404 },
-        { status: 404 }
-      );
+      return createErrorResponse("コメントが見つかりません", 404);
     }
 
-    if (comment.userId !== session.user.id) {
-      return NextResponse.json(
-        { error: "このコメントを削除する権限がありません", status: 403 },
-        { status: 403 }
-      );
+    if (comment.userId !== user.id) {
+      return createErrorResponse("このコメントを削除する権限がありません", 403);
     }
 
-    // コメントの削除
     await prisma.comment.delete({
       where: { id: parseInt(commentId) },
     });
 
-    // ユニットのコメント数を更新
-    await prisma.unit.update({
-      where: { id: parseInt(id) },
-      data: {
-        commentsCount: {
-          decrement: 1,
-        },
-      },
-    });
-
     // キャッシュの再検証
+    revalidateCommentData(parseInt(commentId));
     revalidateUnitData(id);
-    revalidateCommentData(commentId);
 
-    return new NextResponse(null, { status: 204 });
+    return createApiResponse({ id: commentId });
   } catch (error) {
-    console.error("コメントの削除中にエラーが発生しました:", error);
-    return NextResponse.json(
-      { error: "コメントの削除中にエラーが発生しました", status: 500 },
-      { status: 500 }
-    );
+    console.error("Error deleting comment:", error);
+    return createErrorResponse("コメントの削除中にエラーが発生しました", 500);
   }
 }
