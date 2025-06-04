@@ -2,9 +2,9 @@
 
 import { supabase } from "@/lib/supabase-auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
-export default function AuthCallback() {
+function AuthCallbackContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -199,35 +199,61 @@ export default function AuthCallback() {
             <div className="text-red-600 text-5xl mb-4">✗</div>
           )}
 
-          <h1 className="text-xl font-semibold mb-2">
-            {status === "loading" && "認証処理中"}
-            {status === "success" && "認証完了"}
-            {status === "error" && "認証エラー"}
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">
+            {status === "loading"
+              ? "認証中"
+              : status === "success"
+                ? "認証完了"
+                : "認証エラー"}
           </h1>
 
           <p className="text-gray-600 mb-6">{message}</p>
 
-          {debugInfo && (
-            <div className="text-left bg-gray-100 p-4 rounded mb-4 text-xs">
-              <strong>Debug Info:</strong>
-              <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          {status === "error" && (
+            <div className="space-y-4">
+              <button
+                onClick={() => (window.location.href = "/auth/signin")}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                ログインページに戻る
+              </button>
             </div>
           )}
 
-          {status === "error" && (
-            <button
-              onClick={() => router.push("/auth/supabase-login")}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              ログイン画面に戻る
-            </button>
-          )}
-
-          {status === "success" && (
-            <p className="text-sm text-gray-500">ダッシュボードに移動中...</p>
+          {debugInfo && process.env.NODE_ENV === "development" && (
+            <details className="mt-6 text-left">
+              <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
+                デバッグ情報
+              </summary>
+              <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-40">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </details>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallback() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h1 className="text-xl font-semibold text-gray-900 mb-2">
+                認証中
+              </h1>
+              <p className="text-gray-600">認証情報を読み込み中...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

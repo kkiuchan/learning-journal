@@ -2,6 +2,9 @@ import { AdminClient } from "@/components/admin/admin-client";
 import { getCurrentUser, isCurrentUserAdmin } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 
+// 動的レンダリングを強制（Cookieを使用するため）
+export const dynamic = "force-dynamic";
+
 // 管理者権限チェック
 function isAdmin(email: string): boolean {
   const adminEmails = [

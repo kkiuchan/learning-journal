@@ -1,5 +1,8 @@
 import { getCurrentUser } from "@/lib/auth-helpers";
 
+// 動的レンダリングを強制（Cookieを使用するため）
+export const dynamic = "force-dynamic";
+
 export default async function DebugSessionPage() {
   const user = await getCurrentUser();
 
