@@ -24,6 +24,13 @@ const publicPaths = [
   "/contact",
   "/terms",
   "/privacy",
+  // 公開ページを追加
+  "/demo",
+  "/demo/",
+  "/features",
+  "/features/",
+  "/advertisement",
+  "/advertisement/",
 ];
 
 function isPublicPath(pathname: string): boolean {
