@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { supabase } from "@/lib/supabase-auth";
 import { storage } from "@/lib/supabaseClient";
 import { AuthSession } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,10 +100,10 @@ export function ProfileForm() {
         selfIntroduction: profileData.data.selfIntroduction || "",
         age: profileData.data.age,
         ageVisible: profileData.data.ageVisible,
-        skills: profileData.data.skills.map(
+        skills: (profileData.data.skills ?? []).map(
           (skill: { name: string }) => skill.name
         ),
-        interests: profileData.data.interests.map(
+        interests: (profileData.data.interests ?? []).map(
           (interest: { name: string }) => interest.name
         ),
         image: profileData.data.image || null,
@@ -151,6 +152,17 @@ export function ProfileForm() {
       // Supabaseセッションのアクセストークンを追加
       if (supabaseSession?.access_token) {
         headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+      }
+
+      // 画像が更新された場合はSupabase Authのuser_metadata.avatar_urlも更新
+      if (values.image) {
+        const { error: updateUserError } = await supabase.auth.updateUser({
+          data: { avatar_url: values.image },
+        });
+        if (updateUserError) {
+          console.error("Supabase Authの画像更新エラー:", updateUserError);
+          toast.error("認証プロフィール画像の更新に失敗しました");
+        }
       }
 
       const response = await fetch("/api/users/me", {

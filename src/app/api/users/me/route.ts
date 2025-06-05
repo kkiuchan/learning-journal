@@ -157,6 +157,10 @@ export async function GET() {
         ageVisible: true,
         createdAt: true,
         updatedAt: true,
+        userSkills: { select: { tag: { select: { id: true, name: true } } } },
+        userInterests: {
+          select: { tag: { select: { id: true, name: true } } },
+        },
         _count: {
           select: {
             units: true,
@@ -172,7 +176,14 @@ export async function GET() {
       return createErrorResponse("ユーザーが見つかりません", 404);
     }
 
-    return createApiResponse(userInfo);
+    // userSkills, userInterestsからtag配列に変換してskills, interestsとして返す
+    return createApiResponse({
+      ...userInfo,
+      skills: (userInfo.userSkills ?? []).map((skill) => skill.tag),
+      interests: (userInfo.userInterests ?? []).map((interest) => interest.tag),
+      userSkills: undefined,
+      userInterests: undefined,
+    });
   } catch (error) {
     console.error("ユーザー情報取得エラー:", error);
     return createErrorResponse(
@@ -191,7 +202,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, selfIntroduction, age, ageVisible, topImage } = body;
+    const { name, selfIntroduction, age, ageVisible, topImage, image } = body;
 
     // ユーザー情報を更新
     const updatedUser = await prisma.user.update({
@@ -202,6 +213,7 @@ export async function PUT(request: NextRequest) {
         ...(age !== undefined && { age }),
         ...(ageVisible !== undefined && { ageVisible }),
         ...(topImage !== undefined && { topImage }),
+        ...(image !== undefined && { image }),
       },
       select: {
         id: true,
