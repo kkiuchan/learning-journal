@@ -1,6 +1,7 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -228,6 +229,11 @@ export async function PUT(request: NextRequest) {
         updatedAt: true,
       },
     });
+
+    // キャッシュを即時クリア
+    revalidateTag(`user-${user.id}`);
+    revalidateTag("user");
+    revalidateTag("user-profile");
 
     return createApiResponse(updatedUser);
   } catch (error) {
