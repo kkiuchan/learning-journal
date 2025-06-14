@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { UnitDTO } from "@/types/unit";
 import useSWR from "swr";
 
@@ -20,6 +21,8 @@ interface UnitsResponse {
 
 export function useUnits(options: UseUnitsOptions = {}) {
   const { page = 1, searchQuery = "", statusFilter = "all", userId } = options;
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   const params = new URLSearchParams({
     page: page.toString(),
@@ -29,9 +32,15 @@ export function useUnits(options: UseUnitsOptions = {}) {
     ...(userId && { userId }),
   });
 
+  const fetcher = (url: string) => {
+    const headers: Record<string, string> = {};
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+    return fetch(url, { headers }).then((res) => res.json());
+  };
+
   const { data, error, isLoading, mutate } = useSWR<UnitsResponse>(
-    `/api/units?${params.toString()}`,
-    undefined
+    accessToken ? `/api/units?${params.toString()}` : null,
+    fetcher
   );
 
   return {

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
@@ -95,7 +95,7 @@ export default function WizardLogForm({
   onSuccess,
   onSubmit,
 }: WizardLogFormProps) {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);

@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { SUBSCRIPTION_PLANS } from "@/lib/plans";
 import { AuthSession } from "@/types/auth";
 import { Check, Crown, Star } from "lucide-react";
@@ -33,34 +33,34 @@ interface SubscriptionInfo {
 }
 
 export function PricingClient() {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   // Supabaseセッションを NextAuth.js 互換形式に変換（useMemoで最適化）
-  const session: AuthSession | null = useMemo(() => {
-    if (!supabaseSession) return null;
-
+  const authSession: AuthSession | null = useMemo(() => {
+    if (!session) return null;
     return {
       user: {
-        id: supabaseSession.user.id,
-        email: supabaseSession.user.email || "",
+        id: session.user.id,
+        email: session.user.email || "",
         name:
-          supabaseSession.user.user_metadata?.name ||
-          supabaseSession.user.user_metadata?.full_name ||
+          session.user.user_metadata?.name ||
+          session.user.user_metadata?.full_name ||
           "",
         image:
-          supabaseSession.user.user_metadata?.avatar_url ||
-          supabaseSession.user.user_metadata?.picture ||
+          session.user.user_metadata?.avatar_url ||
+          session.user.user_metadata?.picture ||
           "",
       },
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     };
   }, [
-    supabaseSession?.user?.id,
-    supabaseSession?.user?.email,
-    supabaseSession?.user?.user_metadata?.name,
-    supabaseSession?.user?.user_metadata?.full_name,
-    supabaseSession?.user?.user_metadata?.avatar_url,
-    supabaseSession?.user?.user_metadata?.picture,
+    session?.user?.id,
+    session?.user?.email,
+    session?.user?.user_metadata?.name,
+    session?.user?.user_metadata?.full_name,
+    session?.user?.user_metadata?.avatar_url,
+    session?.user?.user_metadata?.picture,
   ]);
 
   const router = useRouter();
@@ -71,14 +71,14 @@ export function PricingClient() {
 
   // サブスクリプション情報を取得（useCallbackで最適化）
   const fetchSubscriptionInfo = useCallback(async () => {
-    if (!supabaseSession?.access_token) {
+    if (!accessToken) {
       setLoadingSubscription(false);
       return;
     }
 
     try {
       const headers: Record<string, string> = {
-        Authorization: `Bearer ${supabaseSession.access_token}`,
+        Authorization: `Bearer ${accessToken}`,
       };
 
       const response = await fetch("/api/auth/user/subscription", { headers });
@@ -94,20 +94,20 @@ export function PricingClient() {
     } finally {
       setLoadingSubscription(false);
     }
-  }, [supabaseSession?.access_token]);
+  }, [accessToken]);
 
   // ユーザーIDが変更された時のみサブスクリプション情報を取得
   useEffect(() => {
-    if (session?.user?.id) {
+    if (authSession?.user?.id) {
       fetchSubscriptionInfo();
     } else {
       setLoadingSubscription(false);
       setSubscriptionInfo(null);
     }
-  }, [session?.user?.id, fetchSubscriptionInfo]);
+  }, [authSession?.user?.id, fetchSubscriptionInfo]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!session) {
+    if (!authSession) {
       router.push("/auth/supabase-login");
       return;
     }
@@ -130,12 +130,8 @@ export function PricingClient() {
         try {
           const headers: Record<string, string> = {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           };
-
-          // Supabaseセッションのアクセストークンを追加
-          if (supabaseSession?.access_token) {
-            headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-          }
 
           const response = await fetch("/api/stripe/create-portal-session", {
             method: "POST",
@@ -167,12 +163,8 @@ export function PricingClient() {
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       };
-
-      // Supabaseセッションのアクセストークンを追加
-      if (supabaseSession?.access_token) {
-        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-      }
 
       const response = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
@@ -206,12 +198,8 @@ export function PricingClient() {
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       };
-
-      // Supabaseセッションのアクセストークンを追加
-      if (supabaseSession?.access_token) {
-        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-      }
 
       const response = await fetch("/api/stripe/create-portal-session", {
         method: "POST",
@@ -239,7 +227,7 @@ export function PricingClient() {
   };
 
   const renderActionButton = (planId: "FREE" | "PRO") => {
-    if (!session) {
+    if (!authSession) {
       return (
         <Button
           className="w-full"
@@ -350,7 +338,7 @@ export function PricingClient() {
   };
 
   const getCurrentPlanBadge = (planId: "FREE" | "PRO") => {
-    if (!session || loadingSubscription) return null;
+    if (!authSession || loadingSubscription) return null;
 
     const isCurrentPlan = subscriptionInfo?.currentPlan === planId;
     const isProActive =

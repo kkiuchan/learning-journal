@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase-auth";
 import type { Session, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuthStore } from "./useAuth";
 
 export interface AuthUser {
   id: string;
@@ -15,7 +16,7 @@ export interface AuthUser {
 
 /**
  * @deprecated このフックは非推奨です。
- * 代わりに @/contexts/SupabaseAuthContext の useSupabaseAuth を使用してください。
+ * 代わりに @/contexts/SupabaseAuthStore を使用してください。
  *
  * このフックは将来のバージョンで削除される予定です。
  */
@@ -110,4 +111,35 @@ export function useSupabaseAuth(requireAuth: boolean = true) {
     isAuthenticated: !!user,
     signOut,
   };
+}
+
+export function useSupabaseAuthZustand() {
+  const setUser = useAuthStore((s) => s.setUser);
+  const setSession = useAuthStore((s) => s.setSession);
+  const setLoading = useAuthStore((s) => s.setLoading);
+
+  useEffect(() => {
+    const getInitialSession = async () => {
+      try {
+        setLoading(true);
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+      }
+    };
+    getInitialSession();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, [setUser, setSession, setLoading]);
 }

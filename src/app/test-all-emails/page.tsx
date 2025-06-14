@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +17,8 @@ export default function TestAllEmailsPage() {
   const [name, setName] = useState("");
   const [daysUntilExpiry, setDaysUntilExpiry] = useState(7);
   const [loading, setLoading] = useState<EmailType | null>(null);
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   const sendTestEmail = async (type: EmailType) => {
     setLoading(type);
@@ -42,6 +45,7 @@ export default function TestAllEmailsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(body),
       });

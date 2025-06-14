@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -7,6 +8,8 @@ export default function TestPaymentEmailPage() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,6 +20,7 @@ export default function TestPaymentEmailPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ email, name }),
       });

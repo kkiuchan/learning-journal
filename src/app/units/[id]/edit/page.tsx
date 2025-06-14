@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidateUnitDataAction } from "@/app/actions/revalidate";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -33,7 +33,8 @@ export default function EditUnitPage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
-  const { user } = useSupabaseAuth();
+  const { user, session } = useAuthStore();
+  const accessToken = session?.access_token;
   const [isLoading, setIsLoading] = useState(false);
   const [unit, setUnit] = useState<Unit | null>(null);
   const { id } = use(params);
@@ -44,7 +45,9 @@ export default function EditUnitPage({
 
   const fetchUnit = async () => {
     try {
-      const response = await fetch(`/api/units/${id}`);
+      const headers: Record<string, string> = {};
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      const response = await fetch(`/api/units/${id}`, { headers });
       const data = await response.json();
 
       if (response.ok) {
@@ -64,11 +67,13 @@ export default function EditUnitPage({
 
     try {
       setIsLoading(true);
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${unit.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           title: values.title,
           learningGoal: values.learningGoal,

@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { supabase } from "@/lib/supabase-auth";
 import { storage } from "@/lib/supabaseClient";
 import { AuthSession } from "@/types/auth";
@@ -41,7 +41,8 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const router = useRouter();
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
+  const accessToken = supabaseSession?.access_token;
 
   // Supabaseセッションを NextAuth.js 互換形式に変換
   const session: AuthSession | null = supabaseSession
@@ -69,10 +70,9 @@ export function ProfileForm() {
 
   // SWR fetcher with Supabase auth headers
   const fetcher = (url: string) => {
-    const headers: Record<string, string> = {};
-    if (supabaseSession?.access_token) {
-      headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-    }
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${accessToken}`,
+    };
     return fetch(url, { headers }).then((res) => res.json());
   };
 
@@ -147,12 +147,8 @@ export function ProfileForm() {
     try {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       };
-
-      // Supabaseセッションのアクセストークンを追加
-      if (supabaseSession?.access_token) {
-        headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-      }
 
       // 画像が更新された場合はSupabase Authのuser_metadata.avatar_urlも更新
       if (values.image) {

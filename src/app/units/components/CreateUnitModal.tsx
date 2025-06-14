@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
@@ -68,7 +68,7 @@ export function CreateUnitModal({
 }: CreateUnitModalProps) {
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
-  const { session } = useSupabaseAuth();
+  const { session } = useAuthStore();
 
   // デバッグ: useSupabaseAuth の結果を確認
   console.log("[CreateUnitModal] useSupabaseAuth result:", {

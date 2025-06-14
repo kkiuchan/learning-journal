@@ -4,7 +4,7 @@ import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useLogs } from "@/hooks/useLogs";
 import { AuthSession } from "@/types/auth";
 import { List, Plus, Wand2 } from "lucide-react";
@@ -76,7 +76,7 @@ export function LogsSection({
     }[]
   >([]);
 
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
 
   const { logs, isLoading, mutate: mutateLogs } = useLogs(unitId);
 

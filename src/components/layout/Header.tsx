@@ -17,7 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import {
   BookOpen,
@@ -54,7 +54,7 @@ const isValidImageUrl = (url: string | null): boolean => {
 };
 
 export function Header() {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingLink, setLoadingLink] = useState<string | null>(null);

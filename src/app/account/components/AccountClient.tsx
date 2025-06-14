@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import { Crown } from "lucide-react";
 import Image from "next/image";
@@ -9,21 +9,22 @@ import Link from "next/link";
 import useSWR from "swr";
 
 export function AccountClient() {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
+  const authSession: AuthSession | null = session
     ? {
         user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
+          id: session.user.id,
+          email: session.user.email || "",
           name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            session.user.user_metadata?.full_name ||
             "",
           image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
+            session.user.user_metadata?.avatar_url ||
+            session.user.user_metadata?.picture ||
             "",
         },
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -33,20 +34,20 @@ export function AccountClient() {
   // SWR fetcher with Supabase auth headers
   const fetcher = (url: string) => {
     const headers: Record<string, string> = {};
-    if (supabaseSession?.access_token) {
-      headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
     }
     return fetch(url, { headers }).then((res) => res.json());
   };
 
   // SWRでサブスクリプション情報を取得
   const { data: subscriptionData, error: subscriptionError } = useSWR(
-    session ? "/api/auth/user/subscription" : null,
+    authSession ? "/api/auth/user/subscription" : null,
     fetcher
   );
 
   // ローディング状態
-  if (!subscriptionData && !subscriptionError && session) {
+  if (!subscriptionData && !subscriptionError && authSession) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -102,9 +103,9 @@ export function AccountClient() {
           <div className="space-y-6">
             {/* プロフィール情報 */}
             <div className="flex items-center space-x-4">
-              {session?.user?.image && (
+              {authSession?.user?.image && (
                 <Image
-                  src={session.user.image}
+                  src={authSession.user.image}
                   alt="プロフィール画像"
                   width={80}
                   height={80}
@@ -113,14 +114,16 @@ export function AccountClient() {
               )}
               <div>
                 <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
-                  {session?.user?.name}
+                  {authSession?.user?.name}
                   {isProPlan && (
                     <div title="プロプランユーザー">
                       <Crown className="h-5 w-5 text-yellow-500" />
                     </div>
                   )}
                 </h2>
-                <p className="text-muted-foreground">{session?.user?.email}</p>
+                <p className="text-muted-foreground">
+                  {authSession?.user?.email}
+                </p>
               </div>
             </div>
 
@@ -135,7 +138,7 @@ export function AccountClient() {
                     ユーザーID
                   </dt>
                   <dd className="mt-1 text-sm text-foreground font-mono">
-                    {session?.user?.id}
+                    {authSession?.user?.id}
                   </dd>
                 </div>
                 <div>

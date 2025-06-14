@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Brain, Clock, LineChart, Loader2 } from "lucide-react";
@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export function HeroSection() {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
 
   // Supabaseセッションを NextAuth.js 互換形式に変換
   const session: AuthSession | null = supabaseSession

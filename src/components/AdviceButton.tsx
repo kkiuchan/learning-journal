@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import { Crown, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -26,7 +26,7 @@ export function AdviceButton({
   onAddComment,
   userId,
 }: AdviceButtonProps) {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
 
   // Supabaseセッションを NextAuth.js 互換形式に変換
   const session: AuthSession | null = supabaseSession

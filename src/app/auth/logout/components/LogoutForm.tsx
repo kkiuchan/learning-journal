@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import { ArrowLeft, Home, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function LogoutForm() {
-  const { session: supabaseSession, loading } = useSupabaseAuth();
+  const { session: supabaseSession, loading } = useAuthStore();
 
   // Supabaseセッションを NextAuth.js 互換形式に変換
   const session: AuthSession | null = supabaseSession

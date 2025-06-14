@@ -1,4 +1,5 @@
 // src/hooks/useUsers.ts
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { User } from "@prisma/client";
 import useSWR from "swr";
 
@@ -24,11 +25,26 @@ interface SearchResponse {
 
 export function useUsers(options: UseUsersOptions) {
   const { page, searchQuery, limit } = options;
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   const searchQueryEncoded = encodeURIComponent(searchQuery.trim() || "*");
+
+  const fetcher = (url: string) =>
+    fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }).then((res) => res.json());
+
   const { data, error, isLoading } = useSWR<SearchResponse>(
-    `/api/users/search?query=${searchQueryEncoded}&page=${page}&limit=${limit}`,
-    undefined
+    accessToken
+      ? [
+          `/api/users/search?query=${searchQueryEncoded}&page=${page}&limit=${limit}`,
+          accessToken,
+        ]
+      : null,
+    fetcher
   );
 
   return {

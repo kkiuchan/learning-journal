@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
-import { useModal } from "@/contexts/ModalContext";
+import { useModalStore } from "@/contexts/ModalStore";
 import { BookOpen, Search, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -10,7 +10,7 @@ import { useState } from "react";
 export function HomeContent({ session }: { session: any }) {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingLink, setLoadingLink] = useState<string | null>(null);
-  const { openCreateUnitModal } = useModal();
+  const { openCreateUnitModal } = useModalStore();
 
   const handleLinkClick = (link: string) => {
     setIsLoading(true);

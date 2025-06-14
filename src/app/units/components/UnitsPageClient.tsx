@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
-import { useModal } from "@/contexts/ModalContext";
+import { useModalStore } from "@/contexts/ModalStore";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -26,7 +26,7 @@ interface UnitsPageClientProps {
 }
 
 export function UnitsPageClient({ user }: UnitsPageClientProps) {
-  const { openCreateUnitModal } = useModal();
+  const { openCreateUnitModal } = useModalStore();
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -3,16 +3,16 @@
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
-import { useModal } from "@/contexts/ModalContext";
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useModalStore } from "@/contexts/ModalStore";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function DashboardHeader() {
-  const { session, loading } = useSupabaseAuth();
+  const { session, loading } = useAuthStore();
   const router = useRouter();
-  const { openCreateUnitModal } = useModal();
+  const { openCreateUnitModal } = useModalStore();
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
   const handleNavigation = async (path: string) => {

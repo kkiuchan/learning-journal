@@ -3,8 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ErrorMessage } from "@/components/ui/error-message";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { LogDTO as Log } from "@/types/log";
-import { CACHE_TAGS } from "@/utils/cache";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ExternalLink, File, Link, Pencil, Star, Trash2 } from "lucide-react";
@@ -32,6 +32,8 @@ interface LogListProps {
 
 export function LogList({ unitId }: LogListProps) {
   const [error, setError] = useState<string | null>(null);
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   // SWRを使ってログを取得
   const {
@@ -52,8 +54,11 @@ export function LogList({ unitId }: LogListProps) {
     if (!confirm("このログを削除してもよろしいですか？")) return;
 
     try {
+      const headers: Record<string, string> = {};
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${unitId}/logs/${logId}`, {
         method: "DELETE",
+        headers,
       });
 
       if (!response.ok) {

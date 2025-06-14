@@ -1,7 +1,7 @@
 import { UnitsList } from "@/app/units/components/UnitsList";
 import { UserProfileClientArea } from "@/app/users/[id]/components/UserProfileClientArea";
 import { Card } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { UnitStatus } from "@/types/unit";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -148,7 +148,7 @@ export async function generateMetadata({
 
 export default async function UserPage({ params }: Props) {
   const { id } = await params;
-  const currentUser = await getCurrentUser();
+  const currentUser = await getCurrentUserUnified();
   const currentUserId = currentUser?.id;
 
   const response = await fetch(

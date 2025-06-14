@@ -1,5 +1,4 @@
 import { Loading } from "@/components/ui/loading";
-import { MenuProvider } from "@/contexts/MenuContext";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { AuthSession } from "@/types/auth";
@@ -105,10 +104,8 @@ export default async function UnitPage({ params }: Props) {
     : null;
 
   return (
-    <MenuProvider>
-      <Suspense fallback={<Loading text="読み込み中..." />}>
-        <UnitDetail id={id} session={session} />
-      </Suspense>
-    </MenuProvider>
+    <Suspense fallback={<Loading text="読み込み中..." />}>
+      <UnitDetail id={id} session={session} />
+    </Suspense>
   );
 }

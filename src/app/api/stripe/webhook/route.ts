@@ -276,14 +276,19 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
     current_period_end: sub.current_period_end,
   });
 
-  // cancel_at_period_endがtrueで期間が過ぎていたら無効化
-  const periodEnd = sub.current_period_end
-    ? new Date(sub.current_period_end * 1000)
-    : null;
-  const periodStart = sub.current_period_start
-    ? new Date(sub.current_period_start * 1000)
-    : null;
-  const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
+  // periodStart, periodEndの厳密なnull判定
+  const periodEnd =
+    typeof sub.current_period_end === "number" && sub.current_period_end > 0
+      ? new Date(sub.current_period_end * 1000)
+      : null;
+  const periodStart =
+    typeof sub.current_period_start === "number" && sub.current_period_start > 0
+      ? new Date(sub.current_period_start * 1000)
+      : null;
+  const trialEnd =
+    typeof sub.trial_end === "number" && sub.trial_end > 0
+      ? new Date(sub.trial_end * 1000)
+      : null;
   const now = new Date();
   const shouldDeactivate =
     sub.cancel_at_period_end && periodEnd && periodEnd <= now;
@@ -312,11 +317,25 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const isCurrentlyValid =
     (sub.status === "active" || sub.status === "trialing") && !shouldDeactivate;
 
+  // 既存のDB値を維持するために現在のユーザーデータを取得
+  const currentUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      subscriptionStart: true,
+      subscriptionEnd: true,
+    },
+  });
+
   const updateData = {
     subscriptionStatus: shouldDeactivate ? "canceled" : sub.status,
     subscriptionPlan: isCurrentlyValid ? "pro" : null,
-    subscriptionStart: isCurrentlyValid && periodStart ? periodStart : null,
-    subscriptionEnd: periodEnd && !shouldDeactivate ? periodEnd : null,
+    subscriptionStart: isCurrentlyValid
+      ? periodStart || currentUser?.subscriptionStart || null
+      : null,
+    subscriptionEnd:
+      periodEnd && !shouldDeactivate
+        ? periodEnd
+        : currentUser?.subscriptionEnd || null,
     trialEnd: trialEnd, // トライアル期間終了日を更新
     cancelAtPeriodEnd: sub.cancel_at_period_end || false,
     canceledAt: canceledAt,

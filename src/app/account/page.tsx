@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { AccountClient } from "./components/AccountClient";
 
@@ -6,7 +6,7 @@ import { AccountClient } from "./components/AccountClient";
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserUnified();
 
   if (!user) {
     redirect("/auth/supabase-login");

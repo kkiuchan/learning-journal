@@ -1,9 +1,18 @@
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { LogDTO } from "@/types/log";
 import useSWR from "swr";
 
 export function useLogs(unitId: string) {
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
+  const fetcher = (url: string) => {
+    const headers: Record<string, string> = {};
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+    return fetch(url, { headers }).then((res) => res.json());
+  };
   const { data, error, mutate } = useSWR<{ data: LogDTO[] }>(
-    `/api/units/${unitId}/logs`
+    accessToken ? `/api/units/${unitId}/logs` : null,
+    fetcher
   );
 
   return {

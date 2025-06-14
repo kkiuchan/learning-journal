@@ -1,4 +1,4 @@
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { AuthSession } from "@/types/auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ export function useUnitLike(
   options: UseUnitLikeOptions = {},
   providedSession?: AuthSession | null
 ) {
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
   const router = useRouter();
 
   // 提供されたセッションまたはSupabaseセッションを使用

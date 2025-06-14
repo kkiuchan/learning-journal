@@ -1,6 +1,6 @@
 "use client";
 
-import { useSupabaseAuth } from "@/contexts/SupabaseAuthContext";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useComments } from "@/hooks/useComments";
 import { useUnitLike } from "@/hooks/useUnitLike";
 import { AuthSession } from "@/types/auth";
@@ -24,7 +24,8 @@ interface UnitDetailProps {
 
 export default function UnitDetail({ id, session }: UnitDetailProps) {
   const router = useRouter();
-  const { session: supabaseSession } = useSupabaseAuth();
+  const { session: supabaseSession } = useAuthStore();
+  const accessToken = supabaseSession?.access_token;
 
   console.log("UnitDetail session state:", {
     serverSession: session,
@@ -34,25 +35,22 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   });
 
   // サーバーサイドのsessionまたはクライアントサイドのsessionを使用
-  const sessionData =
-    session ||
+  const sessionData = (session ||
     (supabaseSession
       ? {
           user: {
             id: supabaseSession.user.id,
-            email: supabaseSession.user.email || "",
-            name:
-              supabaseSession.user.user_metadata?.name ||
-              supabaseSession.user.user_metadata?.full_name ||
-              "",
-            image:
-              supabaseSession.user.user_metadata?.avatar_url ||
-              supabaseSession.user.user_metadata?.picture ||
-              "",
+            email: (supabaseSession.user.email ?? "") as string,
+            name: (supabaseSession.user.user_metadata?.name ??
+              supabaseSession.user.user_metadata?.full_name ??
+              "") as string,
+            image: (supabaseSession.user.user_metadata?.avatar_url ??
+              supabaseSession.user.user_metadata?.picture ??
+              "") as string,
           },
           expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         }
-      : null);
+      : null)) as AuthSession | null;
 
   console.log("UnitDetail final sessionData:", {
     sessionData,
@@ -109,8 +107,11 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
 
     try {
+      const headers: Record<string, string> = {};
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${id}`, {
         method: "DELETE",
+        headers,
       });
 
       if (response.ok) {
@@ -153,11 +154,13 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
       await optimisticUpdate("create", optimisticComment);
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${id}/comments`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           content: comment,
           isAI: true,
@@ -189,18 +192,20 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
         createdAt: new Date().toISOString(),
         user: {
           id: sessionData.user.id,
-          name: sessionData.user.name || null,
-          image: sessionData.user.image || null,
+          name: sessionData.user.name || "",
+          image: sessionData.user.image || "",
         },
       };
 
       await optimisticUpdate("create", optimisticComment);
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${id}/comments`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           content: comment,
         }),
@@ -226,11 +231,13 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     try {
       await optimisticUpdate("update", { comment: content }, commentId);
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           content: content,
         }),
@@ -260,8 +267,11 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     try {
       await optimisticUpdate("delete", undefined, commentId);
 
+      const headers: Record<string, string> = {};
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "DELETE",
+        headers,
       });
 
       if (!response.ok) {

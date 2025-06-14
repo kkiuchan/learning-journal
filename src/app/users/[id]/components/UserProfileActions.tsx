@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/contexts/ModalContext";
+import { useModalStore } from "@/contexts/ModalStore";
 
 interface UserProfileActionsProps {
   currentUserId: string | undefined;
@@ -12,7 +12,7 @@ export function UserProfileActions({
   currentUserId,
   profileUserId,
 }: UserProfileActionsProps) {
-  const { openCreateUnitModal } = useModal();
+  const { openCreateUnitModal } = useModalStore();
 
   if (currentUserId !== profileUserId) {
     return null;

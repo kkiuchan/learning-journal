@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { Crown, Search, User, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -46,6 +47,8 @@ interface SearchResult {
 }
 
 export function AdminClient() {
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +63,12 @@ export function AdminClient() {
     setLoading(true);
     try {
       const response = await fetch(
-        `/api/admin/users/search?q=${encodeURIComponent(searchQuery)}`
+        `/api/admin/users/search?q=${encodeURIComponent(searchQuery)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
       );
       const data = await response.json();
 
@@ -90,7 +98,10 @@ export function AdminClient() {
     try {
       const response = await fetch(`/api/admin/users/${userId}/lifetime-pro`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ reason }),
       });
 
@@ -146,7 +157,10 @@ export function AdminClient() {
     try {
       const response = await fetch(`/api/admin/users/${userId}/lifetime-pro`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ reason }),
       });
 

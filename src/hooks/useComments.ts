@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { CommentDTO } from "@/types/comment";
 import useSWR from "swr";
 
@@ -16,20 +17,18 @@ interface CommentResponse {
   };
 }
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(
-      error.error || "コメント一覧の取得中にエラーが発生しました"
-    );
-  }
-  return response.json();
-};
-
 export function useComments({ unitId, page, limit }: UseCommentsProps) {
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
+  const fetcher = (url: string) => {
+    const headers: Record<string, string> = {};
+    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+    return fetch(url, { headers }).then((res) => res.json());
+  };
   const { data, error, isLoading, mutate } = useSWR<CommentResponse>(
-    `/api/units/${unitId}/comments?page=${page}&limit=${limit}`,
+    accessToken
+      ? `/api/units/${unitId}/comments?page=${page}&limit=${limit}`
+      : null,
     fetcher
   );
 

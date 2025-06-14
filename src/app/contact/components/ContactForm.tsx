@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -36,6 +37,9 @@ export default function ContactForm() {
     Partial<Record<keyof ContactForm, string>>
   >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { session } = useAuthStore();
+  const accessToken = session?.access_token;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -84,6 +88,7 @@ export default function ContactForm() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify(formData),
       });

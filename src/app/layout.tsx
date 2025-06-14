@@ -3,15 +3,13 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
 import { Providers } from "@/components/providers";
-import { MenuProvider } from "@/contexts/MenuContext";
-import { ModalProvider } from "@/contexts/ModalContext";
+import { useSupabaseAuthZustand } from "@/contexts/SupabaseAuthStore";
 import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata, Viewport } from "next";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -140,28 +138,14 @@ export default function RootLayout({
           notoSansJP.variable
         )}
       >
-        <NextThemesProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-        >
-          <MenuProvider>
-            <ModalProvider>
-              <Providers>
-                <div className="flex flex-col flex-1">
-                  <Header />
-                  <main className="flex-1 flex flex-col">
-                    <AnimatedLayout>{children}</AnimatedLayout>
-                  </main>
-                  <Footer />
-                </div>
-                <GlobalModals />
-              </Providers>
-              <Toaster />
-            </ModalProvider>
-          </MenuProvider>
-        </NextThemesProvider>
-        <Analytics />
+        <Providers>
+          <Header />
+          <AnimatedLayout>{children}</AnimatedLayout>
+          <Footer />
+          <GlobalModals />
+          <Toaster position="top-center" richColors closeButton />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );

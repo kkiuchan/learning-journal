@@ -197,6 +197,10 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|logo.png|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.webp|.*\\.ico).*)",
+    "/dashboard/:path*",
+    "/settings/:path*",
+    "/account/:path*",
+    "/admin/:path*",
+    // 必要に応じて他の認証必須パスを追加
   ],
 };
