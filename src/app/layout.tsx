@@ -3,7 +3,6 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
 import { Providers } from "@/components/providers";
-import { useSupabaseAuthZustand } from "@/contexts/SupabaseAuthStore";
 import { validateEnv } from "@/lib/env";
 import { notoSansJP } from "@/lib/fonts";
 import { generateSecurityHeaders } from "@/lib/security";
