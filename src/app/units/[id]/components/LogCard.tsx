@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useMenu } from "@/contexts/MenuContext";
+import { useMenuStore } from "@/contexts/MenuStore";
 import { cn } from "@/lib/utils";
 import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
@@ -41,7 +41,7 @@ export default function LogCard({
   onDelete,
   isDeleting = false,
 }: Omit<LogCardProps, "openMenuId" | "setOpenMenuId">) {
-  const { openMenuId, setOpenMenuId } = useMenu();
+  const { openMenuId, setOpenMenuId } = useMenuStore();
   const [expandedContent, setExpandedContent] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);

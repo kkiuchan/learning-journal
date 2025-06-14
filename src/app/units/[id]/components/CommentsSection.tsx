@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/UserAvatar";
-import { useMenu } from "@/contexts/MenuContext";
+import { useMenuStore } from "@/contexts/MenuStore";
 import { AuthSession } from "@/types/auth";
 import { CommentDTO } from "@/types/comment";
 import { format } from "date-fns";
@@ -44,7 +44,7 @@ export function CommentsSection({
   onDeleteComment,
   isDeleting,
 }: CommentsSectionProps) {
-  const { openMenuId, setOpenMenuId } = useMenu();
+  const { openMenuId, setOpenMenuId } = useMenuStore();
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState("");
