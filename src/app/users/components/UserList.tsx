@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { useUsers } from "@/hooks/useUsers";
-import { ApiUser as User } from "@/types";
+import { ApiUser as User } from "@/types/user";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect } from "react";

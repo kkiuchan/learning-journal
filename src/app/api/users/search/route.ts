@@ -1,4 +1,5 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { prisma } from "@/lib/prisma";
 // import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { ApiResponse, SearchResult } from "@/types";
 import { UserDTO } from "@/types/user";
