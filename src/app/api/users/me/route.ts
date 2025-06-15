@@ -1,6 +1,7 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -137,7 +138,7 @@ const updateUserSchema = z.object({
 export const revalidate = 60;
 
 export async function GET() {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user) {
@@ -195,7 +196,7 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user) {

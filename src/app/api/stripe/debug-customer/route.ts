@@ -1,11 +1,12 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user?.email) {

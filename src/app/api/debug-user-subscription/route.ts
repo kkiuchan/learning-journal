@@ -1,12 +1,12 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getUserPlan } from "@/lib/plans";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   try {
     const session = await getServerSession(authConfig);

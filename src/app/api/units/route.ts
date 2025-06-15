@@ -1,7 +1,8 @@
 import { withApiSecurity } from "@/lib/api-security";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
@@ -97,7 +98,7 @@ export const revalidate = 60;
  */
 export const GET = withApiSecurity(
   async (req: NextRequest) => {
-    await ensurePrismaConnected();
+    // await ensurePrismaConnected();
     try {
       const { searchParams } = new URL(req.url);
       const query = searchParams.get("query") || "";
@@ -330,7 +331,7 @@ export const GET = withApiSecurity(
  */
 export const POST = withApiSecurity(
   async (req: NextRequest, userOrContext?: any) => {
-    await ensurePrismaConnected();
+    // await ensurePrismaConnected();
     try {
       // デバッグ: リクエスト情報とユーザー情報を詳細にログ出力
       console.log("[POST /api/units] Request headers:", {

@@ -1,7 +1,8 @@
 import { MAX_TOKENS, OPENAI_MODEL, TEMPERATURE } from "@/config/constants";
 import { createErrorResponse } from "@/lib/api-utils";
 import { getSupabaseServerUser } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { canUseAIFeatures, createPlanLimitResponse } from "@/lib/stripe";
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -38,7 +39,7 @@ const openai = new OpenAI();
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<AIAssistResponse | { error: string }>> {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   try {
     // Supabase認証の確認

@@ -6,7 +6,7 @@ import {
   sendTrialEndingWarning,
   sendTrialStartedWelcome,
 } from "@/lib/email-templates";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { isProduction, stripe } from "@/lib/stripe";
 import {
   getUserByStripeCustomer,
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") as string;

@@ -1,6 +1,7 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
 
@@ -9,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export async function POST(req: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user?.email) {

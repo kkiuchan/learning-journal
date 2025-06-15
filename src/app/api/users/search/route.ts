@@ -1,5 +1,5 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { ApiResponse, SearchResult } from "@/types";
 import { UserDTO } from "@/types/user";
 import { NextResponse } from "next/server";
@@ -165,7 +165,7 @@ const searchQuerySchema = z.object({
 export async function GET(
   request: Request
 ): Promise<NextResponse<ApiResponse<SearchResult>>> {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { searchParams } = new URL(request.url);
     const rawData = {

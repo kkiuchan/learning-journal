@@ -1,13 +1,14 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { PlanId, SUBSCRIPTION_PLANS } from "@/lib/plans";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { createCheckoutSession } from "@/lib/stripe";
 import { createOrRetrieveStripeCustomer } from "@/lib/stripe-utils";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   try {
     const user = await getCurrentUserUnified();

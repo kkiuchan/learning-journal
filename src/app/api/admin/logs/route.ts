@@ -1,9 +1,10 @@
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
+// import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     // 認証チェック（管理者のみアクセス可能）
     const user = await getCurrentUserUnified();

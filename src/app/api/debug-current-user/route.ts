@@ -1,11 +1,11 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUser } from "@/lib/auth-helpers";
 import { getUserPlan } from "@/lib/plans";
-import { ensurePrismaConnected } from "@/lib/prisma";
+// import { ensurePrismaConnected } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   try {
     const user = await getCurrentUser();

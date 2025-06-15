@@ -117,7 +117,7 @@ export async function getSupabaseSession() {
   return session;
 }
 
-// 認証状態の変更を監視
+// 認証状態の変更を監視 これは使わない 公式のsupabase.auth.onAuthStateChangeを使う
 export function onAuthStateChange(
   callback: (event: string, session: any) => void
 ) {
