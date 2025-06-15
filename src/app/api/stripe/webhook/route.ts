@@ -6,6 +6,7 @@ import {
   sendTrialEndingWarning,
   sendTrialStartedWelcome,
 } from "@/lib/email-templates";
+import { prisma } from "@/lib/prisma";
 // import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { isProduction, stripe } from "@/lib/stripe";
 import {

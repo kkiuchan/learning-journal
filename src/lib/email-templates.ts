@@ -5,7 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // メール送信の共通設定
 const EMAIL_CONFIG = {
   from: "Learning Journal <noreply@learning-journal-app.com>",
-  replyTo: process.env.SUPPORT_EMAIL || "noreply@learning-journal-app.com",
+  replyTo: (
+    process.env.SUPPORT_EMAIL || "noreply@learning-journal-app.com"
+  ).trim(),
 };
 
 // 支払い失敗通知メール
