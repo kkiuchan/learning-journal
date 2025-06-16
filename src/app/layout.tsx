@@ -1,4 +1,4 @@
-import { GlobalModals } from "@/app/components/GlobalModals";
+import { GlobalModals } from "@/components/GlobalModals";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { AnimatedLayout } from "@/components/motion/AnimatedLayout";
