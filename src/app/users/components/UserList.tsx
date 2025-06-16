@@ -4,28 +4,35 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
-import { useUsers } from "@/hooks/useUsers";
 import { ApiUser as User } from "@/types/user";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import UserAvatar from "../[id]/components/UserAvatar";
 
-export function UserList() {
+interface UserListProps {
+  users: User[];
+  pagination?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+export default function UserList({
+  users,
+  pagination,
+  isLoading,
+  error,
+}: UserListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // クエリパラメータから値を取得
   const searchQuery = searchParams.get("q") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
-
-  // SWRを使用してユーザーを取得
-  const { users, isLoading, error, pagination } = useUsers({
-    page,
-    searchQuery,
-    limit,
-  });
 
   // 検索条件を更新する関数
   const updateSearchParams = useCallback(
@@ -53,15 +60,6 @@ export function UserList() {
     [router, searchParams]
   );
 
-  // 検索クエリの更新（デバウンス処理付き）
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateSearchParams(searchQuery);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, updateSearchParams]);
-
   // 有効な画像URLかどうかをチェックする関数
   const isValidImageUrl = (url: string | null): boolean => {
     if (!url) return false;
@@ -69,7 +67,7 @@ export function UserList() {
       "lh3.googleusercontent.com",
       "avatars.githubusercontent.com",
       "localhost",
-      window.location.hostname,
+      typeof window !== "undefined" ? window.location.hostname : "",
       "supabase.co",
     ];
     try {
@@ -92,8 +90,8 @@ export function UserList() {
       </div>
     );
   }
-
-  if (users.length === 0) {
+  console.log("users:", users);
+  if (!users || users.length === 0) {
     return (
       <div className="text-center text-muted-foreground">
         ユーザーが見つかりませんでした
