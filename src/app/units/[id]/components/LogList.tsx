@@ -9,6 +9,11 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { ExternalLink, File, Link, Pencil, Star, Trash2 } from "lucide-react";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import useSWR from "swr";
 
 // デバッグ用にwindowオブジェクトを拡張
@@ -119,8 +124,32 @@ export function LogList({ unitId }: LogListProps) {
           )}
 
           {log.note && (
-            <div className="text-sm text-gray-600 mb-2 whitespace-pre-wrap">
-              {log.note}
+            <div className="prose prose-sm max-w-none dark:prose-invert mb-2">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                  code({ node, inline, className, children, ...props }: any) {
+                    const match = /language-(\w+)/.exec(className || "");
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={oneDark}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, "")}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  },
+                }}
+              >
+                {log.note}
+              </ReactMarkdown>
             </div>
           )}
 
