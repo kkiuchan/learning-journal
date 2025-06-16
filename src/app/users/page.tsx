@@ -21,8 +21,9 @@ export default async function UsersPage({
   console.log("limitNumber:", limitNumber);
 
   const tag = `user-list-${encodeURIComponent(query)}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const res = await fetch(
-    `http://localhost:3000/api/users/search?query=${query}&page=${pageNumber}&limit=${limitNumber}`,
+    `${baseUrl}/api/users/search?query=${query}&page=${pageNumber}&limit=${limitNumber}`,
     { next: { tags: [tag] } }
   );
   const data = await res.json();
