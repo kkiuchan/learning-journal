@@ -5,6 +5,7 @@ import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
 import { revalidatePath } from "next/cache";
 import { NextRequest } from "next/server";
+import sanitizeHtml from "sanitize-html";
 
 export const revalidate = 60;
 
@@ -106,12 +107,46 @@ export async function PUT(
     const body = await request.json();
     const validatedData = logRequestSchema.parse(body);
 
+    // noteをサニタイズ
+    const sanitizedNote = sanitizeHtml(validatedData.note, {
+      allowedTags: [
+        "b",
+        "i",
+        "em",
+        "strong",
+        "a",
+        "code",
+        "pre",
+        "p",
+        "ul",
+        "ol",
+        "li",
+        "br",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "blockquote",
+        "hr",
+        "span",
+      ],
+      allowedAttributes: {
+        a: ["href", "name", "target", "rel"],
+        span: ["class"],
+        code: ["class"],
+      },
+      allowedSchemes: ["http", "https", "mailto"],
+      allowProtocolRelative: true,
+    });
+
     const updatedLog = await prisma.log.update({
       where: { id: parseInt(logId) },
       data: {
         title: validatedData.title,
         learningTime: validatedData.learningTime,
-        note: validatedData.note,
+        note: sanitizedNote,
         logDate: new Date(validatedData.logDate),
         effectScore: validatedData.effectScore,
         effectType: validatedData.effectType,

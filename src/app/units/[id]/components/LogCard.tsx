@@ -19,8 +19,8 @@ import {
 import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 
 interface LogCardProps {
   log: LogDTO;
@@ -135,7 +135,7 @@ export default function LogCard({
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeRaw]}
+              // rehypePlugins={[rehypeRaw]}
             >
               {log.note}
             </ReactMarkdown>

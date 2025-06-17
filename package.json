@@ -74,6 +74,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "resend": "^4.5.0",
+    "sanitize-html": "^2.17.0",
     "sonner": "^2.0.2",
     "stripe": "^18.2.0",
     "swagger-ui-dist": "^5.20.2",
