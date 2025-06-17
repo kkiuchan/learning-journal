@@ -434,7 +434,7 @@ export default function WizardLogForm({
             </div>
 
             {showPreview ? (
-              <div className="min-h-[300px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert">
+              <div className="min-h-[300px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert whitespace-pre-line ">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {note || "プレビューする内容がありません"}
                 </ReactMarkdown>
@@ -845,7 +845,7 @@ export default function WizardLogForm({
                 <span className="font-medium text-muted-foreground">
                   学習内容:
                 </span>
-                <div className="mt-2 p-4 border rounded-md bg-muted/50 prose prose-sm max-w-none dark:prose-invert">
+                <div className="mt-2 p-4 border rounded-md bg-muted/50 prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {note}
                   </ReactMarkdown>

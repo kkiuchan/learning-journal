@@ -19,7 +19,6 @@ import {
 import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 interface LogCardProps {
@@ -129,7 +128,7 @@ export default function LogCard({
         <div className="mt-2">
           <div
             className={cn(
-              "prose prose-sm max-w-none dark:prose-invert",
+              "prose prose-sm max-w-none dark:prose-invert whitespace-pre-line ",
               !expandedContent && log.note.length > 200 ? "line-clamp-[4]" : ""
             )}
           >

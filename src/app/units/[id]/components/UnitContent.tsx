@@ -154,7 +154,7 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
         {unit.learningGoal && (
           <div>
             <h3 className="text-lg font-semibold mb-2">学習目標</h3>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {unit.learningGoal}
               </ReactMarkdown>
@@ -165,7 +165,7 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
         {unit.preLearningState && (
           <div>
             <h3 className="text-lg font-semibold mb-2">学習前の状態</h3>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {unit.preLearningState}
               </ReactMarkdown>
@@ -176,7 +176,7 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
         {unit.reflection && (
           <div>
             <h3 className="text-lg font-semibold mb-2">振り返り</h3>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {unit.reflection}
               </ReactMarkdown>
@@ -187,7 +187,7 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
         {unit.nextAction && (
           <div>
             <h3 className="text-lg font-semibold mb-2">次のアクション</h3>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {unit.nextAction}
               </ReactMarkdown>

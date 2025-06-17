@@ -270,7 +270,7 @@ export default function DemoAIAssistPage() {
             </div>
 
             {showPreview ? (
-              <div className="min-h-[300px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert">
+              <div className="min-h-[300px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {note || "プレビューする内容がありません"}
                 </ReactMarkdown>
