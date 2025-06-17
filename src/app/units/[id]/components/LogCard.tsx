@@ -8,6 +8,7 @@ import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
+  Clipboard,
   ExternalLink,
   File,
   LinkIcon,
@@ -20,6 +21,7 @@ import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { toast } from "sonner";
 
 interface LogCardProps {
   log: LogDTO;
@@ -44,6 +46,11 @@ export default function LogCard({
   const [expandedContent, setExpandedContent] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(log.note);
+    toast.success("コピーしました！");
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,7 +85,15 @@ export default function LogCard({
         </div>
 
         {session?.user?.id === String(log.userId) && (
-          <div className="relative">
+          <div className="relative flex items-center gap-1">
+            <button
+              type="button"
+              className="h-8 w-8 flex items-center justify-center rounded hover:bg-accent transition-colors"
+              onClick={handleCopy}
+              title="内容をコピー"
+            >
+              <Clipboard className="h-4 w-4" />
+            </button>
             <Button
               variant="ghost"
               size="icon"
