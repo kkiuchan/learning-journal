@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useMenuStore } from "@/contexts/MenuStore";
 import { cn } from "@/lib/utils";
 import { LogDTO } from "@/types/log";
+import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import {
@@ -17,7 +18,6 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { Session } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -29,9 +29,10 @@ interface LogCardProps {
   session: Session | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (log: LogDTO) => void;
+  onDelete: (logId: number) => void;
   isDeleting?: boolean;
+  menuRef: React.RefObject<HTMLDivElement>;
 }
 
 export default function LogCard({
@@ -41,6 +42,7 @@ export default function LogCard({
   onEdit,
   onDelete,
   isDeleting = false,
+  menuRef,
 }: Omit<LogCardProps, "openMenuId" | "setOpenMenuId">) {
   const { openMenuId, setOpenMenuId } = useMenuStore();
   const [expandedContent, setExpandedContent] = useState(false);
@@ -114,7 +116,7 @@ export default function LogCard({
                     className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2 menu-action-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEdit();
+                      onEdit(log);
                       setOpenMenuId(null);
                     }}
                   >
@@ -125,7 +127,7 @@ export default function LogCard({
                     className="w-full text-left px-4 py-2 text-destructive hover:bg-accent flex items-center gap-2 menu-action-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDelete();
+                      onDelete(log.id);
                     }}
                     disabled={isDeleting}
                   >

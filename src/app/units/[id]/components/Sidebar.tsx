@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { AuthSession } from "@/types/auth";
 import type { UnitDTO } from "@/types/unit";
+import { Session } from "@supabase/supabase-js";
 import {
   Copy,
   Heart,
@@ -17,7 +17,7 @@ import { EditUnitModal } from "./EditUnitModa";
 
 interface SidebarProps {
   unit: UnitDTO;
-  session: AuthSession | null;
+  session: Session | null;
   id: string;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
@@ -27,10 +27,10 @@ interface SidebarProps {
   handleDelete: () => void;
   menuRefs: React.MutableRefObject<{ [key: number]: HTMLDivElement | null }>;
   currentUrl: string;
-  className?: string;
   commentCount: number;
   onCommentClick: () => void;
   onMutate: () => void;
+  className?: string;
 }
 
 export function Sidebar({
@@ -45,10 +45,10 @@ export function Sidebar({
   handleDelete,
   menuRefs,
   currentUrl,
-  className = "",
   commentCount,
   onCommentClick,
   onMutate,
+  className = "",
 }: SidebarProps) {
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);

@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
-import { AuthSession } from "@/types/auth";
 import { ArrowLeft, Home, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,37 +9,19 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function LogoutForm() {
-  const { session: supabaseSession, loading } = useAuthStore();
+  const { session } = useAuthStore();
 
-  // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
-    ? {
-        user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
-          name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
-            "",
-          image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
-            "",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : null;
+  const user = session?.user;
 
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   // 未ログインの場合はログインページにリダイレクト
   useEffect(() => {
-    if (loading) return; // まだ読み込み中
-    if (!session) {
+    if (!user) {
       router.push("/auth/supabase-login");
     }
-  }, [session, loading, router]);
+  }, [user, router]);
 
   const handleLogout = async () => {
     setIsLoading(true);
@@ -61,19 +42,10 @@ export function LogoutForm() {
   };
 
   // ローディング中の表示
-  if (loading) {
+  if (!user) {
     return (
       <div className="space-y-6 text-center">
         <div className="text-muted-foreground">読み込み中...</div>
-      </div>
-    );
-  }
-
-  // 未ログインの場合の表示（リダイレクト前の一瞬表示される可能性がある）
-  if (!session) {
-    return (
-      <div className="space-y-6 text-center">
-        <div className="text-muted-foreground">ログインしていません</div>
       </div>
     );
   }
@@ -90,7 +62,7 @@ export function LogoutForm() {
             ログアウトしますか？
           </h3>
           <p className="text-sm text-muted-foreground">
-            {session?.user?.name || session?.user?.email}
+            {user.user_metadata?.name || user.email}
             としてログインしています
           </p>
         </div>

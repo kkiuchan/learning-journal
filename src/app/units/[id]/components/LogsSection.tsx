@@ -6,9 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useLogs } from "@/hooks/useLogs";
-import { AuthSession } from "@/types/auth";
+import { Session } from "@supabase/supabase-js";
 import { List, Plus, Wand2 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import CreateLogForm from "./CreateLogForm";
 import { EditLogModal } from "./EditLogModal";
@@ -19,10 +19,10 @@ import WizardLogForm from "./WizardLogForm";
 interface LogsSectionProps {
   unitId: string;
   userId: string;
-  session: AuthSession | null;
+  session: Session | null;
   openMenuId: number | null;
   setOpenMenuId: (id: number | null) => void;
-  onAIAdvice?: (comment: string) => void;
+  onAIAdvice: (comment: string) => void;
 }
 
 // WizardLogFormのResource型と一致させる
@@ -205,6 +205,10 @@ export function LogsSection({
     }
   };
 
+  const menuRefs = React.useRef<{
+    [key: number]: React.RefObject<HTMLDivElement>;
+  }>({});
+
   return (
     <div className="mt-4 sm:mt-6">
       <div className="flex justify-between items-center mb-4">
@@ -316,6 +320,10 @@ export function LogsSection({
                   onEdit={() => setEditingLogId(log.id)}
                   onDelete={() => handleDeleteLog(log.id, setOpenMenuId)}
                   isDeleting={deletingLogIds.includes(log.id)}
+                  menuRef={
+                    menuRefs.current[log.id] ||
+                    (menuRefs.current[log.id] = React.createRef())
+                  }
                 />
               </Card>
             ))}

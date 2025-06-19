@@ -217,17 +217,29 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
 }
 
 // セッション型定義
-export interface AuthSession {
-  user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-    primaryAuthMethod: string;
-    subscriptionStatus?: string | null;
-    subscriptionPlan?: string | null;
-  };
-  expires: string;
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  image?: string;
+  primaryAuthMethod?: string;
+  subscriptionStatus?: string;
+  accounts?: Array<{
+    provider: string;
+    providerAccountId: string;
+  }>;
+}
+
+// 統合されたユーザー取得関数
+export async function getCurrentUserUnified() {
+  // まずトークンベース認証を試行
+  const tokenUser = await getCurrentUserWithToken();
+  if (tokenUser) {
+    return tokenUser;
+  }
+
+  // フォールバック: cookieベース認証
+  return getCurrentUser();
 }
 
 // Authorizationヘッダーからトークンを使用してユーザーを取得
@@ -334,17 +346,5 @@ export async function getCurrentUserWithToken() {
 
   // フォールバック: 通常のcookieベース認証
   console.log("[Auth] Falling back to cookie-based auth");
-  return getCurrentUser();
-}
-
-// 統合されたユーザー取得関数
-export async function getCurrentUserUnified() {
-  // まずトークンベース認証を試行
-  const tokenUser = await getCurrentUserWithToken();
-  if (tokenUser) {
-    return tokenUser;
-  }
-
-  // フォールバック: cookieベース認証
   return getCurrentUser();
 }

@@ -1,7 +1,7 @@
 import { Loading } from "@/components/ui/loading";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { AuthSession } from "@/types/auth";
+import { Session } from "@supabase/supabase-js";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import UnitDetail from "./components/UnitDetail";
@@ -90,16 +90,27 @@ export default async function UnitPage({ params }: Props) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
 
-  // SupabaseユーザーをAuthSession型に変換
-  const session: AuthSession | null = currentUser
+  // SupabaseユーザーをSession型に変換
+  const session: Session | null = currentUser
     ? {
+        access_token: "dummy-token", // APIアクセスには使用しない
+        token_type: "bearer",
+        expires_in: 3600,
+        refresh_token: "dummy-refresh-token",
         user: {
           id: currentUser.id,
-          email: currentUser.email,
-          name: currentUser.name || "",
-          image: currentUser.image || "",
+          email: currentUser.email || "",
+          user_metadata: {
+            name: currentUser.name || "",
+            avatar_url: currentUser.image || "",
+          },
+          aud: "authenticated",
+          role: "authenticated",
+          app_metadata: {},
+          created_at: "",
+          updated_at: "",
         },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24時間後
+        expires_at: Date.now() + 24 * 60 * 60 * 1000,
       }
     : null;
 

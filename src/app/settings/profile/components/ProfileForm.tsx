@@ -17,8 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { supabase } from "@/lib/supabase-auth";
 import { storage } from "@/lib/supabaseClient";
-import { AuthSession } from "@/types/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Session } from "@supabase/supabase-js";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -39,29 +39,14 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
-export function ProfileForm() {
+interface ProfileFormProps {
+  session: Session | null;
+}
+
+export function ProfileForm({ session }: ProfileFormProps) {
   const router = useRouter();
   const { session: supabaseSession } = useAuthStore();
   const accessToken = supabaseSession?.access_token;
-
-  // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
-    ? {
-        user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
-          name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
-            "",
-          image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
-            "",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : null;
 
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);

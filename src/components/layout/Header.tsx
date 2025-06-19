@@ -18,7 +18,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
-import { AuthSession } from "@/types/auth";
 import {
   BookOpen,
   Crown,
@@ -61,24 +60,8 @@ export function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
-    ? {
-        user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
-          name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
-            "",
-          image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
-            "",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : null;
+  // セッションはそのまま使用
+  const session = supabaseSession;
 
   console.log("Header session state:", {
     supabaseSession,
@@ -215,12 +198,22 @@ export function Header() {
                     <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={
-                          session.user?.image || "/images/default-avatar.png"
+                          session.user?.user_metadata?.avatar_url ||
+                          session.user?.user_metadata?.picture ||
+                          "/images/default-avatar.png"
                         }
-                        alt={session.user?.name || ""}
+                        alt={
+                          session.user?.user_metadata?.name ||
+                          session.user?.user_metadata?.full_name ||
+                          ""
+                        }
                       />
                       <AvatarFallback>
-                        {session.user?.name?.charAt(0) || "U"}
+                        {(
+                          session.user?.user_metadata?.name ||
+                          session.user?.user_metadata?.full_name ||
+                          "U"
+                        )?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   </Button>

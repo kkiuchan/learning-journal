@@ -9,7 +9,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
-import { AuthSession } from "@/types/auth";
 import { Crown, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -28,24 +27,8 @@ export function AdviceButton({
 }: AdviceButtonProps) {
   const { session: supabaseSession } = useAuthStore();
 
-  // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
-    ? {
-        user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
-          name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
-            "",
-          image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
-            "",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : null;
+  // Supabaseセッションをそのまま利用
+  const session = supabaseSession;
 
   const [isLoading, setIsLoading] = useState(false);
   const [advice, setAdvice] = useState("");

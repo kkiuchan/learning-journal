@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/UserAvatar";
 import { useMenuStore } from "@/contexts/MenuStore";
-import { AuthSession } from "@/types/auth";
 import { CommentDTO } from "@/types/comment";
+import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -16,7 +16,7 @@ import { useState } from "react";
 interface CommentsSectionProps {
   unitId: string;
   userId: string;
-  session: AuthSession | null;
+  session: Session | null;
   comments: CommentDTO[];
   pagination: {
     totalPages: number;
@@ -25,9 +25,9 @@ interface CommentsSectionProps {
   } | null;
   isLoading: boolean;
   onPageChange: (page: number) => void;
-  onCreateComment: (comment: string) => Promise<void>;
-  onUpdateComment: (commentId: number, content: string) => Promise<void>;
-  onDeleteComment: (commentId: number) => Promise<void>;
+  onCreateComment: (comment: string) => void;
+  onUpdateComment: (commentId: number, content: string) => void;
+  onDeleteComment: (commentId: number) => void;
   isDeleting: boolean;
 }
 

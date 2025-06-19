@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
-import { AuthSession } from "@/types/auth";
+import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -10,31 +10,13 @@ interface UseUnitLikeOptions {
 
 export function useUnitLike(
   options: UseUnitLikeOptions = {},
-  providedSession?: AuthSession | null
+  providedSession?: Session | null
 ) {
   const { session: supabaseSession } = useAuthStore();
   const router = useRouter();
 
   // 提供されたセッションまたはSupabaseセッションを使用
-  const sessionToUse =
-    providedSession ||
-    (supabaseSession
-      ? {
-          user: {
-            id: supabaseSession.user.id,
-            email: supabaseSession.user.email || "",
-            name:
-              supabaseSession.user.user_metadata?.name ||
-              supabaseSession.user.user_metadata?.full_name ||
-              "",
-            image:
-              supabaseSession.user.user_metadata?.avatar_url ||
-              supabaseSession.user.user_metadata?.picture ||
-              "",
-          },
-          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        }
-      : null);
+  const sessionToUse = providedSession || supabaseSession;
 
   const handleLike = async (
     unitId: number,

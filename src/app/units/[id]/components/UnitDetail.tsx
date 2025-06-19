@@ -3,8 +3,8 @@
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useComments } from "@/hooks/useComments";
 import { useUnitLike } from "@/hooks/useUnitLike";
-import { AuthSession } from "@/types/auth";
 import { UnitDTO } from "@/types/unit";
+import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,7 @@ import { UnitHeader } from "./UnitHeader";
 
 interface UnitDetailProps {
   id: string;
-  session: AuthSession | null;
+  session: Session | null;
 }
 
 // const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -25,37 +25,13 @@ interface UnitDetailProps {
 export default function UnitDetail({ id, session }: UnitDetailProps) {
   const router = useRouter();
   const { session: supabaseSession } = useAuthStore();
-  const accessToken = supabaseSession?.access_token;
+  const sessionData: Session | null = session || supabaseSession;
 
   console.log("UnitDetail session state:", {
     serverSession: session,
     supabaseSession,
     hasServerSession: !!session,
     hasSupabaseSession: !!supabaseSession,
-  });
-
-  // サーバーサイドのsessionまたはクライアントサイドのsessionを使用
-  const sessionData = (session ||
-    (supabaseSession
-      ? {
-          user: {
-            id: supabaseSession.user.id,
-            email: (supabaseSession.user.email ?? "") as string,
-            name: (supabaseSession.user.user_metadata?.name ??
-              supabaseSession.user.user_metadata?.full_name ??
-              "") as string,
-            image: (supabaseSession.user.user_metadata?.avatar_url ??
-              supabaseSession.user.user_metadata?.picture ??
-              "") as string,
-          },
-          expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        }
-      : null)) as AuthSession | null;
-
-  console.log("UnitDetail final sessionData:", {
-    sessionData,
-    hasUser: !!sessionData?.user,
-    userId: sessionData?.user?.id,
   });
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -108,7 +84,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
     try {
       const headers: Record<string, string> = {};
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      if (sessionData)
+        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
       const response = await fetch(`/api/units/${id}`, {
         method: "DELETE",
         headers,
@@ -137,7 +114,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   }, []);
 
   const handleAddAIComment = async (comment: string) => {
-    if (!sessionData?.user) return;
+    if (!sessionData) return;
 
     try {
       // 楽観的更新
@@ -157,7 +134,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      if (sessionData.access_token)
+        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
       const response = await fetch(`/api/units/${id}/comments`, {
         method: "POST",
         headers,
@@ -182,7 +160,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   };
 
   const handleCreateComment = async (comment: string) => {
-    if (!sessionData?.user) return;
+    if (!sessionData) return;
 
     try {
       // 楽観的更新
@@ -192,8 +170,14 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
         createdAt: new Date().toISOString(),
         user: {
           id: sessionData.user.id,
-          name: sessionData.user.name || "",
-          image: sessionData.user.image || "",
+          name:
+            sessionData.user.user_metadata?.name ??
+            sessionData.user.user_metadata?.full_name ??
+            "",
+          image:
+            sessionData.user.user_metadata?.avatar_url ??
+            sessionData.user.user_metadata?.picture ??
+            "",
         },
       };
 
@@ -202,7 +186,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      if (sessionData.access_token)
+        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
       const response = await fetch(`/api/units/${id}/comments`, {
         method: "POST",
         headers,
@@ -234,7 +219,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      if (sessionData)
+        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "PUT",
         headers,
@@ -268,7 +254,8 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
       await optimisticUpdate("delete", undefined, commentId);
 
       const headers: Record<string, string> = {};
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      if (sessionData)
+        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
       const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
         method: "DELETE",
         headers,

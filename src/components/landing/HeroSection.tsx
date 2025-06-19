@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
-import { AuthSession } from "@/types/auth";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Brain, Clock, LineChart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -12,24 +11,8 @@ import { useInView } from "react-intersection-observer";
 export function HeroSection() {
   const { session: supabaseSession } = useAuthStore();
 
-  // Supabaseセッションを NextAuth.js 互換形式に変換
-  const session: AuthSession | null = supabaseSession
-    ? {
-        user: {
-          id: supabaseSession.user.id,
-          email: supabaseSession.user.email || "",
-          name:
-            supabaseSession.user.user_metadata?.name ||
-            supabaseSession.user.user_metadata?.full_name ||
-            "",
-          image:
-            supabaseSession.user.user_metadata?.avatar_url ||
-            supabaseSession.user.user_metadata?.picture ||
-            "",
-        },
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      }
-    : null;
+  // Supabaseセッションをそのまま利用
+  const session = supabaseSession;
 
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);

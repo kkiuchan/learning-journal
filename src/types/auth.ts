@@ -42,21 +42,3 @@ export const authResponseSchema = z.object({
 });
 
 export type AuthResponse = z.infer<typeof authResponseSchema>;
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name?: string;
-  image?: string;
-  primaryAuthMethod?: string;
-  subscriptionStatus?: string;
-  accounts?: Array<{
-    provider: string;
-    providerAccountId: string;
-  }>;
-}
-
-export interface AuthSession {
-  user: AuthUser;
-  expires: string;
-}
