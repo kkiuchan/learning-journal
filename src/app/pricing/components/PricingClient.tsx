@@ -11,10 +11,9 @@ import {
 } from "@/components/ui/card";
 import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { SUBSCRIPTION_PLANS } from "@/lib/plans";
-import { AuthSession } from "@/types/auth";
 import { Check, Crown, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface SubscriptionInfo {
@@ -36,32 +35,7 @@ export function PricingClient() {
   const { session } = useAuthStore();
   const accessToken = session?.access_token;
 
-  // Supabaseセッションを NextAuth.js 互換形式に変換（useMemoで最適化）
-  const authSession: AuthSession | null = useMemo(() => {
-    if (!session) return null;
-    return {
-      user: {
-        id: session.user.id,
-        email: session.user.email || "",
-        name:
-          session.user.user_metadata?.name ||
-          session.user.user_metadata?.full_name ||
-          "",
-        image:
-          session.user.user_metadata?.avatar_url ||
-          session.user.user_metadata?.picture ||
-          "",
-      },
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    };
-  }, [
-    session?.user?.id,
-    session?.user?.email,
-    session?.user?.user_metadata?.name,
-    session?.user?.user_metadata?.full_name,
-    session?.user?.user_metadata?.avatar_url,
-    session?.user?.user_metadata?.picture,
-  ]);
+  const user = session?.user;
 
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -98,16 +72,16 @@ export function PricingClient() {
 
   // ユーザーIDが変更された時のみサブスクリプション情報を取得
   useEffect(() => {
-    if (authSession?.user?.id) {
+    if (user?.id) {
       fetchSubscriptionInfo();
     } else {
       setLoadingSubscription(false);
       setSubscriptionInfo(null);
     }
-  }, [authSession?.user?.id, fetchSubscriptionInfo]);
+  }, [user?.id, fetchSubscriptionInfo]);
 
   const handleSubscribe = async (planId: string) => {
-    if (!authSession) {
+    if (!user) {
       router.push("/auth/supabase-login");
       return;
     }
@@ -227,7 +201,7 @@ export function PricingClient() {
   };
 
   const renderActionButton = (planId: "FREE" | "PRO") => {
-    if (!authSession) {
+    if (!user) {
       return (
         <Button
           className="w-full"
@@ -338,7 +312,7 @@ export function PricingClient() {
   };
 
   const getCurrentPlanBadge = (planId: "FREE" | "PRO") => {
-    if (!authSession || loadingSubscription) return null;
+    if (!user || loadingSubscription) return null;
 
     const isCurrentPlan = subscriptionInfo?.currentPlan === planId;
     const isProActive =
