@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useUnitLike } from "@/hooks/useUnitLike";

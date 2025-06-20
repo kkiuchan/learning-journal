@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { useComments } from "@/hooks/useComments";
 import { useUnitLike } from "@/hooks/useUnitLike";
 import { UnitDTO } from "@/types/unit";

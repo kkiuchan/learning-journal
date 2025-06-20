@@ -18,8 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {

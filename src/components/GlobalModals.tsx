@@ -1,7 +1,7 @@
 "use client";
 
-import { useModalStore } from "@/contexts/ModalStore";
 import { CreateUnitModal } from "@/app/units/components/CreateUnitModal";
+import { useModalStore } from "@/stores/ModalStore";
 
 export function GlobalModals() {
   const { isCreateUnitModalOpen, setIsCreateUnitModalOpen } = useModalStore();

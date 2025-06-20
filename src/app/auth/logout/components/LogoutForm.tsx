@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { ArrowLeft, Home, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

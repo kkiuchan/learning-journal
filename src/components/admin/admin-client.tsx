@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Crown, Search, User, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";

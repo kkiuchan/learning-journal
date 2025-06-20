@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Crown, Loader2, MessageSquarePlus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

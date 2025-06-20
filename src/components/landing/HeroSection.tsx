@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { BookOpen, Brain, Clock, LineChart, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";

@@ -4,8 +4,8 @@ import { AdviceButton } from "@/components/AdviceButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useLogs } from "@/hooks/useLogs";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
 import { List, Plus, Wand2 } from "lucide-react";
 import React, { useState } from "react";
@@ -78,7 +78,7 @@ export function LogsSection({
 
   const { session: supabaseSession } = useAuthStore();
 
-  const { logs, isLoading, mutate: mutateLogs } = useLogs(unitId);
+  const { logs = [], isLoading, mutate: mutateLogs } = useLogs(unitId);
 
   const handleCreateLogSubmit = async (formData: {
     title: string;

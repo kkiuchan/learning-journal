@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
-import { useModalStore } from "@/contexts/ModalStore";
+import { useModalStore } from "@/stores/ModalStore";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";

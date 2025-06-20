@@ -2,8 +2,8 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useMenuStore } from "@/contexts/MenuStore";
 import { cn } from "@/lib/utils";
+import { useMenuStore } from "@/stores/MenuStore";
 import { LogDTO } from "@/types/log";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";

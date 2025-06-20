@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { UnitDTO } from "@/types/unit";
 import useSWR from "swr";
 

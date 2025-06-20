@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import UserAvatar from "@/components/UserAvatar";
-import { useMenuStore } from "@/contexts/MenuStore";
+import { useMenuStore } from "@/stores/MenuStore";
 import { CommentDTO } from "@/types/comment";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";

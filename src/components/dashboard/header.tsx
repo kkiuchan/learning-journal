@@ -3,8 +3,8 @@
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/ui/loading";
-import { useModalStore } from "@/contexts/ModalStore";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useModalStore } from "@/stores/ModalStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useModalStore } from "@/contexts/ModalStore";
+import { useModalStore } from "@/stores/ModalStore";
 
 interface UserProfileActionsProps {
   currentUserId: string | undefined;

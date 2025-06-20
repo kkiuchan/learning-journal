@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { SUBSCRIPTION_PLANS } from "@/lib/plans";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Check, Crown, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

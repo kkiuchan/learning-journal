@@ -15,10 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { format } from "date-fns";
 import {
   ChevronLeft,

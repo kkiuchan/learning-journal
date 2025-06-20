@@ -1,5 +1,5 @@
 // src/hooks/useUsers.ts
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { User } from "@prisma/client";
 import useSWR from "swr";
 

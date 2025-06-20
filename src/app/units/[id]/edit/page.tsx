@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidateUnitDataAction } from "@/app/actions/revalidate";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { toast } from "sonner";

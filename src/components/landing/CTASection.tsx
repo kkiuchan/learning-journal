@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/contexts/SupabaseAuthStore";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { motion } from "framer-motion";
 import { ArrowRight, Eye, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
