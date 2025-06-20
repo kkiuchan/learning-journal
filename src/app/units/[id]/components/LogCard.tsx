@@ -12,7 +12,9 @@ import {
   Clipboard,
   ExternalLink,
   File,
+  Github,
   LinkIcon,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Star,
@@ -46,12 +48,69 @@ export default function LogCard({
 }: Omit<LogCardProps, "openMenuId" | "setOpenMenuId">) {
   const { openMenuId, setOpenMenuId } = useMenuStore();
   const [expandedContent, setExpandedContent] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuContentRef = useRef<HTMLDivElement>(null);
+
+  const DEVELOPER_EMAIL = "bandman.gh.bs.dk.lav@gmail.com";
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(log.note);
     toast.success("コピーしました！");
+  };
+
+  const handlePushToGithub = async () => {
+    if (!session?.user) {
+      toast.error("ログインが必要です。");
+      return;
+    }
+    setIsPushing(true);
+
+    const content = `
+# ${log.title}
+
+- **学習日**: ${format(new Date(log.logDate), "yyyy/MM/dd")}
+- **学習時間**: ${log.learningTime || "記録なし"}分
+- **効果実感**: ${log.effectScore !== null ? `${log.effectScore}/5` : "未評価"}
+- **効果の種類**: ${log.effectType ? getEffectTypeLabel(log.effectType) : "未分類"}
+
+## 内容
+
+${log.note || "記録なし"}
+    `.trim();
+
+    try {
+      const response = await fetch("/api/push-to-github", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: log.title,
+          content: content,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "GitHubへのプッシュに失敗しました。");
+      }
+
+      toast.success("GitHubに学習ログをプッシュしました！", {
+        action: {
+          label: "ファイルを見る",
+          onClick: () => window.open(data.url, "_blank"),
+        },
+      });
+    } catch (error) {
+      console.error("Error pushing to GitHub:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "GitHubへのプッシュ中にエラーが発生しました。"
+      );
+    } finally {
+      setIsPushing(false);
+    }
   };
 
   useEffect(() => {
@@ -96,6 +155,21 @@ export default function LogCard({
             >
               <Clipboard className="h-4 w-4" />
             </button>
+            {session?.user?.email === DEVELOPER_EMAIL && (
+              <button
+                type="button"
+                className="h-8 w-8 flex items-center justify-center rounded hover:bg-accent transition-colors disabled:opacity-50"
+                onClick={handlePushToGithub}
+                disabled={isPushing}
+                title={isPushing ? "プッシュ中..." : "GitHubにプッシュ"}
+              >
+                {isPushing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Github className="h-4 w-4" />
+                )}
+              </button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -110,7 +184,10 @@ export default function LogCard({
             </Button>
 
             {openMenuId === log.id && (
-              <div className="absolute right-0 mt-2 min-w-[120px] rounded-md shadow-lg bg-background ring-1 ring-border z-10 menu-content">
+              <div
+                ref={menuContentRef}
+                className="absolute right-0 mt-2 min-w-[160px] rounded-md shadow-lg bg-background ring-1 ring-border z-10 menu-content"
+              >
                 <div className="py-1">
                   <button
                     className="w-full text-left px-4 py-2 text-foreground hover:bg-accent flex items-center gap-2 menu-action-button"
