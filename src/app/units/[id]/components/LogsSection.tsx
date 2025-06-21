@@ -7,6 +7,7 @@ import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
+import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
@@ -46,7 +47,20 @@ export function LogsSection({
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
 
-  // フォーム状態
+  // 作成フォーム状態（データ保持用）
+  const [createFormData, setCreateFormData] = useState({
+    title: "",
+    learningTime: 30,
+    note: "",
+    logDate: format(new Date(), "yyyy-MM-dd"),
+    effectScore: 3,
+    effectType: "understanding",
+    tags: [] as string[],
+    resources: [] as CreateLogResource[],
+    currentStep: 1,
+  });
+
+  // 編集フォーム状態
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editResources, setEditResources] = useState<
     {
@@ -225,6 +239,8 @@ export function LogsSection({
         onOpenChange={setIsCreatingLog}
         unitId={unitId}
         onSubmit={handleCreateLogSubmit}
+        formData={createFormData}
+        onFormDataChange={setCreateFormData}
       />
 
       {isLoading ? (

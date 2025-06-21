@@ -58,6 +58,28 @@ interface WizardLogFormProps {
     effectType: string;
     resources: Resource[];
   }) => Promise<void>;
+  formData?: {
+    title: string;
+    learningTime: number;
+    note: string;
+    logDate: string;
+    effectScore: number;
+    effectType: string;
+    tags: string[];
+    resources: Resource[];
+    currentStep: number;
+  };
+  onFormDataChange?: (data: {
+    title: string;
+    learningTime: number;
+    note: string;
+    logDate: string;
+    effectScore: number;
+    effectType: string;
+    tags: string[];
+    resources: Resource[];
+    currentStep: number;
+  }) => void;
 }
 
 interface AIAssistResponse {
@@ -93,22 +115,24 @@ export default function WizardLogForm({
   onCancel,
   onSuccess,
   onSubmit,
+  formData,
+  onFormDataChange,
 }: WizardLogFormProps) {
   const { session: supabaseSession } = useAuthStore();
-  const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isPlanLimitDialogOpen, setIsPlanLimitDialogOpen] = useState(false);
 
-  // フォームデータ
-  const [title, setTitle] = useState("");
-  const [learningTime, setLearningTime] = useState(30);
-  const [note, setNote] = useState("");
-  const [logDate, setLogDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [effectScore, setEffectScore] = useState(3);
-  const [effectType, setEffectType] = useState("understanding");
-  const [tags, setTags] = useState<string[]>([]);
-  const [resources, setResources] = useState<Resource[]>([]);
+  // フォームデータ（外部から受け取るか、デフォルト値を使用）
+  const currentStep = formData?.currentStep ?? 1;
+  const title = formData?.title ?? "";
+  const learningTime = formData?.learningTime ?? 30;
+  const note = formData?.note ?? "";
+  const logDate = formData?.logDate ?? format(new Date(), "yyyy-MM-dd");
+  const effectScore = formData?.effectScore ?? 3;
+  const effectType = formData?.effectType ?? "understanding";
+  const tags = formData?.tags ?? [];
+  const resources = formData?.resources ?? [];
 
   // UI状態
   const [showPreview, setShowPreview] = useState(false);
@@ -126,6 +150,24 @@ export default function WizardLogForm({
 
   const { isComposing, onCompositionStart, onCompositionEnd } =
     useCompositionInput();
+
+  // フォームデータ更新用のヘルパー関数
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    if (onFormDataChange) {
+      onFormDataChange({
+        title,
+        learningTime,
+        note,
+        logDate,
+        effectScore,
+        effectType,
+        tags,
+        resources,
+        currentStep,
+        ...updates,
+      });
+    }
+  };
 
   // AI アシスト機能
   const getAIAssistance = useCallback(
@@ -190,13 +232,13 @@ export default function WizardLogForm({
   // ステップ進行
   const nextStep = () => {
     if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+      updateFormData({ currentStep: currentStep + 1 });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      updateFormData({ currentStep: currentStep - 1 });
     }
   };
 
@@ -204,26 +246,28 @@ export default function WizardLogForm({
   const handleAddTag = (tagToAdd?: string) => {
     const tag = tagToAdd || newTag.trim();
     if (tag && !tags.includes(tag)) {
-      setTags([...tags, tag]);
+      updateFormData({ tags: [...tags, tag] });
       setNewTag("");
     }
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
+    updateFormData({ tags: tags.filter((tag) => tag !== tagToRemove) });
   };
 
   // リソース操作
   const handleAddResource = () => {
     if (newResourceTitle.trim() && newResourceLink.trim()) {
-      setResources([
-        ...resources,
-        {
-          resourceType: "link",
-          resourceLink: newResourceLink,
-          description: newResourceTitle,
-        },
-      ]);
+      updateFormData({
+        resources: [
+          ...resources,
+          {
+            resourceType: "link",
+            resourceLink: newResourceLink,
+            description: newResourceTitle,
+          },
+        ],
+      });
       setNewResourceTitle("");
       setNewResourceLink("");
     }
@@ -235,16 +279,18 @@ export default function WizardLogForm({
     setUploadingFile(true);
     try {
       const filePath = await storage.uploadResource(selectedFile, unitId);
-      setResources([
-        ...resources,
-        {
-          resourceType: "file",
-          resourceLink: filePath,
-          description: selectedFile.name,
-          fileName: selectedFile.name,
-          filePath,
-        },
-      ]);
+      updateFormData({
+        resources: [
+          ...resources,
+          {
+            resourceType: "file",
+            resourceLink: filePath,
+            description: selectedFile.name,
+            fileName: selectedFile.name,
+            filePath,
+          },
+        ],
+      });
       setSelectedFile(null);
       toast.success("ファイルがアップロードされました");
     } catch (error) {
@@ -269,6 +315,20 @@ export default function WizardLogForm({
         effectType,
         resources,
       });
+      // 成功時にフォームデータをリセット
+      if (onFormDataChange) {
+        onFormDataChange({
+          title: "",
+          learningTime: 30,
+          note: "",
+          logDate: format(new Date(), "yyyy-MM-dd"),
+          effectScore: 3,
+          effectType: "understanding",
+          tags: [],
+          resources: [],
+          currentStep: 1,
+        });
+      }
       onSuccess();
     } catch (error) {
       console.error("Submit error:", error);
@@ -335,7 +395,7 @@ export default function WizardLogForm({
                 <Input
                   id="title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => updateFormData({ title: e.target.value })}
                   placeholder="今日学習した内容のタイトル"
                   onCompositionStart={onCompositionStart}
                   onCompositionEnd={onCompositionEnd}
@@ -351,7 +411,7 @@ export default function WizardLogForm({
                           key={index}
                           variant="outline"
                           size="sm"
-                          onClick={() => setTitle(suggestion)}
+                          onClick={() => updateFormData({ title: suggestion })}
                           className="text-xs"
                         >
                           {suggestion}
@@ -369,7 +429,9 @@ export default function WizardLogForm({
                     id="logDate"
                     type="date"
                     value={logDate}
-                    onChange={(e) => setLogDate(e.target.value)}
+                    onChange={(e) =>
+                      updateFormData({ logDate: e.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -378,7 +440,9 @@ export default function WizardLogForm({
                     id="learningTime"
                     type="number"
                     value={learningTime}
-                    onChange={(e) => setLearningTime(Number(e.target.value))}
+                    onChange={(e) =>
+                      updateFormData({ learningTime: Number(e.target.value) })
+                    }
                     min="1"
                     placeholder="30"
                   />
@@ -441,7 +505,7 @@ export default function WizardLogForm({
             ) : (
               <Textarea
                 value={note}
-                onChange={(e) => setNote(e.target.value)}
+                onChange={(e) => updateFormData({ note: e.target.value })}
                 placeholder="学習内容の詳細を記述してください（Markdown形式）&#10;&#10;例：&#10;# 今日学習したこと&#10;- ポイント1&#10;- ポイント2&#10;&#10;## つまづいた点&#10;- 課題1&#10;- 解決方法"
                 rows={12}
                 className="font-mono resize-none"
@@ -497,11 +561,13 @@ export default function WizardLogForm({
                             onClick={() => {
                               if (isAdded) {
                                 // 追加済みの場合は削除
-                                setTags(tags.filter((t) => t !== tag));
+                                updateFormData({
+                                  tags: tags.filter((t) => t !== tag),
+                                });
                               } else {
                                 // 未追加の場合は追加
                                 if (!tags.includes(tag)) {
-                                  setTags([...tags, tag]);
+                                  updateFormData({ tags: [...tags, tag] });
                                 }
                               }
                             }}
@@ -560,7 +626,7 @@ export default function WizardLogForm({
                     <button
                       key={score}
                       type="button"
-                      onClick={() => setEffectScore(score)}
+                      onClick={() => updateFormData({ effectScore: score })}
                       onMouseEnter={() => setHoveredScore(score)}
                       className="transition-all hover:scale-110 focus:outline-none"
                     >
@@ -590,7 +656,7 @@ export default function WizardLogForm({
                     <button
                       key={type.value}
                       type="button"
-                      onClick={() => setEffectType(type.value)}
+                      onClick={() => updateFormData({ effectType: type.value })}
                       className={cn(
                         "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
                         effectType === type.value
@@ -756,9 +822,11 @@ export default function WizardLogForm({
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              setResources(
-                                resources.filter((_, i) => i !== index)
-                              )
+                              updateFormData({
+                                resources: resources.filter(
+                                  (_, i) => i !== index
+                                ),
+                              })
                             }
                           >
                             <X className="h-4 w-4" />
@@ -879,12 +947,7 @@ export default function WizardLogForm({
     <>
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>学習ログを作成</CardTitle>
-            <Button variant="ghost" onClick={onCancel}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <CardTitle>学習ログを作成</CardTitle>
 
           {/* プログレスバー */}
           <div className="space-y-2">

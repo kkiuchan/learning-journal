@@ -29,6 +29,28 @@ interface CreateLogModalProps {
   onOpenChange: (open: boolean) => void;
   unitId: string;
   onSubmit: (form: CreateLogFormValues) => Promise<void>;
+  formData?: {
+    title: string;
+    learningTime: number;
+    note: string;
+    logDate: string;
+    effectScore: number;
+    effectType: string;
+    tags: string[];
+    resources: Resource[];
+    currentStep: number;
+  };
+  onFormDataChange?: (data: {
+    title: string;
+    learningTime: number;
+    note: string;
+    logDate: string;
+    effectScore: number;
+    effectType: string;
+    tags: string[];
+    resources: Resource[];
+    currentStep: number;
+  }) => void;
 }
 
 export function CreateLogModal({
@@ -36,6 +58,8 @@ export function CreateLogModal({
   onOpenChange,
   unitId,
   onSubmit,
+  formData,
+  onFormDataChange,
 }: CreateLogModalProps) {
   const handleCancel = () => {
     onOpenChange(false);
@@ -56,6 +80,8 @@ export function CreateLogModal({
           onCancel={handleCancel}
           onSuccess={handleSuccess}
           onSubmit={onSubmit}
+          formData={formData}
+          onFormDataChange={onFormDataChange}
         />
       </DialogContent>
     </Dialog>

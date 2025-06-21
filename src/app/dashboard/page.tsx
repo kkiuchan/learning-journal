@@ -72,42 +72,39 @@ async function getDashboardData(userId: string) {
   });
 
   let streakDays = 0;
-  today.setHours(0, 0, 0, 0);
 
-  // 今日の日付から1日ずつ遡って連続学習日数をカウント
-  let checkDate = new Date(today);
-  let hasLogToday = false;
+  // 日本時間の今日（時分秒をリセット）
+  const jstToday = new Date();
+  jstToday.setHours(jstToday.getHours() + 9); // JSTに調整
+  jstToday.setHours(0, 0, 0, 0);
 
-  // 今日の学習ログがあるか確認
-  const todayLog = recentLogs.find((log) => {
-    const logDate = new Date(log.logDate);
-    return logDate.toDateString() === today.toDateString();
-  });
+  // ログの日付を重複なしでユニークな日付セットを作成
+  const uniqueLogDates = new Set(
+    recentLogs.map((log) => {
+      const logDate = new Date(log.logDate);
+      logDate.setHours(0, 0, 0, 0);
+      return logDate.getTime();
+    })
+  );
 
-  if (!todayLog) {
-    // 今日の学習がまだの場合、昨日から確認を開始
+  // 今日から遡って連続する日数をカウント
+  let checkDate = new Date(jstToday);
+
+  while (uniqueLogDates.has(checkDate.getTime())) {
+    streakDays++;
     checkDate.setDate(checkDate.getDate() - 1);
   }
 
-  for (let i = 0; i < recentLogs.length; i++) {
-    const logDate = new Date(recentLogs[i].logDate);
-    logDate.setHours(0, 0, 0, 0);
+  // 今日の学習がない場合、昨日から再チェック
+  if (!uniqueLogDates.has(jstToday.getTime())) {
+    streakDays = 0;
+    checkDate = new Date(jstToday);
+    checkDate.setDate(checkDate.getDate() - 1);
 
-    if (logDate.toDateString() === checkDate.toDateString()) {
+    while (uniqueLogDates.has(checkDate.getTime())) {
       streakDays++;
       checkDate.setDate(checkDate.getDate() - 1);
-    } else if (
-      (checkDate.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24) >
-      1
-    ) {
-      // 1日以上の空きがある場合は連続記録終了
-      break;
     }
-  }
-
-  // 今日の学習がある場合は+1
-  if (todayLog) {
-    streakDays++;
   }
 
   // 最近の学習ログを取得
