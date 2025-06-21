@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { logRequestSchema } from "@/types/log";
 import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
 import { revalidatePath } from "next/cache";
@@ -12,7 +12,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user) {
@@ -74,7 +74,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id, logId } = await params;
     const user = await getCurrentUserUnified();
@@ -169,7 +169,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; logId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { logId } = await params;
     const user = await getCurrentUserUnified();

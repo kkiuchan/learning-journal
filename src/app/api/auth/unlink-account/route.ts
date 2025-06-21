@@ -1,6 +1,6 @@
 import { createErrorResponse, createSuccessResponse } from "@/lib/api-utils";
 import { getSupabaseServerUser } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { UnlinkAccountRequest } from "@/types/api";
 
 /**
@@ -79,7 +79,7 @@ import { UnlinkAccountRequest } from "@/types/api";
  *                   example: アカウントの連携解除中にエラーが発生しました
  */
 export async function POST(request: Request) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getSupabaseServerUser();
 

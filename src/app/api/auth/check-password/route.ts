@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getSupabaseServerUser } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { CheckPasswordResponse } from "@/types/api";
 
 /**
@@ -47,7 +47,7 @@ import { CheckPasswordResponse } from "@/types/api";
  *                   example: ユーザーが見つかりません
  */
 export async function GET() {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getSupabaseServerUser();
 

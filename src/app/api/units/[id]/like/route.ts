@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
 import { NextRequest } from "next/server";
 // import { revalidateTag } from "next/cache";
@@ -64,7 +64,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id } = await params;
     const user = await getCurrentUserUnified();
@@ -183,7 +183,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id } = await params;
     const user = await getCurrentUserUnified();

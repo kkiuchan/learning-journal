@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getSupabaseServerUser } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { updatePassword } from "@/lib/supabase-auth";
 import { ApiResponse } from "@/types";
 
@@ -119,7 +119,7 @@ type LinkAccountRequest = z.infer<typeof linkAccountSchema>;
 export async function POST(
   request: Request
 ): Promise<NextResponse<ApiResponse<{ message: string }>>> {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getSupabaseServerUser();
 

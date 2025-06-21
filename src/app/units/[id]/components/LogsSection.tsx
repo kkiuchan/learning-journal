@@ -317,7 +317,22 @@ export function LogsSection({
                   log={log}
                   unitId={unitId}
                   session={session}
-                  onEdit={() => setEditingLogId(log.id)}
+                  onEdit={() => {
+                    setEditingLogId(log.id);
+                    // 既存のタグ情報を編集状態に設定
+                    setEditTags(log.tags?.map((tag) => tag.name) || []);
+                    // 既存のリソース情報も編集状態に設定
+                    setEditResources(
+                      log.resources?.map((resource) => ({
+                        id: resource.id,
+                        resourceType: resource.resourceType,
+                        resourceLink: resource.resourceLink,
+                        description: resource.description,
+                        fileName: resource.fileName,
+                        filePath: resource.filePath,
+                      })) || []
+                    );
+                  }}
                   onDelete={() => handleDeleteLog(log.id, setOpenMenuId)}
                   isDeleting={deletingLogIds.includes(log.id)}
                   menuRef={
@@ -333,11 +348,21 @@ export function LogsSection({
           {editingLogId && (
             <EditLogModal
               open={editingLogId !== null}
-              onOpenChange={(open) => !open && setEditingLogId(null)}
+              onOpenChange={(open) => {
+                if (!open) {
+                  setEditingLogId(null);
+                  // 編集状態をリセット
+                  setEditTags([]);
+                  setEditResources([]);
+                }
+              }}
               log={logs.find((log) => log.id === editingLogId)!}
               unitId={unitId}
               onUpdate={() => {
                 setEditingLogId(null);
+                // 編集状態をリセット
+                setEditTags([]);
+                setEditResources([]);
                 mutateLogs();
               }}
               onSubmit={(form) => handleEditLogSubmit(editingLogId, form)}

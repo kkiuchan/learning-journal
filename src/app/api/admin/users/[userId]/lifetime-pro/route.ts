@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
 // 管理者権限チェック
@@ -13,7 +13,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user) {
@@ -76,7 +76,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const user = await getCurrentUserUnified();
     if (!user) {

@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import {
   revalidateCommentData,
   revalidateUnitData,
@@ -98,7 +98,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id, commentId } = await params;
     const user = await getCurrentUserUnified();
@@ -207,7 +207,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; commentId: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id, commentId } = await params;
     const user = await getCurrentUserUnified();

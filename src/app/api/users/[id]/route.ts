@@ -1,6 +1,6 @@
 import { createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { PublicUserResponse } from "@/types/api";
 import { NextResponse } from "next/server";
 
@@ -228,7 +228,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<{ data: PublicUserResponse } | { error: string }>> {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id } = await context.params;
     const currentUser = await getCurrentUserUnified();

@@ -1,6 +1,6 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
 // import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
@@ -105,7 +105,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id } = await params;
     // 現在のユーザーを取得
@@ -265,7 +265,7 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     const { id } = await params;
     const user = await getCurrentUserUnified();
@@ -402,7 +402,7 @@ export async function GET(
   try {
     const { id } = await Promise.resolve(params);
     const numericId = parseInt(id);
-    await ensurePrismaConnected();
+    // await ensurePrismaConnected();
 
     if (isNaN(numericId)) {
       return createErrorResponse("無効なユニットIDです", 400);

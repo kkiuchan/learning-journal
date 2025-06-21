@@ -1,12 +1,12 @@
 import { authConfig } from "@/auth.config";
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
 
   try {
     const session = await getServerSession(authConfig);

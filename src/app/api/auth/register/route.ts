@@ -1,5 +1,5 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
-import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { ApiResponse } from "@/types";
 import { authRequestSchema } from "@/types/auth";
 import bcryptjs from "bcryptjs";
@@ -13,7 +13,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(
   request: Request
 ): Promise<NextResponse<ApiResponse<{ message: string }>>> {
-  await ensurePrismaConnected();
+  // await ensurePrismaConnected();
   try {
     console.log("登録リクエスト受信");
     const body = await request.json();
