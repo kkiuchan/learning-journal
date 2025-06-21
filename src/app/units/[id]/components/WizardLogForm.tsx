@@ -433,7 +433,7 @@ export default function WizardLogForm({
             </div>
 
             {showPreview ? (
-              <div className="min-h-[300px] p-4 border rounded-md bg-background">
+              <div className="min-h-[300px] max-h-[400px] p-4 border rounded-md bg-background overflow-y-auto">
                 <MarkdownPreview>
                   {note || "プレビューする内容がありません"}
                 </MarkdownPreview>
@@ -844,7 +844,7 @@ export default function WizardLogForm({
                 <span className="font-medium text-muted-foreground">
                   学習内容:
                 </span>
-                <div className="mt-2 p-4 border rounded-md bg-muted/50">
+                <div className="mt-2 p-4 border rounded-md bg-muted/50 max-h-[300px] overflow-y-auto">
                   <MarkdownPreview>{note}</MarkdownPreview>
                 </div>
               </div>

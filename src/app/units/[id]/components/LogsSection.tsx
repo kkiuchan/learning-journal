@@ -7,14 +7,13 @@ import { Loading } from "@/components/ui/loading";
 import { useLogs } from "@/hooks/useLogs";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
-import { List, Plus, Wand2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
-import CreateLogForm from "./CreateLogForm";
+import { CreateLogModal } from "./CreateLogModal";
 import { EditLogModal } from "./EditLogModal";
 import LogCard from "./LogCard";
 import { TableOfContents } from "./TableOfContents";
-import WizardLogForm from "./WizardLogForm";
 
 interface LogsSectionProps {
   unitId: string;
@@ -25,16 +24,7 @@ interface LogsSectionProps {
   onAIAdvice: (comment: string) => void;
 }
 
-// WizardLogFormのResource型と一致させる
-interface WizardResource {
-  resourceType: string | null;
-  resourceLink: string;
-  description: string | null;
-  fileName?: string;
-  filePath?: string;
-}
-
-// CreateLogFormのResource型
+// CreateLogModalのResource型
 interface CreateLogResource {
   id?: number;
   resourceType: string | null;
@@ -53,17 +43,10 @@ export function LogsSection({
   onAIAdvice,
 }: LogsSectionProps) {
   const [isCreatingLog, setIsCreatingLog] = useState(false);
-  const [useWizardForm, setUseWizardForm] = useState(true); // デフォルトはウィザード形式
   const [editingLogId, setEditingLogId] = useState<number | null>(null);
   const [deletingLogIds, setDeletingLogIds] = useState<number[]>([]);
 
   // フォーム状態
-  const [createTags, setCreateTags] = useState<string[]>([]);
-  const [createResources, setCreateResources] = useState<CreateLogResource[]>(
-    []
-  );
-  const [tags, setTags] = useState<string[]>([]);
-  const [resources, setResources] = useState<CreateLogResource[]>([]);
   const [editTags, setEditTags] = useState<string[]>([]);
   const [editResources, setEditResources] = useState<
     {
@@ -236,67 +219,13 @@ export function LogsSection({
         </div>
       </div>
 
-      {isCreatingLog && (
-        <div className="mb-6">
-          {/* フォーム切り替えボタン */}
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">学習ログを作成</h3>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={useWizardForm ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUseWizardForm(true)}
-                className="flex items-center gap-2"
-              >
-                <Wand2 className="h-4 w-4" />
-                ウィザード
-              </Button>
-              <Button
-                variant={!useWizardForm ? "default" : "outline"}
-                size="sm"
-                onClick={() => setUseWizardForm(false)}
-                className="flex items-center gap-2"
-              >
-                <List className="h-4 w-4" />
-                従来形式
-              </Button>
-            </div>
-          </div>
-
-          {useWizardForm ? (
-            <WizardLogForm
-              unitId={unitId}
-              onCancel={() => {
-                setIsCreatingLog(false);
-                setCreateTags([]);
-                setCreateResources([]);
-              }}
-              onSuccess={() => {
-                setIsCreatingLog(false);
-                setCreateTags([]);
-                setCreateResources([]);
-              }}
-              onSubmit={handleCreateLogSubmit}
-            />
-          ) : (
-            <CreateLogForm
-              unitId={unitId}
-              onCancel={() => setIsCreatingLog(false)}
-              onSuccess={() => {
-                setIsCreatingLog(false);
-                mutateLogs();
-                setCreateTags([]);
-                setCreateResources([]);
-              }}
-              tags={createTags}
-              setTags={setCreateTags}
-              resources={createResources}
-              setResources={setCreateResources}
-              onSubmit={handleCreateLogSubmit}
-            />
-          )}
-        </div>
-      )}
+      {/* 作成モーダル */}
+      <CreateLogModal
+        open={isCreatingLog}
+        onOpenChange={setIsCreatingLog}
+        unitId={unitId}
+        onSubmit={handleCreateLogSubmit}
+      />
 
       {isLoading ? (
         <Loading text="読み込み中..." />
