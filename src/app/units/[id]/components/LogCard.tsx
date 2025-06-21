@@ -8,6 +8,7 @@ import { LogDTO } from "@/types/log";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+import "github-markdown-css/github-markdown-dark.css";
 import {
   Clipboard,
   ExternalLink,
@@ -22,6 +23,8 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
@@ -222,13 +225,32 @@ ${log.note || "記録なし"}
         <div className="mt-2">
           <div
             className={cn(
-              "prose prose-sm max-w-none dark:prose-invert whitespace-pre-line ",
+              "markdown-body",
               !expandedContent && log.note.length > 200 ? "line-clamp-[4]" : ""
             )}
+            style={{ backgroundColor: "transparent" }}
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              // rehypePlugins={[rehypeRaw]}
+              components={{
+                code({ node, className, children, ...props }: any) {
+                  const match = /language-(\w+)/.exec(className || "");
+                  return !props.inline && match ? (
+                    <SyntaxHighlighter
+                      style={vscDarkPlus}
+                      language={match[1]}
+                      PreTag="div"
+                      {...props}
+                    >
+                      {String(children).replace(/\n$/, "")}
+                    </SyntaxHighlighter>
+                  ) : (
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  );
+                },
+              }}
             >
               {log.note}
             </ReactMarkdown>

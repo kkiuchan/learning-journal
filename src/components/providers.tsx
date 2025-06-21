@@ -2,6 +2,7 @@
 
 import { SWRProvider } from "@/lib/swr";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
+import { ThemeProvider } from "next-themes";
 import { useEffect } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -10,5 +11,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     useAuthStore.getState().initializeAuth();
   }, []);
 
-  return <SWRProvider>{children}</SWRProvider>;
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+      <SWRProvider>{children}</SWRProvider>
+    </ThemeProvider>
+  );
 }
