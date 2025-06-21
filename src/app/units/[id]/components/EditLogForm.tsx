@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useSyncedState } from "@/hooks/useSyncedState";
@@ -12,8 +13,6 @@ import { LogDTO } from "@/types/log";
 import { format } from "date-fns";
 import { Eye, EyeOff, Star, X } from "lucide-react";
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 interface EditLogFormProps {
   log: LogDTO;
@@ -262,10 +261,10 @@ export default function EditLogForm({
           </Button>
         </div>
         {showPreview ? (
-          <div className="min-h-[200px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          <div className="min-h-[200px] p-4 border rounded-md bg-background">
+            <MarkdownPreview>
               {note || "プレビューする内容がありません"}
-            </ReactMarkdown>
+            </MarkdownPreview>
           </div>
         ) : (
           <Textarea

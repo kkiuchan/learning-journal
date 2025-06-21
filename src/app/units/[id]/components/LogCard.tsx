@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { cn } from "@/lib/utils";
 import { useMenuStore } from "@/stores/MenuStore";
 import { LogDTO } from "@/types/log";
@@ -22,10 +23,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 interface LogCardProps {
@@ -223,38 +220,13 @@ ${log.note || "記録なし"}
 
       {log.note && (
         <div className="mt-2">
-          <div
+          <MarkdownPreview
             className={cn(
-              "markdown-body",
               !expandedContent && log.note.length > 200 ? "line-clamp-[4]" : ""
             )}
-            style={{ backgroundColor: "transparent" }}
           >
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                code({ node, className, children, ...props }: any) {
-                  const match = /language-(\w+)/.exec(className || "");
-                  return !props.inline && match ? (
-                    <SyntaxHighlighter
-                      style={vscDarkPlus}
-                      language={match[1]}
-                      PreTag="div"
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, "")}
-                    </SyntaxHighlighter>
-                  ) : (
-                    <code className={className} {...props}>
-                      {children}
-                    </code>
-                  );
-                },
-              }}
-            >
-              {log.note}
-            </ReactMarkdown>
-          </div>
+            {log.note}
+          </MarkdownPreview>
           {log.note.length > 200 && (
             <button
               onClick={() => setExpandedContent(!expandedContent)}

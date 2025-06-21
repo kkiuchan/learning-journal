@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
@@ -33,8 +34,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 
 interface Resource {
@@ -434,10 +433,10 @@ export default function WizardLogForm({
             </div>
 
             {showPreview ? (
-              <div className="min-h-[300px] p-4 border rounded-md bg-background prose prose-sm max-w-none dark:prose-invert whitespace-pre-line ">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <div className="min-h-[300px] p-4 border rounded-md bg-background">
+                <MarkdownPreview>
                   {note || "プレビューする内容がありません"}
-                </ReactMarkdown>
+                </MarkdownPreview>
               </div>
             ) : (
               <Textarea
@@ -845,10 +844,8 @@ export default function WizardLogForm({
                 <span className="font-medium text-muted-foreground">
                   学習内容:
                 </span>
-                <div className="mt-2 p-4 border rounded-md bg-muted/50 prose prose-sm max-w-none dark:prose-invert whitespace-pre-line">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {note}
-                  </ReactMarkdown>
+                <div className="mt-2 p-4 border rounded-md bg-muted/50">
+                  <MarkdownPreview>{note}</MarkdownPreview>
                 </div>
               </div>
 
