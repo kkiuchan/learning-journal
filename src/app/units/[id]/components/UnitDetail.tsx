@@ -1,14 +1,13 @@
 "use client";
 
-import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { useComments } from "@/hooks/useComments";
+import { useUnit } from "@/hooks/useUnit";
 import { useUnitLike } from "@/hooks/useUnitLike";
-import { UnitDTO } from "@/types/unit";
+import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import { CommentsSection } from "./CommentsSection";
 import { LogsSection } from "./LogsSection";
 import { Sidebar } from "./Sidebar";
@@ -19,8 +18,6 @@ interface UnitDetailProps {
   id: string;
   session: Session | null;
 }
-
-// const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function UnitDetail({ id, session }: UnitDetailProps) {
   const router = useRouter();
@@ -43,12 +40,11 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
   const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   const {
-    data: unitData,
+    unit,
+    isLoading,
     error,
     mutate: mutateUnit,
-  } = useSWR<{ data: UnitDTO }>(`/api/units/${id}`);
-
-  const unit = unitData?.data;
+  } = useUnit({ unitId: id });
 
   const {
     comments,
@@ -308,8 +304,12 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     return <div>エラーが発生しました</div>;
   }
 
-  if (!unit) {
+  if (isLoading) {
     return <div>読み込み中...</div>;
+  }
+
+  if (!unit) {
+    return <div>ユニットが見つかりません</div>;
   }
 
   return (

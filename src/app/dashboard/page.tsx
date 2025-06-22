@@ -1,5 +1,5 @@
 import { DashboardClient } from "@/components/dashboard/dashboard-client";
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -13,7 +13,7 @@ export default async function DashboardPage() {
   try {
     console.log("[Dashboard] Checking user authentication...");
 
-    const user = await getCurrentUser();
+    const user = await getCurrentUserUnified();
     console.log(
       "[Dashboard] User:",
       user ? `${user.email} (${user.id})` : "None"

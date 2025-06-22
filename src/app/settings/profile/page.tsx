@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "./components/ProfileForm";
 
@@ -6,7 +6,7 @@ import { ProfileForm } from "./components/ProfileForm";
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserUnified();
   if (!user) {
     redirect("/auth/supabase-login");
   }
@@ -14,7 +14,7 @@ export default async function ProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">プロフィール設定</h1>
-      <ProfileForm />
+      <ProfileForm session={null} />
     </div>
   );
 }

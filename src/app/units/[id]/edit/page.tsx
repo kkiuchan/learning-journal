@@ -1,31 +1,14 @@
 "use client";
 
 import { revalidateUnitDataAction } from "@/app/actions/revalidate";
+import { Loading } from "@/components/ui/loading";
+import { useUnit } from "@/hooks/useUnit";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useState } from "react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { UnitForm, UnitFormValues } from "./components/UnitForm";
-
-type Unit = {
-  id: number;
-  title: string;
-  learningGoal: string | null;
-  preLearningState: string | null;
-  reflection: string | null;
-  nextAction: string | null;
-  startDate: Date | null;
-  endDate: Date | null;
-  status: string;
-  displayFlag: boolean;
-  unitTags: {
-    tag: {
-      id: number;
-      name: string;
-    };
-  }[];
-};
 
 export default function EditUnitPage({
   params,
@@ -36,31 +19,10 @@ export default function EditUnitPage({
   const { user, session } = useAuthStore();
   const accessToken = session?.access_token;
   const [isLoading, setIsLoading] = useState(false);
-  const [unit, setUnit] = useState<Unit | null>(null);
   const { id } = use(params);
 
-  useEffect(() => {
-    fetchUnit();
-  }, [id]);
-
-  const fetchUnit = async () => {
-    try {
-      const headers: Record<string, string> = {};
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-      const response = await fetch(`/api/units/${id}`, { headers });
-      const data = await response.json();
-
-      if (response.ok) {
-        setUnit(data.data);
-      } else {
-        console.error("ユニットの取得に失敗しました:", data.error);
-        toast.error("ユニットの取得に失敗しました");
-      }
-    } catch (error) {
-      console.error("エラーが発生しました:", error);
-      toast.error("エラーが発生しました");
-    }
-  };
+  // SWRを使用してユニットデータを取得
+  const { unit, isLoading: isLoadingUnit, error } = useUnit({ unitId: id });
 
   const handleSubmit = async (values: UnitFormValues) => {
     if (!user || !unit) return;
@@ -106,8 +68,55 @@ export default function EditUnitPage({
     }
   };
 
+  // ローディング状態
+  if (isLoadingUnit) {
+    return (
+      <div className="container mx-auto py-8 flex items-center justify-center">
+        <Loading size="lg" />
+      </div>
+    );
+  }
+
+  // エラー状態
+  if (error) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">
+            エラーが発生しました
+          </h1>
+          <p className="text-muted-foreground mb-4">
+            ユニットの読み込み中にエラーが発生しました。
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ユニットが見つからない場合
   if (!unit) {
-    return <div>読み込み中...</div>;
+    return (
+      <div className="container mx-auto py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">ユニットが見つかりません</h1>
+          <p className="text-muted-foreground mb-4">
+            指定されたユニットは存在しないか、アクセス権限がありません。
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            戻る
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const initialValues: UnitFormValues = {
@@ -124,10 +133,11 @@ export default function EditUnitPage({
       : "",
     status: unit.status,
     displayFlag: unit.displayFlag,
-    tags: unit.unitTags.map((ut) => ({
-      id: ut.tag.id,
-      name: ut.tag.name,
-    })),
+    tags:
+      unit.tags?.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+      })) || [],
   };
 
   return (

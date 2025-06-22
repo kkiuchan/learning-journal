@@ -1,5 +1,5 @@
 import { AdminClient } from "@/components/admin/admin-client";
-import { getCurrentUser, isCurrentUserAdmin } from "@/lib/auth-helpers";
+import { getCurrentUserUnified, isCurrentUserAdmin } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 
 // 動的レンダリングを強制（Cookieを使用するため）
@@ -24,7 +24,7 @@ function isAdmin(email: string): boolean {
 }
 
 export default async function AdminPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserUnified();
   console.log("=== 管理者ページデバッグ ===");
   console.log("user?.email:", user?.email);
   console.log("user全体:", JSON.stringify(user, null, 2));

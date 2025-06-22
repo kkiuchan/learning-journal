@@ -1,11 +1,11 @@
-import { getCurrentUser } from "@/lib/auth-helpers";
+import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
 
 // 動的レンダリングを強制（Cookieを使用するため）
 export const dynamic = "force-dynamic";
 
 export default async function NewUnitPage() {
-  const user = await getCurrentUser();
+  const user = await getCurrentUserUnified();
 
   if (!user) {
     redirect("/auth/supabase-login");
