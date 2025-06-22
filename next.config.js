@@ -6,18 +6,26 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "via.placeholder.com",
+        port: "",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "*.vercel.app",
+        hostname: "images.unsplash.com",
+        port: "",
+        pathname: "/**",
       },
     ],
     minimumCacheTTL: 60,
@@ -83,6 +91,33 @@ const nextConfig = {
         ],
       },
       {
+        source: "/api/units/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
+        source: "/api/dashboard",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=300, stale-while-revalidate=600",
+          },
+        ],
+      },
+      {
+        source: "/api/users/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=60, stale-while-revalidate=300",
+          },
+        ],
+      },
+      {
         source: "/api/users/search",
         headers: [
           {
@@ -124,6 +159,10 @@ const nextConfig = {
     if (isServer) {
       config.externals = [...config.externals, "@prisma/client", "prisma"];
     }
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ["@svgr/webpack"],
+    });
     return config;
   },
   serverRuntimeConfig: {

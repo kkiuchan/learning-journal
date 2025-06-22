@@ -19,4 +19,5 @@ export const CACHE_TAGS = {
   TAG_LIST: "tag-list",
   RESOURCE: "resource",
   RESOURCE_LIST: "resource-list",
+  DASHBOARD: "dashboard",
 } as const;

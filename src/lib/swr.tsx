@@ -3,22 +3,19 @@ import { SWRConfig, SWRConfiguration } from "swr";
 
 // SWRのグローバル設定
 const swrConfig: SWRConfiguration = {
-  revalidateOnFocus: false, // フォーカス時の再検証を有効化
-  revalidateIfStale: false, // 古いデータを再検証しない
+  revalidateOnFocus: false, // フォーカス時の再検証を無効化
+  revalidateIfStale: true, // 古いデータを再検証する
   revalidateOnReconnect: true, // 再接続時の再検証を有効化
-  refreshInterval: 30000, // 30秒ごとに再検証
-  dedupingInterval: 5000,
+  refreshInterval: 0, // 自動更新を無効化（各フックで個別設定）
+  dedupingInterval: 5000, // 5秒間は重複リクエストを防ぐ
   errorRetryCount: 3, // エラー時の再試行回数を制限
   errorRetryInterval: 5000, // エラー時の再試行間隔を5秒に設定
-  keepPreviousData: false, // データ更新中も古いデータを表示
+  keepPreviousData: true, // データ更新中も古いデータを表示
   suspense: false, // Suspenseモードを無効化
   fetcher: async (url: string, options?: { tags?: string[] }) => {
     const fetchOptions: RequestInit & { next?: { tags?: string[] } } = {
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
       },
     };
 
@@ -38,6 +35,12 @@ const swrConfig: SWRConfiguration = {
   },
   onError: (error: Error) => {
     console.error("SWRエラー:", error);
+  },
+  onSuccess: (data, key) => {
+    // 成功時のログ（開発環境のみ）
+    if (process.env.NODE_ENV === "development") {
+      console.log(`SWR Success: ${key}`, data);
+    }
   },
 };
 

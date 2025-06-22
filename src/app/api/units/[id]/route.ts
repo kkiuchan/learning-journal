@@ -1,4 +1,4 @@
-import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
+import { createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
@@ -449,11 +449,22 @@ export async function GET(
       isLiked = !!like;
     }
 
-    return createApiResponse({
-      ...unit,
-      tags: unit.unitTags.map((ut) => ut.tag),
-      isLiked,
-    });
+    const response = NextResponse.json(
+      {
+        data: {
+          ...unit,
+          tags: unit.unitTags.map((ut) => ut.tag),
+          isLiked,
+        },
+      },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=1800, stale-while-revalidate=3600",
+        },
+      }
+    );
+
+    return response;
   } catch (error) {
     console.error("ユニット取得エラー:", error);
     return createErrorResponse(
@@ -465,5 +476,5 @@ export async function GET(
   }
 }
 
-// キャッシュの有効期限を60秒に設定
-export const revalidate = 60;
+// キャッシュの有効期限を30分に設定（メタデータ生成と合わせる）
+export const revalidate = 1800;

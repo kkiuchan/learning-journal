@@ -1,6 +1,5 @@
 import { Loading } from "@/components/ui/loading";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
-import { prisma } from "@/lib/prisma";
 import { Session } from "@supabase/supabase-js";
 import { Metadata } from "next";
 import { Suspense } from "react";
@@ -24,14 +23,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   try {
-    const unit = await prisma.unit.findUnique({
-      where: { id: numericId },
-      include: {
-        user: {
-          select: { name: true },
-        },
+    // ✅ Next.jsサーバーサイドキャッシュを活用してAPIルート経由でデータ取得
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/units/${id}`, {
+      next: {
+        revalidate: 1800, // 30分キャッシュ（メタデータは変更頻度が中程度）
+        tags: [`unit-${id}`, "unit", "unit-metadata"],
       },
     });
+
+    if (!response.ok) {
+      return {
+        title: "ユニットが見つかりません",
+        description: "指定されたユニットは存在しません。",
+      };
+    }
+
+    const { data: unit } = await response.json();
 
     if (!unit) {
       return {
@@ -41,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const { title, learningGoal } = unit;
-    const userName = unit.user.name || "ユーザー";
+    const userName = unit.user?.name || "ユーザー";
 
     return {
       title: `${title} | Learning Journal`,

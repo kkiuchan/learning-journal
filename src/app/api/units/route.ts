@@ -445,6 +445,7 @@ export const POST = withApiSecurity(
       // キャッシュの無効化
       revalidateTag(CACHE_TAGS.UNIT);
       revalidateTag(CACHE_TAGS.UNIT_LIST);
+      revalidateTag(CACHE_TAGS.DASHBOARD);
 
       return NextResponse.json({ data: formattedUnit }, { status: 201 });
     } catch (error) {
