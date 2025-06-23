@@ -6,11 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/ui/loading";
 import { mutateDashboard } from "@/hooks/useDashboard";
 import { useLogs } from "@/hooks/useLogs";
+import { useMenuToggle } from "@/hooks/useMenuToggle";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CreateLogModal } from "./CreateLogModal";
 import { EditLogModal } from "./EditLogModal";
@@ -366,22 +367,8 @@ export const LogsSection = memo(function LogsSection({
     return states;
   }, [logs, deletingLogIds]);
 
-  // ✅ openMenuIdのRefを作成して依存を排除
-  const openMenuIdRef = useRef(openMenuId);
-  openMenuIdRef.current = openMenuId;
-
-  // ✅ 完全に安定したメニュートグル関数を作成
-  const menuToggleFunctions = useMemo(() => {
-    const functions: Record<number, () => void> = {};
-    logs.forEach((log) => {
-      functions[log.id] = () => {
-        const currentOpenMenuId = openMenuIdRef.current;
-        const newMenuId = currentOpenMenuId === log.id ? null : log.id;
-        setOpenMenuId(newMenuId);
-      };
-    });
-    return functions;
-  }, [logs, setOpenMenuId]);
+  // ✅ カスタムフックでメニュートグル機能を提供
+  const menuToggleFunctions = useMenuToggle(logs, openMenuId, setOpenMenuId);
 
   return (
     <div className="mt-4 sm:mt-6">
