@@ -7,7 +7,7 @@ import { useSyncedState } from "@/hooks/useSyncedState";
 import { UnitDTO } from "@/types/unit";
 import { Session } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
@@ -19,7 +19,12 @@ interface UnitContentProps {
   id: string;
 }
 
-export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
+export const UnitContent = memo(function UnitContent({
+  unit,
+  session,
+  onMutate,
+  id,
+}: UnitContentProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [achievementLevel, setAchievementLevel] = useSyncedState(
     unit.achievementLevel || 0
@@ -197,4 +202,4 @@ export function UnitContent({ unit, session, onMutate, id }: UnitContentProps) {
       </div>
     </Card>
   );
-}
+});

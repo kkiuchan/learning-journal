@@ -11,7 +11,7 @@ import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 
 interface CommentsSectionProps {
   unitId: string;
@@ -31,7 +31,7 @@ interface CommentsSectionProps {
   isDeleting: boolean;
 }
 
-export function CommentsSection({
+export const CommentsSection = memo(function CommentsSection({
   unitId,
   userId,
   session,
@@ -260,4 +260,4 @@ export function CommentsSection({
       )}
     </div>
   );
-}
+});

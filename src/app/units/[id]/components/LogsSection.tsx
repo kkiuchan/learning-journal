@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/SupabaseAuthStore";
 import { Session } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { toast } from "sonner";
 import { CreateLogModal } from "./CreateLogModal";
 import { EditLogModal } from "./EditLogModal";
@@ -35,7 +35,7 @@ interface CreateLogResource {
   filePath?: string;
 }
 
-export function LogsSection({
+export const LogsSection = memo(function LogsSection({
   unitId,
   userId,
   session,
@@ -323,4 +323,4 @@ export function LogsSection({
       )}
     </div>
   );
-}
+});

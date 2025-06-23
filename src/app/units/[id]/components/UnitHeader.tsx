@@ -25,7 +25,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EditUnitModal } from "./EditUnitModa";
 
@@ -37,7 +37,7 @@ interface UnitHeaderProps {
   scrollToComments: () => void;
 }
 
-export function UnitHeader({
+export const UnitHeader = memo(function UnitHeader({
   unit,
   session,
   onMutate,
@@ -407,4 +407,4 @@ export function UnitHeader({
       />
     </Card>
   );
-}
+});

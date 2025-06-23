@@ -12,7 +12,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { EditUnitModal } from "./EditUnitModa";
 
 interface SidebarProps {
@@ -33,7 +33,7 @@ interface SidebarProps {
   className?: string;
 }
 
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   unit,
   session,
   id,
@@ -206,4 +206,4 @@ export function Sidebar({
       />
     </aside>
   );
-}
+});

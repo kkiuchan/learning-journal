@@ -64,7 +64,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     setCurrentUrl(window.location.href);
   }, []);
 
-  const handleCopyUrl = async () => {
+  const handleCopyUrl = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(currentUrl);
       setCopied(true);
@@ -73,9 +73,9 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     } catch (error) {
       toast.error("URLのコピーに失敗しました");
     }
-  };
+  }, [currentUrl]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     if (!confirm("このユニットを削除してもよろしいですか？")) return;
 
     try {
@@ -100,7 +100,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
         error instanceof Error ? error.message : "ユニットの削除に失敗しました"
       );
     }
-  };
+  }, [id, sessionData, router]);
 
   const scrollToComments = useCallback(() => {
     const commentsSection = document.getElementById("comments-section");
@@ -109,173 +109,193 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
     }
   }, []);
 
-  const handleAddAIComment = async (comment: string) => {
-    if (!sessionData) return;
+  const handleAddAIComment = useCallback(
+    async (comment: string) => {
+      if (!sessionData) return;
 
-    try {
-      // 楽観的更新
-      const optimisticComment = {
-        id: Date.now(),
-        comment: comment,
-        createdAt: new Date().toISOString(),
-        user: {
-          id: "ai-assistant",
-          name: "AIアシスタント",
-          image: "/images/ai-assistant.png",
-        },
-      };
+      try {
+        // 楽観的更新
+        const optimisticComment = {
+          id: Date.now(),
+          comment: comment,
+          createdAt: new Date().toISOString(),
+          user: {
+            id: "ai-assistant",
+            name: "AIアシスタント",
+            image: "/images/ai-assistant.png",
+          },
+        };
 
-      await optimisticUpdate("create", optimisticComment);
+        await optimisticUpdate("create", optimisticComment);
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (sessionData.access_token)
-        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
-      const response = await fetch(`/api/units/${id}/comments`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          content: comment,
-          isAI: true,
-        }),
-      });
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (sessionData.access_token)
+          headers["Authorization"] = `Bearer ${sessionData.access_token}`;
+        const response = await fetch(`/api/units/${id}/comments`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            content: comment,
+            isAI: true,
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          mutateComments();
+          const data = await response.json();
+          throw new Error(data.error || "コメントの追加に失敗しました");
+        }
+      } catch (error) {
+        console.error("Error adding AI comment:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "コメントの追加に失敗しました"
+        );
         mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの追加に失敗しました");
       }
-    } catch (error) {
-      console.error("Error adding AI comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの追加に失敗しました"
-      );
-      mutateComments();
-    }
-  };
+    },
+    [id, sessionData, optimisticUpdate, mutateComments]
+  );
 
-  const handleCreateComment = async (comment: string) => {
-    if (!sessionData) return;
+  const handleCreateComment = useCallback(
+    async (comment: string) => {
+      if (!sessionData) return;
 
-    try {
-      // 楽観的更新
-      const optimisticComment = {
-        id: Date.now(),
-        comment,
-        createdAt: new Date().toISOString(),
-        user: {
-          id: sessionData.user.id,
-          name:
-            sessionData.user.user_metadata?.name ??
-            sessionData.user.user_metadata?.full_name ??
-            "",
-          image:
-            sessionData.user.user_metadata?.avatar_url ??
-            sessionData.user.user_metadata?.picture ??
-            "",
-        },
-      };
+      try {
+        // 楽観的更新
+        const optimisticComment = {
+          id: Date.now(),
+          comment,
+          createdAt: new Date().toISOString(),
+          user: {
+            id: sessionData.user.id,
+            name:
+              sessionData.user.user_metadata?.name ??
+              sessionData.user.user_metadata?.full_name ??
+              "",
+            image:
+              sessionData.user.user_metadata?.avatar_url ??
+              sessionData.user.user_metadata?.picture ??
+              "",
+          },
+        };
 
-      await optimisticUpdate("create", optimisticComment);
+        await optimisticUpdate("create", optimisticComment);
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (sessionData.access_token)
-        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
-      const response = await fetch(`/api/units/${id}/comments`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          content: comment,
-        }),
-      });
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (sessionData.access_token)
+          headers["Authorization"] = `Bearer ${sessionData.access_token}`;
+        const response = await fetch(`/api/units/${id}/comments`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            content: comment,
+          }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          mutateComments();
+          const data = await response.json();
+          throw new Error(data.error || "コメントの作成に失敗しました");
+        }
+
+        toast.success("コメントを作成しました");
+      } catch (error) {
+        console.error("Error creating comment:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "コメントの作成に失敗しました"
+        );
         mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの作成に失敗しました");
       }
+    },
+    [id, sessionData, optimisticUpdate, mutateComments]
+  );
 
-      toast.success("コメントを作成しました");
-    } catch (error) {
-      console.error("Error creating comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの作成に失敗しました"
-      );
-      mutateComments();
-    }
-  };
+  const handleUpdateComment = useCallback(
+    async (commentId: number, content: string) => {
+      try {
+        await optimisticUpdate("update", { comment: content }, commentId);
 
-  const handleUpdateComment = async (commentId: number, content: string) => {
-    try {
-      await optimisticUpdate("update", { comment: content }, commentId);
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+        if (sessionData)
+          headers["Authorization"] = `Bearer ${sessionData.access_token}`;
+        const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
+            content: content,
+          }),
+        });
 
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (sessionData)
-        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
-      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
-        method: "PUT",
-        headers,
-        body: JSON.stringify({
-          content: content,
-        }),
-      });
+        if (!response.ok) {
+          mutateComments();
+          const data = await response.json();
+          throw new Error(data.error || "コメントの更新に失敗しました");
+        }
 
-      if (!response.ok) {
+        toast.success("コメントを更新しました");
+      } catch (error) {
+        console.error("Error updating comment:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "コメントの更新に失敗しました"
+        );
         mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの更新に失敗しました");
       }
+    },
+    [id, sessionData, optimisticUpdate, mutateComments]
+  );
 
-      toast.success("コメントを更新しました");
-    } catch (error) {
-      console.error("Error updating comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの更新に失敗しました"
-      );
-      mutateComments();
-    }
-  };
+  const handleDeleteComment = useCallback(
+    async (commentId: number) => {
+      if (!confirm("このコメントを削除してもよろしいですか？")) return;
+      if (isDeletingComment) return;
 
-  const handleDeleteComment = async (commentId: number) => {
-    if (!confirm("このコメントを削除してもよろしいですか？")) return;
-    if (isDeletingComment) return;
+      setIsDeletingComment(true);
+      try {
+        await optimisticUpdate("delete", undefined, commentId);
 
-    setIsDeletingComment(true);
-    try {
-      await optimisticUpdate("delete", undefined, commentId);
+        const headers: Record<string, string> = {};
+        if (sessionData)
+          headers["Authorization"] = `Bearer ${sessionData.access_token}`;
+        const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
+          method: "DELETE",
+          headers,
+        });
 
-      const headers: Record<string, string> = {};
-      if (sessionData)
-        headers["Authorization"] = `Bearer ${sessionData.access_token}`;
-      const response = await fetch(`/api/units/${id}/comments/${commentId}`, {
-        method: "DELETE",
-        headers,
-      });
+        if (!response.ok) {
+          mutateComments();
+          const data = await response.json();
+          throw new Error(data.error || "コメントの削除に失敗しました");
+        }
 
-      if (!response.ok) {
+        toast.success("コメントを削除しました");
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "コメントの削除に失敗しました"
+        );
         mutateComments();
-        const data = await response.json();
-        throw new Error(data.error || "コメントの削除に失敗しました");
+      } finally {
+        setIsDeletingComment(false);
       }
+    },
+    [id, sessionData, isDeletingComment, optimisticUpdate, mutateComments]
+  );
 
-      toast.success("コメントを削除しました");
-    } catch (error) {
-      console.error("Error deleting comment:", error);
-      toast.error(
-        error instanceof Error ? error.message : "コメントの削除に失敗しました"
-      );
-      mutateComments();
-    } finally {
-      setIsDeletingComment(false);
-    }
-  };
-
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
     if (!unit) return;
 
     // 楽観的更新
@@ -298,7 +318,7 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
     // 共通フックを使用
     await handleUnitLike(parseInt(id), unit.isLiked, mutateUnit);
-  };
+  }, [unit, mutateUnit, handleUnitLike, id]);
 
   if (error) {
     return <div>エラーが発生しました</div>;
