@@ -7,7 +7,9 @@ import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
 import { NextRequest, NextResponse } from "next/server";
 // import sanitizeHtml from "sanitize-html";
 
-export const revalidate = 60;
+// キャッシュを無効化してリアルタイム更新を実現
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export async function POST(
   request: NextRequest,
@@ -130,7 +132,17 @@ export async function GET(
       logTags: undefined,
     }));
 
-    return createApiResponse(formattedLogs);
+    const response = createApiResponse(formattedLogs);
+
+    // キャッシュ無効化ヘッダーを追加
+    response.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, max-age=0, must-revalidate"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+
+    return response;
   } catch (error) {
     console.error("ログ取得エラー:", error);
     return createErrorResponse("ログの取得中にエラーが発生しました", 500);

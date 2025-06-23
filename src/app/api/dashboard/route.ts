@@ -3,8 +3,9 @@ import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// キャッシュの有効期限を5分に設定（リアルタイム性重視）
-export const revalidate = 300;
+// キャッシュを無効化してリアルタイム更新を実現
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -163,9 +164,9 @@ export async function GET(request: NextRequest) {
       { data: dashboardData },
       {
         headers: {
-          "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-          "CDN-Cache-Control": "public, max-age=300",
-          "Vercel-CDN-Cache-Control": "public, max-age=300",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
         },
       }
     );

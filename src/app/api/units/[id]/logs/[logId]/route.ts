@@ -6,7 +6,9 @@ import { revalidateLogData, revalidateUnitData } from "@/utils/server-cache";
 import { revalidatePath } from "next/cache";
 import { NextRequest } from "next/server";
 
-export const revalidate = 60;
+// キャッシュを無効化してリアルタイム更新を実現
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 export async function DELETE(
   request: NextRequest,
@@ -62,7 +64,11 @@ export async function DELETE(
     revalidateLogData(logId);
     revalidateUnitData(id);
 
+    // 強力なキャッシュ無効化
     revalidatePath(`/units/${id}`);
+    revalidatePath(`/api/units/${id}/logs`);
+    revalidatePath(`/api/units/${id}/logs/${logId}`);
+
     return createApiResponse({ id: logId });
   } catch (error) {
     console.error("Error deleting log:", error);

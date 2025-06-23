@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
-import useSWR from "swr";
+import useSWR, { mutate as globalMutate } from "swr";
 
 interface DashboardStats {
   totalLearningTime: number;
@@ -41,6 +41,11 @@ interface DashboardResponse {
   data: DashboardData;
 }
 
+// ダッシュボードキャッシュを手動で更新する関数
+export function mutateDashboard() {
+  return globalMutate("/api/dashboard");
+}
+
 export function useDashboard() {
   const { session } = useAuthStore();
   const accessToken = session?.access_token;
@@ -56,10 +61,10 @@ export function useDashboard() {
     fetcher,
     {
       revalidateOnFocus: false,
-      revalidateIfStale: true,
+      revalidateIfStale: false,
       revalidateOnReconnect: true,
-      refreshInterval: 300000, // 5分ごとに自動更新
-      dedupingInterval: 30000, // 30秒間は重複リクエストを防ぐ
+      refreshInterval: 0,
+      dedupingInterval: 5000,
       errorRetryCount: 3,
       errorRetryInterval: 5000,
     }

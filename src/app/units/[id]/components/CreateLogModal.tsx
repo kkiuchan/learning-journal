@@ -2,6 +2,7 @@
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import React from "react";
 import WizardLogForm from "./WizardLogForm";
 
 interface Resource {
@@ -53,7 +54,7 @@ interface CreateLogModalProps {
   }) => void;
 }
 
-export function CreateLogModal({
+export const CreateLogModal = React.memo(function CreateLogModal({
   open,
   onOpenChange,
   unitId,
@@ -86,4 +87,4 @@ export function CreateLogModal({
       </DialogContent>
     </Dialog>
   );
-}
+});

@@ -31,7 +31,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
 interface Resource {
@@ -67,7 +67,7 @@ interface EditLogModalProps {
   setResources: React.Dispatch<React.SetStateAction<Resource[]>>;
 }
 
-export function EditLogModal({
+export const EditLogModal = React.memo(function EditLogModal({
   open,
   onOpenChange,
   log,
@@ -713,4 +713,4 @@ export function EditLogModal({
       </DialogContent>
     </Dialog>
   );
-}
+});
