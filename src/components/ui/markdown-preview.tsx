@@ -6,6 +6,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import remarkGfm from "remark-gfm";
+import { MermaidDiagram } from "./mermaid-diagram";
 
 interface MarkdownPreviewProps {
   children: string;
@@ -25,16 +26,33 @@ export function MarkdownPreview({
         components={{
           code({ node, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || "");
-            return !props.inline && match ? (
-              <SyntaxHighlighter
-                style={vscDarkPlus}
-                language={match[1]}
-                PreTag="div"
-                {...props}
-              >
-                {String(children).replace(/\n$/, "")}
-              </SyntaxHighlighter>
-            ) : (
+            const language = match ? match[1] : "";
+
+            if (!props.inline && match) {
+              // Mermaid図の処理
+              if (language === "mermaid") {
+                return (
+                  <MermaidDiagram
+                    chart={String(children).replace(/\n$/, "")}
+                    id={`mermaid-${Math.random().toString(36).substr(2, 9)}`}
+                  />
+                );
+              }
+
+              // 通常のシンタックスハイライト
+              return (
+                <SyntaxHighlighter
+                  style={vscDarkPlus}
+                  language={language}
+                  PreTag="div"
+                  {...props}
+                >
+                  {String(children).replace(/\n$/, "")}
+                </SyntaxHighlighter>
+              );
+            }
+
+            return (
               <code className={className} {...props}>
                 {children}
               </code>

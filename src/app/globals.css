@@ -108,7 +108,8 @@
   }
 
   body::before {
-    background: repeating-linear-gradient(
+    background:
+      repeating-linear-gradient(
         75deg,
         rgba(0, 0, 0, 0.015) 0px,
         rgba(0, 0, 0, 0.015) 160px,
@@ -146,7 +147,8 @@
   }
 
   .dark body::before {
-    background: repeating-linear-gradient(
+    background:
+      repeating-linear-gradient(
         75deg,
         rgba(255, 255, 255, 0.015) 0px,
         rgba(255, 255, 255, 0.015) 160px,
@@ -304,5 +306,127 @@
 
   .btn-lg {
     @apply h-11 px-8;
+  }
+
+  /* GitHub風Mermaid図のスタイル */
+  .github-mermaid-container {
+    @apply my-6 flex justify-center;
+    background: #f6f8fa;
+    border: 1px solid #d1d9e0;
+    border-radius: 6px;
+    padding: 16px;
+  }
+
+  .github-mermaid-content {
+    @apply w-full;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .github-mermaid-content svg {
+    @apply max-w-full h-auto;
+    background: transparent;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .github-mermaid-loading {
+    @apply flex items-center justify-center py-8 text-gray-600;
+    gap: 8px;
+  }
+
+  .github-loading-spinner {
+    @apply text-blue-600;
+  }
+
+  /* GitHub風エラー表示 */
+  .github-mermaid-error {
+    @apply my-4 rounded-md border border-red-200 bg-red-50;
+    padding: 16px;
+  }
+
+  .github-error-header {
+    @apply flex items-center gap-2 text-red-700 font-medium mb-2;
+  }
+
+  .github-error-header .octicon {
+    @apply text-red-500;
+  }
+
+  .github-error-message {
+    @apply text-red-600 text-sm mb-3;
+  }
+
+  .github-error-details {
+    @apply mt-2;
+  }
+
+  .github-error-details summary {
+    @apply text-red-700 text-sm cursor-pointer font-medium;
+  }
+
+  .github-error-details summary:hover {
+    @apply text-red-800;
+  }
+
+  .github-error-code {
+    @apply mt-2 p-3 bg-red-100 rounded text-xs font-mono overflow-auto whitespace-pre-wrap;
+    color: #1f2328;
+    border: 1px solid #f85149;
+  }
+
+  /* ダークテーマ対応 */
+  .dark .github-mermaid-container {
+    background: #161b22;
+    border-color: #30363d;
+  }
+
+  .dark .github-mermaid-error {
+    @apply bg-red-900/20 border-red-800;
+  }
+
+  .dark .github-error-header {
+    @apply text-red-300;
+  }
+
+  .dark .github-error-header .octicon {
+    @apply text-red-400;
+  }
+
+  .dark .github-error-message {
+    @apply text-red-300;
+  }
+
+  .dark .github-error-details summary {
+    @apply text-red-300;
+  }
+
+  .dark .github-error-details summary:hover {
+    @apply text-red-200;
+  }
+
+  .dark .github-error-code {
+    @apply bg-red-900/30 border-red-700;
+    color: #f0f6fc;
+  }
+
+  .dark .github-mermaid-loading {
+    @apply text-gray-300;
+  }
+
+  .dark .github-loading-spinner {
+    @apply text-blue-400;
+  }
+
+  /* レスポンシブ対応 */
+  @media (max-width: 768px) {
+    .github-mermaid-container {
+      @apply mx-2 px-3 py-3;
+    }
+
+    .github-mermaid-content svg {
+      @apply text-sm;
+    }
   }
 }
