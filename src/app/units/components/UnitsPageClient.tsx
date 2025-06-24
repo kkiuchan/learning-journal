@@ -6,7 +6,7 @@ import { useModalStore } from "@/stores/ModalStore";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { UnitsList } from "./UnitsList";
+import { UnitsListWithSearch } from "./UnitsListWithSearch";
 
 interface UnitsPageClientProps {
   user: {
@@ -44,7 +44,7 @@ export function UnitsPageClient({ user }: UnitsPageClientProps) {
         )}
       </div>
       <Suspense fallback={<Loading text="ユニットを読み込み中..." />}>
-        <UnitsList />
+        <UnitsListWithSearch />
       </Suspense>
     </div>
   );

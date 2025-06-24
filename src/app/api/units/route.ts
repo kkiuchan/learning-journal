@@ -128,23 +128,83 @@ export const GET = withApiSecurity(
           !userId || (userId && userId !== currentUserId)
             ? { displayFlag: true }
             : {},
-          // 検索キーワード
+          // 検索キーワード（ユニット内容 + ログ内容の両方を検索）
           query
             ? {
                 OR: [
-                  { title: { contains: query, mode: "insensitive" } },
-                  { learningGoal: { contains: query, mode: "insensitive" } },
+                  // ユニット内容検索
                   {
-                    preLearningState: { contains: query, mode: "insensitive" },
+                    title: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
                   },
-                  { reflection: { contains: query, mode: "insensitive" } },
-                  { nextAction: { contains: query, mode: "insensitive" } },
+                  {
+                    learningGoal: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    preLearningState: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    reflection: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                  {
+                    nextAction: {
+                      contains: query,
+                      mode: "insensitive" as const,
+                    },
+                  },
                   {
                     unitTags: {
                       some: {
                         tag: {
-                          name: { contains: query, mode: "insensitive" },
+                          name: {
+                            contains: query,
+                            mode: "insensitive" as const,
+                          },
                         },
+                      },
+                    },
+                  },
+                  // ログ内容検索
+                  {
+                    logs: {
+                      some: {
+                        OR: [
+                          {
+                            title: {
+                              contains: query,
+                              mode: "insensitive" as const,
+                            },
+                          },
+                          {
+                            note: {
+                              contains: query,
+                              mode: "insensitive" as const,
+                            },
+                          },
+                          {
+                            logTags: {
+                              some: {
+                                tag: {
+                                  name: {
+                                    contains: query,
+                                    mode: "insensitive" as const,
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        ],
                       },
                     },
                   },

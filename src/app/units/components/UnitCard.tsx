@@ -8,20 +8,47 @@ import { ja } from "date-fns/locale";
 import { FileText, Globe, Heart, Lock, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
+// 検索キーワードをハイライトする関数
+function highlightText(text: string, searchQuery?: string): React.ReactNode {
+  if (!searchQuery || !text) return text;
+
+  const regex = new RegExp(
+    `(${searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+    "gi"
+  );
+  const parts = text.split(regex);
+
+  return parts.map((part, index) =>
+    regex.test(part) ? (
+      <mark key={index} className="bg-yellow-200 px-1 rounded">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
 interface UnitCardProps {
   unit: UnitDTO;
   onLike?: (unitId: number) => void;
   showMenu?: boolean;
+  searchQuery?: string; // 検索キーワードハイライト用
 }
 
-export function UnitCard({ unit, onLike, showMenu = true }: UnitCardProps) {
+export function UnitCard({
+  unit,
+  onLike,
+  showMenu = true,
+  searchQuery,
+}: UnitCardProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2 px-3 sm:px-6">
         <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-base sm:text-xl line-clamp-2 flex-1">
             <Link href={`/units/${unit.id}`} className="hover:underline">
-              {unit.title}
+              {highlightText(unit.title, searchQuery)}
             </Link>
           </CardTitle>
           <div className="flex-shrink-0 flex items-center gap-1 sm:gap-2">
