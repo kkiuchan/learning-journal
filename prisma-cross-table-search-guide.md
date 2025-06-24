@@ -344,3 +344,8 @@ const searchScore = {
 - [Prisma 公式ドキュメント - Filtering and Sorting](https://www.prisma.io/docs/concepts/components/prisma-client/filtering-and-sorting)
 - [React useTransition Hook](https://react.dev/reference/react/useTransition)
 - [PostgreSQL 全文検索](https://www.postgresql.org/docs/current/textsearch.html)
+
+```typescript
+const jsonData = JSON.stringify(jsObject);
+const jsObject2 = JSON.parse(jsonData);
+```
