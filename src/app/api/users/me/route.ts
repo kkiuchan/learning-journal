@@ -3,7 +3,7 @@ import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 // import { ensurePrismaConnected, prisma } from "@/lib/prisma";
 import { revalidateTag } from "next/cache";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 /**
@@ -203,19 +203,55 @@ export async function PUT(request: NextRequest) {
       return createErrorResponse("認証が必要です", 401);
     }
 
+    // リクエストボディの取得とバリデーション
     const body = await request.json();
-    const { name, selfIntroduction, age, ageVisible, topImage, image } = body;
+    const validatedData = updateUserSchema.parse(body);
 
     // ユーザー情報を更新
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
       data: {
-        ...(name && { name }),
-        ...(selfIntroduction !== undefined && { selfIntroduction }),
-        ...(age !== undefined && { age }),
-        ...(ageVisible !== undefined && { ageVisible }),
-        ...(topImage !== undefined && { topImage }),
-        ...(image !== undefined && { image }),
+        ...(validatedData.name !== undefined && { name: validatedData.name }),
+        ...(validatedData.selfIntroduction !== undefined && {
+          selfIntroduction: validatedData.selfIntroduction,
+        }),
+        ...(validatedData.age !== undefined && { age: validatedData.age }),
+        ...(validatedData.ageVisible !== undefined && {
+          ageVisible: validatedData.ageVisible,
+        }),
+        ...(validatedData.topImage !== undefined && {
+          topImage: validatedData.topImage,
+        }),
+        ...(validatedData.image !== undefined && {
+          image: validatedData.image,
+        }),
+        // スキルと関心分野の更新
+        ...(validatedData.skills && {
+          userSkills: {
+            deleteMany: {},
+            create: validatedData.skills.map((skillName) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: skillName },
+                  create: { name: skillName },
+                },
+              },
+            })),
+          },
+        }),
+        ...(validatedData.interests && {
+          userInterests: {
+            deleteMany: {},
+            create: validatedData.interests.map((interestName) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: interestName },
+                  create: { name: interestName },
+                },
+              },
+            })),
+          },
+        }),
       },
       select: {
         id: true,
@@ -228,6 +264,10 @@ export async function PUT(request: NextRequest) {
         ageVisible: true,
         createdAt: true,
         updatedAt: true,
+        userSkills: { select: { tag: { select: { id: true, name: true } } } },
+        userInterests: {
+          select: { tag: { select: { id: true, name: true } } },
+        },
       },
     });
 
@@ -236,9 +276,28 @@ export async function PUT(request: NextRequest) {
     revalidateTag("user");
     revalidateTag("user-profile");
 
-    return createApiResponse(updatedUser);
+    return createApiResponse({
+      ...updatedUser,
+      skills: (updatedUser.userSkills ?? []).map((skill) => skill.tag),
+      interests: (updatedUser.userInterests ?? []).map(
+        (interest) => interest.tag
+      ),
+      userSkills: undefined,
+      userInterests: undefined,
+    });
   } catch (error) {
     console.error("ユーザー情報更新エラー:", error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "入力データが無効です",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
     return createErrorResponse(
       "ユーザー情報の更新中にエラーが発生しました",
       500

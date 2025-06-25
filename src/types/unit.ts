@@ -129,3 +129,87 @@ export interface CreateUnitDTO
 export interface UpdateUnitDTO extends Partial<CreateUnitDTO> {
   achievementLevel?: number;
 }
+
+// Zodバリデーションスキーマ
+import { z } from "zod";
+
+// 基本スキーマ（refineなし）
+const baseUnitSchema = z.object({
+  title: z
+    .string()
+    .min(1, "タイトルは必須です")
+    .max(200, "タイトルは200文字以内で入力してください"),
+  learningGoal: z
+    .string()
+    .max(1000, "学習目標は1000文字以内で入力してください")
+    .optional(),
+  preLearningState: z
+    .string()
+    .max(1000, "事前学習状態は1000文字以内で入力してください")
+    .optional(),
+  reflection: z
+    .string()
+    .max(2000, "振り返りは2000文字以内で入力してください")
+    .optional(),
+  nextAction: z
+    .string()
+    .max(1000, "次のアクションは1000文字以内で入力してください")
+    .optional(),
+  startDate: z.string().datetime("開始日の形式が正しくありません").optional(),
+  endDate: z.string().datetime("終了日の形式が正しくありません").optional(),
+  status: z
+    .enum(["PLANNED", "IN_PROGRESS", "COMPLETED"], {
+      errorMap: () => ({ message: "ステータスが無効です" }),
+    })
+    .optional(),
+  displayFlag: z.boolean().optional(),
+  tags: z
+    .array(
+      z
+        .string()
+        .min(1, "タグは1文字以上で入力してください")
+        .max(50, "タグは50文字以内で入力してください")
+    )
+    .max(10, "タグは10個まで設定できます")
+    .optional(),
+});
+
+// 作成用スキーマ（日付バリデーション付き）
+export const unitCreateSchema = baseUnitSchema.refine(
+  (data) => {
+    if (data.startDate && data.endDate) {
+      return new Date(data.startDate) <= new Date(data.endDate);
+    }
+    return true;
+  },
+  {
+    message: "終了日は開始日より後の日付を設定してください",
+    path: ["endDate"],
+  }
+);
+
+// 更新用スキーマ（全フィールドオプショナル + 達成度）
+export const unitUpdateSchema = baseUnitSchema
+  .partial()
+  .extend({
+    achievementLevel: z
+      .number()
+      .min(0, "達成度は0以上で入力してください")
+      .max(100, "達成度は100以下で入力してください")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.startDate) <= new Date(data.endDate);
+      }
+      return true;
+    },
+    {
+      message: "終了日は開始日より後の日付を設定してください",
+      path: ["endDate"],
+    }
+  );
+
+export type UnitCreateRequest = z.infer<typeof unitCreateSchema>;
+export type UnitUpdateRequest = z.infer<typeof unitUpdateSchema>;

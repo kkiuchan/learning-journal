@@ -3,10 +3,12 @@ import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 // import { ensurePrismaConnected, prisma } from "@/lib/prisma";
+import { unitCreateSchema } from "@/types/unit";
 import { CACHE_TAGS } from "@/utils/cache";
 import { Prisma } from "@prisma/client";
 import { revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // キャッシュの有効期限を60秒に設定
 export const revalidate = 60;
@@ -429,7 +431,23 @@ export const POST = withApiSecurity(
       const userId = user.id;
       const body = await req.json();
 
-      // 必須フィールドのバリデーション
+      // Zodバリデーション
+      const validationResult = unitCreateSchema.safeParse(body);
+
+      if (!validationResult.success) {
+        const errors = validationResult.error.errors.map((err) => ({
+          path: err.path.join("."),
+          message: err.message,
+        }));
+
+        console.log("バリデーションエラー:", errors);
+
+        return createErrorResponse(
+          `バリデーションエラー: ${errors.map((e) => e.message).join(", ")}`,
+          400
+        );
+      }
+
       const {
         title,
         learningGoal,
@@ -441,11 +459,7 @@ export const POST = withApiSecurity(
         status = "PLANNED",
         displayFlag = true,
         tags = [],
-      } = body;
-
-      if (!title) {
-        return createErrorResponse("タイトルは必須です", 400);
-      }
+      } = validationResult.data;
 
       // ユニットの作成
       const unit = await prisma.unit.create({
@@ -510,6 +524,22 @@ export const POST = withApiSecurity(
       return NextResponse.json({ data: formattedUnit }, { status: 201 });
     } catch (error) {
       console.error("ユニット作成エラー:", error);
+
+      // Zodバリデーションエラーの場合
+      if (error instanceof z.ZodError) {
+        const errors = error.errors.map((err) => ({
+          path: err.path.join("."),
+          message: err.message,
+        }));
+
+        console.log("Zodバリデーションエラー:", errors);
+
+        return createErrorResponse(
+          `入力値が正しくありません: ${errors.map((e) => e.message).join(", ")}`,
+          400
+        );
+      }
+
       return createErrorResponse(
         error instanceof Error
           ? error.message

@@ -3,7 +3,9 @@ import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { revalidateUnitData } from "@/utils/server-cache";
 // import { revalidateTag } from "next/cache";
+import { unitUpdateSchema } from "@/types/unit";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 /**
  * @swagger
@@ -137,53 +139,53 @@ export async function PUT(
       );
     }
 
-    // リクエストボディの取得
+    // リクエストボディの取得とバリデーション
     const body = await request.json();
-    const {
-      title,
-      learningGoal,
-      preLearningState,
-      reflection,
-      nextAction,
-      startDate,
-      endDate,
-      status,
-      unitTags = [],
-      displayFlag,
-    } = body;
-
-    // バリデーション
-    if (!title) {
-      return NextResponse.json(
-        { error: "タイトルは必須です", status: 400 },
-        { status: 400 }
-      );
-    }
+    const validatedData = unitUpdateSchema.parse(body);
 
     // ユニットの更新
     const updatedUnit = await prisma.unit.update({
       where: { id: parseInt(id) },
       data: {
-        title,
-        learningGoal,
-        preLearningState,
-        reflection,
-        nextAction,
-        startDate: startDate ? new Date(startDate) : undefined,
-        endDate: endDate ? new Date(endDate) : undefined,
-        status,
-        unitTags: {
-          deleteMany: {}, // 既存のタグをすべて削除
-          create: unitTags.map((tag: string) => ({
-            tag: {
-              connectOrCreate: {
-                where: { name: tag },
-                create: { name: tag },
+        ...(validatedData.title && { title: validatedData.title }),
+        ...(validatedData.learningGoal !== undefined && {
+          learningGoal: validatedData.learningGoal,
+        }),
+        ...(validatedData.preLearningState !== undefined && {
+          preLearningState: validatedData.preLearningState,
+        }),
+        ...(validatedData.reflection !== undefined && {
+          reflection: validatedData.reflection,
+        }),
+        ...(validatedData.nextAction !== undefined && {
+          nextAction: validatedData.nextAction,
+        }),
+        ...(validatedData.achievementLevel !== undefined && {
+          achievementLevel: validatedData.achievementLevel,
+        }),
+        ...(validatedData.startDate && {
+          startDate: new Date(validatedData.startDate),
+        }),
+        ...(validatedData.endDate && {
+          endDate: new Date(validatedData.endDate),
+        }),
+        ...(validatedData.status && { status: validatedData.status }),
+        ...(validatedData.displayFlag !== undefined && {
+          displayFlag: validatedData.displayFlag,
+        }),
+        ...(validatedData.tags && {
+          unitTags: {
+            deleteMany: {}, // 既存のタグをすべて削除
+            create: validatedData.tags.map((tag: string) => ({
+              tag: {
+                connectOrCreate: {
+                  where: { name: tag },
+                  create: { name: tag },
+                },
               },
-            },
-          })),
-        },
-        displayFlag,
+            })),
+          },
+        }),
       },
       include: {
         user: {
@@ -210,6 +212,18 @@ export async function PUT(
     return NextResponse.json({ data: updatedUnit });
   } catch (error) {
     console.error("ユニットの更新中にエラーが発生しました:", error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "入力データが無効です",
+          details: error.errors,
+          status: 400,
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "ユニットの更新中にエラーが発生しました", status: 500 },
       { status: 500 }

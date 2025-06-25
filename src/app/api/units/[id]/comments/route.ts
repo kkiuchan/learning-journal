@@ -1,10 +1,12 @@
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { commentCreateSchema } from "@/types/comment";
 import {
   revalidateCommentData,
   revalidateUnitData,
 } from "@/utils/server-cache";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 /**
  * @swagger
@@ -270,21 +272,15 @@ export async function POST(
       );
     }
 
+    // リクエストボディの取得とバリデーション
     const body = await request.json();
-    const { content } = body;
-
-    if (!content) {
-      return NextResponse.json(
-        { error: "Content is required" },
-        { status: 400 }
-      );
-    }
+    const validatedData = commentCreateSchema.parse(body);
 
     const comment = await prisma.comment.create({
       data: {
         unitId: unit.id,
         userId: user.id,
-        comment: content,
+        comment: validatedData.content,
       },
       include: {
         user: {
@@ -304,6 +300,17 @@ export async function POST(
     return NextResponse.json({ data: comment }, { status: 201 });
   } catch (error) {
     console.error("Error creating comment:", error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "入力データが無効です",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

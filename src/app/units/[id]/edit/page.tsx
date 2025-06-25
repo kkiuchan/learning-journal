@@ -46,7 +46,7 @@ export default function EditUnitPage({
           endDate: values.endDate || null,
           status: values.status,
           displayFlag: values.displayFlag,
-          unitTags: values.tags.map((tag) => tag.name),
+          tags: values.tags.map((tag) => tag.name),
         }),
       });
 
@@ -56,13 +56,22 @@ export default function EditUnitPage({
         toast.success("ユニットを更新しました");
         router.push(`/units/${unit.id}`);
       } else {
-        const error = await response.json();
-        console.error("ユニットの更新に失敗しました:", error);
-        toast.error("ユニットの更新に失敗しました");
+        const errorData = await response.json();
+        console.error("ユニットの更新に失敗しました:", errorData);
+
+        // Zodバリデーションエラーの場合、詳細なエラーメッセージを表示
+        if (errorData.details && Array.isArray(errorData.details)) {
+          const errorMessages = errorData.details
+            .map((detail: any) => detail.message)
+            .join("\n");
+          toast.error(`入力内容に問題があります:\n${errorMessages}`);
+        } else {
+          toast.error(errorData.error || "ユニットの更新に失敗しました");
+        }
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
-      toast.error("エラーが発生しました");
+      toast.error("ネットワークエラーが発生しました");
     } finally {
       setIsLoading(false);
     }

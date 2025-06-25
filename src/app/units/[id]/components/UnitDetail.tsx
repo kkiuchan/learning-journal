@@ -200,8 +200,17 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
         if (!response.ok) {
           mutateComments();
-          const data = await response.json();
-          throw new Error(data.error || "コメントの作成に失敗しました");
+          const errorData = await response.json();
+
+          // Zodバリデーションエラーの場合、詳細なエラーメッセージを表示
+          if (errorData.details && Array.isArray(errorData.details)) {
+            const errorMessages = errorData.details
+              .map((detail: any) => detail.message)
+              .join("\n");
+            throw new Error(`入力内容に問題があります:\n${errorMessages}`);
+          } else {
+            throw new Error(errorData.error || "コメントの作成に失敗しました");
+          }
         }
 
         toast.success("コメントを作成しました");
@@ -238,8 +247,17 @@ export default function UnitDetail({ id, session }: UnitDetailProps) {
 
         if (!response.ok) {
           mutateComments();
-          const data = await response.json();
-          throw new Error(data.error || "コメントの更新に失敗しました");
+          const errorData = await response.json();
+
+          // Zodバリデーションエラーの場合、詳細なエラーメッセージを表示
+          if (errorData.details && Array.isArray(errorData.details)) {
+            const errorMessages = errorData.details
+              .map((detail: any) => detail.message)
+              .join("\n");
+            throw new Error(`入力内容に問題があります:\n${errorMessages}`);
+          } else {
+            throw new Error(errorData.error || "コメントの更新に失敗しました");
+          }
         }
 
         toast.success("コメントを更新しました");

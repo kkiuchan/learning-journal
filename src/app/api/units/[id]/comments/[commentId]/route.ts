@@ -1,11 +1,13 @@
 import { createApiResponse, createErrorResponse } from "@/lib/api-utils";
 import { getCurrentUserUnified } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
+import { commentUpdateSchema } from "@/types/comment";
 import {
   revalidateCommentData,
   revalidateUnitData,
 } from "@/utils/server-cache";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 /**
  * @swagger
@@ -121,16 +123,13 @@ export async function PUT(
       return createErrorResponse("このコメントを更新する権限がありません", 403);
     }
 
+    // リクエストボディの取得とバリデーション
     const body = await request.json();
-    const { content } = body;
-
-    if (!content) {
-      return createErrorResponse("コメント内容は必須です", 400);
-    }
+    const validatedData = commentUpdateSchema.parse(body);
 
     const updatedComment = await prisma.comment.update({
       where: { id: parseInt(commentId) },
-      data: { comment: content },
+      data: { comment: validatedData.content },
       include: {
         user: {
           select: {
@@ -149,6 +148,17 @@ export async function PUT(
     return createApiResponse(updatedComment);
   } catch (error) {
     console.error("Error updating comment:", error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        {
+          error: "入力データが無効です",
+          details: error.errors,
+        },
+        { status: 400 }
+      );
+    }
+
     return createErrorResponse("コメントの更新中にエラーが発生しました", 500);
   }
 }

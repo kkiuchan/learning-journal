@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 // コメントのドメインモデル
 export interface CommentModel {
   id: number;
@@ -47,3 +49,17 @@ export const convertDTOToCommentModel = (
     userId: dto.user.id,
   };
 };
+
+// コメント作成・更新用のバリデーションスキーマ
+export const commentCreateSchema = z.object({
+  content: z
+    .string()
+    .min(1, "コメント内容は必須です")
+    .max(1000, "コメントは1000文字以内で入力してください")
+    .trim(),
+});
+
+export const commentUpdateSchema = commentCreateSchema;
+
+export type CommentCreateRequest = z.infer<typeof commentCreateSchema>;
+export type CommentUpdateRequest = z.infer<typeof commentUpdateSchema>;
