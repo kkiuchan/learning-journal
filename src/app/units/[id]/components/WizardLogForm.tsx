@@ -308,19 +308,22 @@ export default function WizardLogForm({
     label: string,
     disabled?: boolean
   ) => (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => getAIAssistance(step)}
-      disabled={aiLoading || disabled}
-      className="flex items-center gap-2 relative"
-    >
-      <Lightbulb className="h-4 w-4" />
-      {aiLoading ? "提案中..." : label}
-      <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[8px] font-bold px-1 py-0.5 rounded-full">
+    <div className="relative mt-2 mr-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => getAIAssistance(step)}
+        disabled={aiLoading || disabled}
+        className="flex items-center gap-2"
+      >
+        <Lightbulb className="h-4 w-4" />
+        {aiLoading ? "提案中..." : label}
+      </Button>
+      <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10">
         PRO
       </span>
-    </Button>
+    </div>
   );
 
   // AI提案を表示するコンポーネント
@@ -341,6 +344,7 @@ export default function WizardLogForm({
                 {aiSuggestions.titles.map((title, index) => (
                   <Button
                     key={index}
+                    type="button"
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start h-auto p-2 text-left text-wrap hover:bg-amber-100 dark:hover:bg-amber-900/50"
@@ -383,6 +387,7 @@ export default function WizardLogForm({
                     {aiSuggestions.tags.map((tag, index) => (
                       <Button
                         key={index}
+                        type="button"
                         variant="outline"
                         size="sm"
                         className="text-xs h-6 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
@@ -415,88 +420,101 @@ export default function WizardLogForm({
 
       case 4:
         // タグとリソース提案
-        return (
-          <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-            <h4 className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-3 flex items-center gap-2">
-              <Lightbulb className="h-4 w-4" />
-              AI提案
-            </h4>
+        if (
+          aiSuggestions.tags ||
+          aiSuggestions.resources ||
+          aiSuggestions.feedback
+        ) {
+          return (
+            <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+              <h4 className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4" />
+                AI提案
+              </h4>
 
-            {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
-              <div className="mb-3">
-                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
-                  最終推奨タグ:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {aiSuggestions.tags.map((tag, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs h-6 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                      onClick={() => {
-                        const currentTags = form.getValues("tags") || [];
-                        if (!currentTags.includes(tag)) {
-                          const newTags = [...currentTags, tag];
-                          form.setValue("tags", newTags);
-                          updateFormData({ tags: newTags });
-                          toast.success(`タグ「${tag}」を追加しました`);
-                        }
-                      }}
-                    >
-                      🏷️ {tag}
-                    </Button>
-                  ))}
+              {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                    最終推奨タグ:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {aiSuggestions.tags.map((tag, index) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-6 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                        onClick={() => {
+                          const currentTags = form.getValues("tags") || [];
+                          if (!currentTags.includes(tag)) {
+                            const newTags = [...currentTags, tag];
+                            form.setValue("tags", newTags);
+                            updateFormData({ tags: newTags });
+                            toast.success(`タグ「${tag}」を追加しました`);
+                          }
+                        }}
+                      >
+                        🏷️ {tag}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {aiSuggestions.resources && aiSuggestions.resources.length > 0 && (
-              <div className="mb-3">
-                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
-                  推奨リソース:
-                </p>
-                <div className="space-y-2">
-                  {aiSuggestions.resources.map((resource, index) => (
-                    <Button
-                      key={index}
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start h-auto p-2 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
-                      onClick={() => {
-                        const currentResources =
-                          form.getValues("resources") || [];
-                        const newResource = {
-                          resourceType: "link",
-                          resourceLink: resource.url,
-                          description: resource.title,
-                        };
-                        const newResources = [...currentResources, newResource];
-                        form.setValue("resources", newResources);
-                        updateFormData({ resources: newResources });
-                        toast.success(
-                          `リソース「${resource.title}」を追加しました`
-                        );
-                      }}
-                    >
-                      📚 {resource.title}
-                      <br />
-                      <span className="text-xs text-muted-foreground">
-                        {resource.description}
-                      </span>
-                    </Button>
-                  ))}
+              {aiSuggestions.resources &&
+                aiSuggestions.resources.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                      推奨リソース:
+                    </p>
+                    <div className="space-y-2">
+                      {aiSuggestions.resources.map((resource, index) => (
+                        <Button
+                          key={index}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start h-auto p-2 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                          onClick={() => {
+                            const currentResources =
+                              form.getValues("resources") || [];
+                            const newResource = {
+                              resourceType: "link",
+                              resourceLink: resource.url,
+                              description: resource.title,
+                            };
+                            const newResources = [
+                              ...currentResources,
+                              newResource,
+                            ];
+                            form.setValue("resources", newResources);
+                            updateFormData({ resources: newResources });
+                            toast.success(
+                              `リソース「${resource.title}」を追加しました`
+                            );
+                          }}
+                        >
+                          📚 {resource.title}
+                          <br />
+                          <span className="text-xs text-muted-foreground">
+                            {resource.description}
+                          </span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              {aiSuggestions.feedback && (
+                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded text-sm text-emerald-800 dark:text-emerald-200">
+                  <strong>💡 AIアドバイス:</strong> {aiSuggestions.feedback}
                 </div>
-              </div>
-            )}
-
-            {aiSuggestions.feedback && (
-              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded text-sm text-emerald-800 dark:text-emerald-200">
-                <strong>💡 AIアドバイス:</strong> {aiSuggestions.feedback}
-              </div>
-            )}
-          </div>
-        );
+              )}
+            </div>
+          );
+        }
+        break;
     }
     return null;
   };
@@ -507,11 +525,13 @@ export default function WizardLogForm({
       case 1:
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-lg font-semibold">
                 基本情報を入力してください
               </h3>
-              {renderAIAssistButton(1, "学習提案")}
+              <div className="flex items-center overflow-visible">
+                {renderAIAssistButton(1, "学習提案")}
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -599,17 +619,18 @@ export default function WizardLogForm({
       case 2:
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-lg font-semibold">
                 学習内容を記述してください
               </h3>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center overflow-visible">
                 {renderAIAssistButton(
                   2,
                   "学習ガイド",
                   !form.getValues("title").trim()
                 )}
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowPreview(!showPreview)}
@@ -753,9 +774,11 @@ export default function WizardLogForm({
       case 4:
         return (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pb-2">
               <h3 className="text-lg font-semibold">タグと参考資料を追加</h3>
-              {renderAIAssistButton(4, "タグ提案")}
+              <div className="flex items-center overflow-visible">
+                {renderAIAssistButton(4, "タグ提案")}
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -952,6 +975,7 @@ export default function WizardLogForm({
                               {resource.description}
                             </span>
                             <Button
+                              type="button"
                               variant="ghost"
                               size="sm"
                               onClick={() =>
@@ -1092,8 +1116,8 @@ export default function WizardLogForm({
 
   return (
     <>
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader>
+      <Card className="w-full max-w-4xl mx-auto h-[80vh] flex flex-col">
+        <CardHeader className="flex-shrink-0">
           <CardTitle>学習ログを作成</CardTitle>
 
           {/* プログレスバー */}
@@ -1141,16 +1165,29 @@ export default function WizardLogForm({
           </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="flex flex-col flex-1 min-h-0 p-6">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-6"
+              onKeyDown={(e) => {
+                // Enterキーでのフォーム送信を最後のステップ以外では防ぐ
+                if (e.key === "Enter" && currentStep !== steps.length) {
+                  e.preventDefault();
+                  console.log(
+                    "Enter key prevented. Current step:",
+                    currentStep
+                  );
+                }
+              }}
+              className="flex flex-col h-full"
             >
-              {renderStepContent()}
+              {/* スクロール可能なコンテンツエリア */}
+              <div className="flex-1 overflow-y-auto overflow-x-visible pr-2 space-y-6 min-h-0">
+                {renderStepContent()}
+              </div>
 
-              {/* ナビゲーションボタン */}
-              <div className="flex justify-between pt-6">
+              {/* 固定ナビゲーションボタン */}
+              <div className="flex justify-between pt-6 mt-6 border-t border-border flex-shrink-0">
                 <Button
                   type="button"
                   variant="outline"
@@ -1167,16 +1204,8 @@ export default function WizardLogForm({
                   {currentStep === 1 ? "キャンセル" : "戻る"}
                 </Button>
 
-                {currentStep < steps.length ? (
-                  <Button
-                    type="button"
-                    onClick={() => setCurrentStep(currentStep + 1)}
-                    disabled={!canProceed(currentStep) || isSubmitting}
-                  >
-                    次へ
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
+                {/* ステップ5（最後のステップ）でのみ送信ボタンを表示 */}
+                {currentStep === steps.length ? (
                   <Button
                     type="submit"
                     disabled={isSubmitting || !canProceed(currentStep)}
@@ -1198,6 +1227,24 @@ export default function WizardLogForm({
                         作成
                       </>
                     )}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      console.log(
+                        "Next button clicked. Current step:",
+                        currentStep,
+                        "Steps length:",
+                        steps.length
+                      );
+                      setCurrentStep(currentStep + 1);
+                    }}
+                    disabled={!canProceed(currentStep) || isSubmitting}
+                  >
+                    次へ
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}
               </div>
