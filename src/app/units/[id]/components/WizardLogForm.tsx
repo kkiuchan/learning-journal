@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
+import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
@@ -137,6 +138,8 @@ export default function WizardLogForm({
   onFormDataChange,
 }: WizardLogFormProps) {
   const { session: supabaseSession } = useAuthStore();
+  const { isComposing, onCompositionStart, onCompositionEnd } =
+    useCompositionInput();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isPlanLimitDialogOpen, setIsPlanLimitDialogOpen] = useState(false);
@@ -158,7 +161,12 @@ export default function WizardLogForm({
       note: formData?.note ?? "",
       logDate: formData?.logDate ?? format(new Date(), "yyyy-MM-dd"),
       effectScore: formData?.effectScore ?? 3,
-      effectType: formData?.effectType ?? "understanding",
+      effectType:
+        (formData?.effectType as
+          | "understanding"
+          | "practical"
+          | "application"
+          | "none") ?? "understanding",
       tags: formData?.tags ?? [],
       resources: formData?.resources ?? [],
     },
@@ -173,9 +181,16 @@ export default function WizardLogForm({
     });
 
     if (onFormDataChange) {
+      const currentValues = form.getValues();
       onFormDataChange({
-        ...watchedValues,
-        ...updates,
+        title: currentValues.title,
+        learningTime: currentValues.learningTime,
+        note: currentValues.note,
+        logDate: currentValues.logDate,
+        effectScore: currentValues.effectScore ?? 3,
+        effectType: (currentValues.effectType ?? "understanding") as string,
+        tags: currentValues.tags ?? [],
+        resources: currentValues.resources ?? [],
         currentStep,
       });
     }
@@ -192,7 +207,7 @@ export default function WizardLogForm({
       setAiLoading(true);
       try {
         const currentValues = form.getValues();
-        const response = await fetch("/api/ai/learning-assistance", {
+        const response = await fetch("/api/ai/log-assist", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -226,7 +241,16 @@ export default function WizardLogForm({
   const handleSubmit = async (values: LogFormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(values);
+      await onSubmit({
+        title: values.title,
+        learningTime: values.learningTime,
+        note: values.note,
+        logDate: values.logDate,
+        effectScore: values.effectScore ?? 3,
+        effectType: (values.effectType ?? "understanding") as string,
+        tags: values.tags ?? [],
+        resources: values.resources ?? [],
+      });
       // 成功時にフォームデータをリセット
       form.reset({
         title: "",
@@ -269,7 +293,7 @@ export default function WizardLogForm({
       case 2:
         return values.note.trim().length > 0;
       case 3:
-        return values.effectScore >= 1 && values.effectScore <= 5;
+        return (values.effectScore ?? 0) >= 1 && (values.effectScore ?? 0) <= 5;
       case 4:
         return true; // タグとリソースはオプション
       case 5:
@@ -298,6 +322,184 @@ export default function WizardLogForm({
       </span>
     </Button>
   );
+
+  // AI提案を表示するコンポーネント
+  const renderAISuggestions = (step: number) => {
+    if (!aiSuggestions) return null;
+
+    switch (step) {
+      case 1:
+        // タイトル提案
+        if (aiSuggestions.titles && aiSuggestions.titles.length > 0) {
+          return (
+            <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4" />
+                AI提案タイトル
+              </h4>
+              <div className="space-y-2">
+                {aiSuggestions.titles.map((title, index) => (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start h-auto p-2 text-left text-wrap hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                    onClick={() => {
+                      form.setValue("title", title);
+                      updateFormData({ title });
+                      toast.success("タイトルを適用しました");
+                    }}
+                  >
+                    📝 {title}
+                  </Button>
+                ))}
+              </div>
+              {aiSuggestions.feedback && (
+                <div className="mt-3 p-3 bg-amber-100 dark:bg-amber-900/30 rounded text-sm text-amber-800 dark:text-amber-200">
+                  <strong>💡 AIアドバイス:</strong> {aiSuggestions.feedback}
+                </div>
+              )}
+            </div>
+          );
+        }
+        break;
+
+      case 2:
+        // タグ提案とフィードバック
+        if (aiSuggestions.tags || aiSuggestions.feedback) {
+          return (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4" />
+                AI学習ガイド
+              </h4>
+
+              {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                    推奨タグ:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {aiSuggestions.tags.map((tag, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-6 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                        onClick={() => {
+                          const currentTags = form.getValues("tags") || [];
+                          if (!currentTags.includes(tag)) {
+                            const newTags = [...currentTags, tag];
+                            form.setValue("tags", newTags);
+                            updateFormData({ tags: newTags });
+                            toast.success(`タグ「${tag}」を追加しました`);
+                          }
+                        }}
+                      >
+                        🏷️ {tag}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {aiSuggestions.feedback && (
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded text-sm text-blue-800 dark:text-blue-200">
+                  <strong>💡 AIアドバイス:</strong> {aiSuggestions.feedback}
+                </div>
+              )}
+            </div>
+          );
+        }
+        break;
+
+      case 4:
+        // タグとリソース提案
+        return (
+          <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+            <h4 className="text-sm font-medium text-emerald-800 dark:text-emerald-200 mb-3 flex items-center gap-2">
+              <Lightbulb className="h-4 w-4" />
+              AI提案
+            </h4>
+
+            {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
+              <div className="mb-3">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                  最終推奨タグ:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {aiSuggestions.tags.map((tag, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-6 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                      onClick={() => {
+                        const currentTags = form.getValues("tags") || [];
+                        if (!currentTags.includes(tag)) {
+                          const newTags = [...currentTags, tag];
+                          form.setValue("tags", newTags);
+                          updateFormData({ tags: newTags });
+                          toast.success(`タグ「${tag}」を追加しました`);
+                        }
+                      }}
+                    >
+                      🏷️ {tag}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {aiSuggestions.resources && aiSuggestions.resources.length > 0 && (
+              <div className="mb-3">
+                <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                  推奨リソース:
+                </p>
+                <div className="space-y-2">
+                  {aiSuggestions.resources.map((resource, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start h-auto p-2 text-left hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                      onClick={() => {
+                        const currentResources =
+                          form.getValues("resources") || [];
+                        const newResource = {
+                          resourceType: "link",
+                          resourceLink: resource.url,
+                          description: resource.title,
+                        };
+                        const newResources = [...currentResources, newResource];
+                        form.setValue("resources", newResources);
+                        updateFormData({ resources: newResources });
+                        toast.success(
+                          `リソース「${resource.title}」を追加しました`
+                        );
+                      }}
+                    >
+                      📚 {resource.title}
+                      <br />
+                      <span className="text-xs text-muted-foreground">
+                        {resource.description}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {aiSuggestions.feedback && (
+              <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded text-sm text-emerald-800 dark:text-emerald-200">
+                <strong>💡 AIアドバイス:</strong> {aiSuggestions.feedback}
+              </div>
+            )}
+          </div>
+        );
+    }
+    return null;
+  };
 
   // ステップコンテンツ
   const renderStepContent = () => {
@@ -388,6 +590,9 @@ export default function WizardLogForm({
                 />
               </div>
             </div>
+
+            {/* AI提案表示 */}
+            {renderAISuggestions(1)}
           </div>
         );
 
@@ -450,6 +655,9 @@ export default function WizardLogForm({
                 </FormItem>
               )}
             />
+
+            {/* AI提案表示 */}
+            {renderAISuggestions(2)}
           </div>
         );
 
@@ -458,7 +666,6 @@ export default function WizardLogForm({
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">効果を測定してください</h3>
-              {renderAIAssistButton(3, "効果分析")}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -486,7 +693,7 @@ export default function WizardLogForm({
                             <Star
                               className={cn(
                                 "h-6 w-6 transition-all cursor-pointer",
-                                score <= field.value
+                                score <= (field.value ?? 0)
                                   ? "fill-yellow-400 text-yellow-400"
                                   : "fill-transparent text-gray-300 hover:text-yellow-300"
                               )}
@@ -494,7 +701,7 @@ export default function WizardLogForm({
                           </button>
                         ))}
                         <span className="ml-2 text-sm font-medium text-muted-foreground">
-                          {field.value}/5
+                          {field.value ?? 0}/5
                         </span>
                       </div>
                     </FormControl>
@@ -568,7 +775,10 @@ export default function WizardLogForm({
                       if (e.key === "Enter" && !isComposing) {
                         e.preventDefault();
                         updateFormData({
-                          tags: [...form.getValues("tags"), newTag.trim()],
+                          tags: [
+                            ...(form.getValues("tags") || []),
+                            newTag.trim(),
+                          ],
                         });
                         setNewTag("");
                       }
@@ -580,7 +790,10 @@ export default function WizardLogForm({
                     type="button"
                     onClick={() =>
                       updateFormData({
-                        tags: [...form.getValues("tags"), newTag.trim()],
+                        tags: [
+                          ...(form.getValues("tags") || []),
+                          newTag.trim(),
+                        ],
                       })
                     }
                     disabled={!newTag.trim()}
@@ -589,36 +802,8 @@ export default function WizardLogForm({
                   </Button>
                 </div>
 
-                {form.getValues("suggestions")?.tags &&
-                  form.getValues("suggestions").tags.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        💡 AI提案タグ:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {form
-                          .getValues("suggestions")
-                          .tags.map((suggestion, index) => (
-                            <Button
-                              key={index}
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                updateFormData({
-                                  tags: [...form.getValues("tags"), suggestion],
-                                })
-                              }
-                              className="text-xs"
-                            >
-                              + {suggestion}
-                            </Button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
                 <div className="flex flex-wrap gap-2">
-                  {form.getValues("tags").map((tag) => (
+                  {(form.getValues("tags") || []).map((tag) => (
                     <Badge
                       key={tag}
                       variant="secondary"
@@ -629,9 +814,9 @@ export default function WizardLogForm({
                         type="button"
                         onClick={() =>
                           updateFormData({
-                            tags: form
-                              .getValues("tags")
-                              .filter((t) => t !== tag),
+                            tags: (form.getValues("tags") || []).filter(
+                              (t) => t !== tag
+                            ),
                           })
                         }
                         className="ml-1 hover:text-destructive"
@@ -670,7 +855,7 @@ export default function WizardLogForm({
                         onClick={() =>
                           updateFormData({
                             resources: [
-                              ...form.getValues("resources"),
+                              ...(form.getValues("resources") || []),
                               {
                                 resourceType: "link",
                                 resourceLink: newResourceLink,
@@ -699,7 +884,7 @@ export default function WizardLogForm({
                             );
                             updateFormData({
                               resources: [
-                                ...form.getValues("resources"),
+                                ...(form.getValues("resources") || []),
                                 {
                                   resourceType: "file",
                                   resourceLink: filePath,
@@ -721,7 +906,8 @@ export default function WizardLogForm({
                           file.type = "file";
                           file.accept = "image/*";
                           file.onchange = async (e) => {
-                            const imageFile = e.target?.files?.[0];
+                            const target = e.target as HTMLInputElement;
+                            const imageFile = target.files?.[0];
                             if (imageFile) {
                               const filePath = await storage.uploadResource(
                                 imageFile,
@@ -729,7 +915,7 @@ export default function WizardLogForm({
                               );
                               updateFormData({
                                 resources: [
-                                  ...form.getValues("resources"),
+                                  ...(form.getValues("resources") || []),
                                   {
                                     resourceType: "image",
                                     resourceLink: filePath,
@@ -754,36 +940,41 @@ export default function WizardLogForm({
                     </div>
                   </div>
 
-                  {form.getValues("resources").length > 0 && (
+                  {(form.getValues("resources") || []).length > 0 && (
                     <div className="space-y-2">
-                      {form.getValues("resources").map((resource, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 p-2 border rounded"
-                        >
-                          <span className="flex-1 text-sm">
-                            {resource.description}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              updateFormData({
-                                resources: form
-                                  .getValues("resources")
-                                  .filter((_, i) => i !== index),
-                              })
-                            }
+                      {(form.getValues("resources") || []).map(
+                        (resource, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 p-2 border rounded"
                           >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                            <span className="flex-1 text-sm">
+                              {resource.description}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                updateFormData({
+                                  resources: (
+                                    form.getValues("resources") || []
+                                  ).filter((_, i) => i !== index),
+                                })
+                              }
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
                 </div>
               </div>
             </div>
+
+            {/* AI提案表示 */}
+            {renderAISuggestions(4)}
           </div>
         );
 
@@ -819,7 +1010,7 @@ export default function WizardLogForm({
                     効果スコア:
                   </span>
                   <div className="flex items-center gap-1">
-                    {Array(form.getValues("effectScore"))
+                    {Array(form.getValues("effectScore") || 0)
                       .fill(0)
                       .map((_, i) => (
                         <Star
@@ -828,7 +1019,7 @@ export default function WizardLogForm({
                         />
                       ))}
                     <span className="ml-1">
-                      ({form.getValues("effectScore")}/5)
+                      ({form.getValues("effectScore") || 0}/5)
                     </span>
                   </div>
                 </div>
@@ -847,13 +1038,13 @@ export default function WizardLogForm({
                 </p>
               </div>
 
-              {form.getValues("tags").length > 0 && (
+              {(form.getValues("tags") || []).length > 0 && (
                 <div>
                   <span className="font-medium text-muted-foreground">
                     タグ:
                   </span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {form.getValues("tags").map((tag) => (
+                    {(form.getValues("tags") || []).map((tag) => (
                       <Badge key={tag} variant="secondary">
                         {tag}
                       </Badge>
@@ -871,20 +1062,22 @@ export default function WizardLogForm({
                 </div>
               </div>
 
-              {form.getValues("resources").length > 0 && (
+              {(form.getValues("resources") || []).length > 0 && (
                 <div>
                   <span className="font-medium text-muted-foreground">
                     参考資料:
                   </span>
                   <div className="space-y-2 mt-1">
-                    {form.getValues("resources").map((resource, index) => (
-                      <div
-                        key={index}
-                        className="text-sm p-2 bg-muted/50 rounded"
-                      >
-                        {resource.description}
-                      </div>
-                    ))}
+                    {(form.getValues("resources") || []).map(
+                      (resource, index) => (
+                        <div
+                          key={index}
+                          className="text-sm p-2 bg-muted/50 rounded"
+                        >
+                          {resource.description}
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               )}
