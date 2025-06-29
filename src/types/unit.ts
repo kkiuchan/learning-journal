@@ -155,8 +155,14 @@ const baseUnitSchema = z.object({
     .string()
     .max(1000, "次のアクションは1000文字以内で入力してください")
     .optional(),
-  startDate: z.string().datetime("開始日の形式が正しくありません").optional(),
-  endDate: z.string().datetime("終了日の形式が正しくありません").optional(),
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "開始日の形式が正しくありません")
+    .optional(),
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "終了日の形式が正しくありません")
+    .optional(),
   status: z
     .enum(["PLANNED", "IN_PROGRESS", "COMPLETED"], {
       errorMap: () => ({ message: "ステータスが無効です" }),

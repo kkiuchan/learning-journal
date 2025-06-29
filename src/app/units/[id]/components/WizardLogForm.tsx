@@ -11,30 +11,45 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MarkdownPreview } from "@/components/ui/markdown-preview";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { storage } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
+import { logRequestSchema } from "@/types/log";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
 import {
-  ChevronLeft,
-  ChevronRight,
+  ArrowLeft,
+  ArrowRight,
+  Clock,
   Crown,
   Eye,
   EyeOff,
+  FileText,
   Lightbulb,
+  Save,
   Star,
   Upload,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 interface Resource {
   resourceType: string | null;
@@ -110,6 +125,9 @@ const effectTypes = [
   { value: "none", label: "特になかった", icon: "📝" },
 ];
 
+// Zodスキーマに基づく型定義
+type LogFormValues = z.infer<typeof logRequestSchema>;
+
 export default function WizardLogForm({
   unitId,
   onCancel,
@@ -122,73 +140,67 @@ export default function WizardLogForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isPlanLimitDialogOpen, setIsPlanLimitDialogOpen] = useState(false);
-
-  // フォームデータ（外部から受け取るか、デフォルト値を使用）
-  const currentStep = formData?.currentStep ?? 1;
-  const title = formData?.title ?? "";
-  const learningTime = formData?.learningTime ?? 30;
-  const note = formData?.note ?? "";
-  const logDate = formData?.logDate ?? format(new Date(), "yyyy-MM-dd");
-  const effectScore = formData?.effectScore ?? 3;
-  const effectType = formData?.effectType ?? "understanding";
-  const tags = formData?.tags ?? [];
-  const resources = formData?.resources ?? [];
-
-  // UI状態
+  const [currentStep, setCurrentStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [newResourceTitle, setNewResourceTitle] = useState("");
   const [newResourceLink, setNewResourceLink] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [hoveredScore, setHoveredScore] = useState<number | null>(null);
-
-  // AI提案
   const [aiSuggestions, setAiSuggestions] = useState<
     AIAssistResponse["suggestions"]
   >({});
 
-  const { isComposing, onCompositionStart, onCompositionEnd } =
-    useCompositionInput();
+  const form = useForm<LogFormValues>({
+    resolver: zodResolver(logRequestSchema),
+    defaultValues: {
+      title: formData?.title ?? "",
+      learningTime: formData?.learningTime ?? 30,
+      note: formData?.note ?? "",
+      logDate: formData?.logDate ?? format(new Date(), "yyyy-MM-dd"),
+      effectScore: formData?.effectScore ?? 3,
+      effectType: formData?.effectType ?? "understanding",
+      tags: formData?.tags ?? [],
+      resources: formData?.resources ?? [],
+    },
+  });
 
-  // フォームデータ更新用のヘルパー関数
-  const updateFormData = (updates: Partial<typeof formData>) => {
+  // フォームの値を監視してformDataを更新
+  const watchedValues = form.watch();
+
+  const updateFormData = (updates: Partial<LogFormValues>) => {
+    Object.entries(updates).forEach(([key, value]) => {
+      form.setValue(key as keyof LogFormValues, value);
+    });
+
     if (onFormDataChange) {
       onFormDataChange({
-        title,
-        learningTime,
-        note,
-        logDate,
-        effectScore,
-        effectType,
-        tags,
-        resources,
-        currentStep,
+        ...watchedValues,
         ...updates,
+        currentStep,
       });
     }
   };
 
-  // AI アシスト機能
+  // AI支援機能
   const getAIAssistance = useCallback(
     async (step: number) => {
+      if (!supabaseSession?.access_token) {
+        setIsPlanLimitDialogOpen(true);
+        return;
+      }
+
       setAiLoading(true);
       try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-
-        // Supabaseセッションのアクセストークンを追加
-        if (supabaseSession?.access_token) {
-          headers["Authorization"] = `Bearer ${supabaseSession.access_token}`;
-        }
-
-        const response = await fetch("/api/ai/log-assist", {
+        const currentValues = form.getValues();
+        const response = await fetch("/api/ai/learning-assistance", {
           method: "POST",
-          headers,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseSession.access_token}`,
+          },
           body: JSON.stringify({
             step,
-            data: { title, note, learningTime, effectScore, effectType, tags },
+            data: currentValues,
             unitId,
           }),
         });
@@ -198,124 +210,34 @@ export default function WizardLogForm({
           setAiSuggestions(data.suggestions);
           toast.success("AI提案を取得しました！");
         } else {
-          const errorData = await response.json();
-
-          // プラン制限エラーの場合
-          if (errorData.code === "PLAN_LIMIT_EXCEEDED") {
-            setIsPlanLimitDialogOpen(true);
-            return;
-          }
-
-          throw new Error(errorData.error || "AI提案の取得に失敗しました");
+          throw new Error("AI支援の取得に失敗しました");
         }
       } catch (error) {
         console.error("AI assistance error:", error);
-        toast.error(
-          error instanceof Error ? error.message : "AI提案の取得に失敗しました"
-        );
+        toast.error("AI支援の取得に失敗しました");
       } finally {
         setAiLoading(false);
       }
     },
-    [
-      title,
-      note,
-      learningTime,
-      effectScore,
-      effectType,
-      tags,
-      unitId,
-      supabaseSession?.access_token,
-    ]
+    [form, unitId, supabaseSession?.access_token]
   );
 
-  // ステップ進行
-  const nextStep = () => {
-    if (currentStep < steps.length) {
-      updateFormData({ currentStep: currentStep + 1 });
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      updateFormData({ currentStep: currentStep - 1 });
-    }
-  };
-
-  // タグ操作
-  const handleAddTag = (tagToAdd?: string) => {
-    const tag = tagToAdd || newTag.trim();
-    if (tag && !tags.includes(tag)) {
-      updateFormData({ tags: [...tags, tag] });
-      setNewTag("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    updateFormData({ tags: tags.filter((tag) => tag !== tagToRemove) });
-  };
-
-  // リソース操作
-  const handleAddResource = () => {
-    if (newResourceTitle.trim() && newResourceLink.trim()) {
-      updateFormData({
-        resources: [
-          ...resources,
-          {
-            resourceType: "link",
-            resourceLink: newResourceLink,
-            description: newResourceTitle,
-          },
-        ],
-      });
-      setNewResourceTitle("");
-      setNewResourceLink("");
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (!selectedFile) return;
-
-    setUploadingFile(true);
-    try {
-      const filePath = await storage.uploadResource(selectedFile, unitId);
-      updateFormData({
-        resources: [
-          ...resources,
-          {
-            resourceType: "file",
-            resourceLink: filePath,
-            description: selectedFile.name,
-            fileName: selectedFile.name,
-            filePath,
-          },
-        ],
-      });
-      setSelectedFile(null);
-      toast.success("ファイルがアップロードされました");
-    } catch (error) {
-      console.error("File upload error:", error);
-      toast.error("ファイルのアップロードに失敗しました");
-    } finally {
-      setUploadingFile(false);
-    }
-  };
-
   // フォーム送信
-  const handleSubmit = async () => {
+  const handleSubmit = async (values: LogFormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit({
-        title,
-        learningTime,
-        note,
-        logDate,
-        tags,
-        effectScore,
-        effectType,
-        resources,
-      });
+      await onSubmit(values);
       // 成功時にフォームデータをリセット
+      form.reset({
+        title: "",
+        learningTime: 30,
+        note: "",
+        logDate: format(new Date(), "yyyy-MM-dd"),
+        effectScore: 3,
+        effectType: "understanding",
+        tags: [],
+        resources: [],
+      });
       if (onFormDataChange) {
         onFormDataChange({
           title: "",
@@ -340,13 +262,14 @@ export default function WizardLogForm({
 
   // バリデーション
   const canProceed = (step: number) => {
+    const values = form.getValues();
     switch (step) {
       case 1:
-        return title.trim().length > 0 && learningTime > 0;
+        return values.title.trim().length > 0 && values.learningTime > 0;
       case 2:
-        return note.trim().length > 0;
+        return values.note.trim().length > 0;
       case 3:
-        return effectScore >= 1 && effectScore <= 5;
+        return values.effectScore >= 1 && values.effectScore <= 5;
       case 4:
         return true; // タグとリソースはオプション
       case 5:
@@ -386,88 +309,85 @@ export default function WizardLogForm({
               <h3 className="text-lg font-semibold">
                 基本情報を入力してください
               </h3>
-              {renderAIAssistButton(1, "学習内容提案")}
+              {renderAIAssistButton(1, "学習提案")}
             </div>
 
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">タイトル *</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => updateFormData({ title: e.target.value })}
-                  placeholder="今日学習した内容のタイトル"
-                  onCompositionStart={onCompositionStart}
-                  onCompositionEnd={onCompositionEnd}
-                />
-                {aiSuggestions.titles && aiSuggestions.titles.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      💡 今回の学習内容提案:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {aiSuggestions.titles.map((suggestion, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateFormData({ title: suggestion })}
-                          className="text-xs"
-                        >
-                          {suggestion}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 font-medium">
+                      <FileText className="w-4 h-4" />
+                      タイトル *
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="今日学習した内容のタイトル"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          updateFormData({ title: e.target.value });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="logDate">日付</Label>
-                  <Input
-                    id="logDate"
-                    type="date"
-                    value={logDate}
-                    onChange={(e) =>
-                      updateFormData({ logDate: e.target.value })
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="learningTime">学習時間（分）*</Label>
-                  <Input
-                    id="learningTime"
-                    type="number"
-                    value={learningTime}
-                    onChange={(e) =>
-                      updateFormData({ learningTime: Number(e.target.value) })
-                    }
-                    min="1"
-                    placeholder="30"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="logDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>日付</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            updateFormData({ logDate: e.target.value });
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="learningTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        学習時間（分）*
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="30"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            field.onChange(value);
+                            updateFormData({ learningTime: value });
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
-
-            {/* AI フィードバック */}
-            {aiSuggestions.feedback && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                      AIアドバイス
-                    </h4>
-                    <p className="text-sm text-blue-800 dark:text-blue-200">
-                      {aiSuggestions.feedback}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         );
 
@@ -479,7 +399,11 @@ export default function WizardLogForm({
                 学習内容を記述してください
               </h3>
               <div className="flex gap-2">
-                {renderAIAssistButton(2, "学習ガイド", !title.trim())}
+                {renderAIAssistButton(
+                  2,
+                  "学習ガイド",
+                  !form.getValues("title").trim()
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -496,110 +420,36 @@ export default function WizardLogForm({
               </div>
             </div>
 
-            {showPreview ? (
-              <div className="min-h-[300px] max-h-[400px] p-4 border rounded-md bg-background overflow-y-auto">
-                <MarkdownPreview>
-                  {note || "プレビューする内容がありません"}
-                </MarkdownPreview>
-              </div>
-            ) : (
-              <Textarea
-                value={note}
-                onChange={(e) => updateFormData({ note: e.target.value })}
-                placeholder="学習内容の詳細を記述してください（Markdown形式）&#10;&#10;例：&#10;# 今日学習したこと&#10;- ポイント1&#10;- ポイント2&#10;&#10;## つまづいた点&#10;- 課題1&#10;- 解決方法"
-                rows={12}
-                className="font-mono resize-none"
-                onCompositionStart={onCompositionStart}
-                onCompositionEnd={onCompositionEnd}
-              />
-            )}
-            <p className="text-xs text-muted-foreground">
-              💡
-              Markdown記法が使用できます（見出し、リスト、コードブロックなど）
-            </p>
-
-            {/* AI学習ガイド */}
-            {aiSuggestions.feedback && (
-              <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 rounded-lg border border-green-200 dark:border-green-800">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <Lightbulb className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">
-                      「{title}」の学習ガイド
-                    </h4>
-                    <p className="text-sm text-green-800 dark:text-green-200 leading-relaxed">
-                      {aiSuggestions.feedback}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* AI推奨タグ */}
-            {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
-              <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-950 dark:to-violet-950 rounded-lg border border-purple-200 dark:border-purple-800">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                      Tags
-                    </Badge>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">
-                      この学習内容の推奨タグ
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {aiSuggestions.tags.map((tag, index) => {
-                        const isAdded = tags.includes(tag);
-                        return (
-                          <Button
-                            key={index}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              if (isAdded) {
-                                // 追加済みの場合は削除
-                                updateFormData({
-                                  tags: tags.filter((t) => t !== tag),
-                                });
-                              } else {
-                                // 未追加の場合は追加
-                                if (!tags.includes(tag)) {
-                                  updateFormData({ tags: [...tags, tag] });
-                                }
-                              }
-                            }}
-                            className={cn(
-                              "text-xs transition-all focus:outline-none",
-                              isAdded
-                                ? "bg-green-100 border-green-300 text-green-800 hover:bg-green-200 focus:bg-green-200 focus:border-green-400 focus:text-green-900 dark:bg-green-900 dark:border-green-700 dark:text-green-200 dark:hover:bg-green-800 dark:focus:bg-green-800 dark:focus:border-green-600 dark:focus:text-green-100"
-                                : "border-purple-300 hover:border-purple-400 hover:bg-purple-50 focus:border-purple-500 focus:bg-purple-100 focus:text-purple-900 dark:border-purple-700 dark:hover:border-purple-600 dark:focus:border-purple-500 dark:focus:bg-purple-900 dark:focus:text-purple-100"
-                            )}
-                          >
-                            {isAdded ? "✓" : "+"} {tag}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-2">
-                      💡 クリックでタグを追加・削除できます
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* タイトル未設定の場合の案内 */}
-            {!title.trim() && !aiLoading && (
-              <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  💡
-                  先にステップ1でタイトルを設定すると、より具体的な学習ガイドを受けられます
-                </p>
-              </div>
-            )}
+            <FormField
+              control={form.control}
+              name="note"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>学習内容 *</FormLabel>
+                  <FormControl>
+                    {showPreview ? (
+                      <div className="min-h-[300px] max-h-[400px] p-4 border rounded-md bg-background overflow-y-auto">
+                        <MarkdownPreview>
+                          {field.value || "プレビューする内容がありません"}
+                        </MarkdownPreview>
+                      </div>
+                    ) : (
+                      <Textarea
+                        placeholder="学習内容の詳細を記述してください（Markdown形式）&#10;&#10;例：&#10;# 今日学習したこと&#10;- ポイント1&#10;- ポイント2&#10;&#10;## つまづいた点&#10;- 課題1&#10;- 解決方法"
+                        rows={12}
+                        className="font-mono resize-none"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          updateFormData({ note: e.target.value });
+                        }}
+                      />
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         );
 
@@ -607,69 +457,88 @@ export default function WizardLogForm({
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                学習効果を評価してください
-              </h3>
+              <h3 className="text-lg font-semibold">効果を測定してください</h3>
+              {renderAIAssistButton(3, "効果分析")}
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <Label className="text-base">効果実感スコア</Label>
-                <p className="text-sm text-muted-foreground mb-4">
-                  今日の学習がどの程度効果的だったか評価してください
-                </p>
-                <div
-                  className="flex items-center justify-center gap-2"
-                  onMouseLeave={() => setHoveredScore(null)}
-                >
-                  {[1, 2, 3, 4, 5].map((score) => (
-                    <button
-                      key={score}
-                      type="button"
-                      onClick={() => updateFormData({ effectScore: score })}
-                      onMouseEnter={() => setHoveredScore(score)}
-                      className="transition-all hover:scale-110 focus:outline-none"
-                    >
-                      <Star
-                        className={cn(
-                          "h-8 w-8 transition-all cursor-pointer",
-                          score <= (hoveredScore || effectScore)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-transparent text-gray-300 hover:text-yellow-300"
-                        )}
-                      />
-                    </button>
-                  ))}
-                  <span className="ml-3 text-sm font-medium text-muted-foreground">
-                    {effectScore}/5
-                  </span>
-                </div>
-              </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="effectScore"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Star className="w-4 w-4" />
+                      効果実感スコア
+                    </FormLabel>
+                    <FormControl>
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((score) => (
+                          <button
+                            key={score}
+                            type="button"
+                            onClick={() => {
+                              field.onChange(score);
+                              updateFormData({ effectScore: score });
+                            }}
+                            className="transition-all hover:scale-110 focus:outline-none"
+                          >
+                            <Star
+                              className={cn(
+                                "h-6 w-6 transition-all cursor-pointer",
+                                score <= field.value
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "fill-transparent text-gray-300 hover:text-yellow-300"
+                              )}
+                            />
+                          </button>
+                        ))}
+                        <span className="ml-2 text-sm font-medium text-muted-foreground">
+                          {field.value}/5
+                        </span>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              <div>
-                <Label className="text-base">効果のタイプ</Label>
-                <p className="text-sm text-muted-foreground mb-4">
-                  どのような効果を感じましたか？
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {effectTypes.map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => updateFormData({ effectType: type.value })}
-                      className={cn(
-                        "flex items-center gap-3 p-4 rounded-lg border-2 transition-all",
-                        effectType === type.value
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50"
-                      )}
-                    >
-                      <span className="text-2xl">{type.icon}</span>
-                      <span className="text-sm font-medium">{type.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <FormField
+                control={form.control}
+                name="effectType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>効果のタイプ</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {effectTypes.map((type) => (
+                          <label
+                            key={type.value}
+                            className="flex items-center gap-2 text-sm cursor-pointer"
+                          >
+                            <input
+                              type="radio"
+                              name="effectType"
+                              value={type.value}
+                              checked={field.value === type.value}
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                updateFormData({
+                                  effectType: e.target.value as any,
+                                });
+                              }}
+                              className="form-radio"
+                            />
+                            <span className="text-lg">{type.icon}</span>
+                            {type.label}
+                          </label>
+                        ))}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         );
@@ -698,7 +567,10 @@ export default function WizardLogForm({
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !isComposing) {
                         e.preventDefault();
-                        handleAddTag();
+                        updateFormData({
+                          tags: [...form.getValues("tags"), newTag.trim()],
+                        });
+                        setNewTag("");
                       }
                     }}
                     onCompositionStart={onCompositionStart}
@@ -706,36 +578,47 @@ export default function WizardLogForm({
                   />
                   <Button
                     type="button"
-                    onClick={() => handleAddTag()}
+                    onClick={() =>
+                      updateFormData({
+                        tags: [...form.getValues("tags"), newTag.trim()],
+                      })
+                    }
                     disabled={!newTag.trim()}
                   >
                     追加
                   </Button>
                 </div>
 
-                {aiSuggestions.tags && aiSuggestions.tags.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      💡 AI提案タグ:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {aiSuggestions.tags.map((suggestion, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAddTag(suggestion)}
-                          className="text-xs"
-                        >
-                          + {suggestion}
-                        </Button>
-                      ))}
+                {form.getValues("suggestions")?.tags &&
+                  form.getValues("suggestions").tags.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        💡 AI提案タグ:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {form
+                          .getValues("suggestions")
+                          .tags.map((suggestion, index) => (
+                            <Button
+                              key={index}
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                updateFormData({
+                                  tags: [...form.getValues("tags"), suggestion],
+                                })
+                              }
+                              className="text-xs"
+                            >
+                              + {suggestion}
+                            </Button>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
+                  {form.getValues("tags").map((tag) => (
                     <Badge
                       key={tag}
                       variant="secondary"
@@ -744,7 +627,13 @@ export default function WizardLogForm({
                       {tag}
                       <button
                         type="button"
-                        onClick={() => handleRemoveTag(tag)}
+                        onClick={() =>
+                          updateFormData({
+                            tags: form
+                              .getValues("tags")
+                              .filter((t) => t !== tag),
+                          })
+                        }
                         className="ml-1 hover:text-destructive"
                       >
                         <X className="h-3 w-3" />
@@ -778,7 +667,18 @@ export default function WizardLogForm({
                       />
                       <Button
                         type="button"
-                        onClick={handleAddResource}
+                        onClick={() =>
+                          updateFormData({
+                            resources: [
+                              ...form.getValues("resources"),
+                              {
+                                resourceType: "link",
+                                resourceLink: newResourceLink,
+                                description: newResourceTitle,
+                              },
+                            ],
+                          })
+                        }
                         disabled={
                           !newResourceTitle.trim() || !newResourceLink.trim()
                         }
@@ -790,27 +690,73 @@ export default function WizardLogForm({
                     <div className="flex items-center gap-2">
                       <Input
                         type="file"
-                        onChange={(e) =>
-                          setSelectedFile(e.target.files?.[0] || null)
-                        }
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const filePath = await storage.uploadResource(
+                              file,
+                              unitId
+                            );
+                            updateFormData({
+                              resources: [
+                                ...form.getValues("resources"),
+                                {
+                                  resourceType: "file",
+                                  resourceLink: filePath,
+                                  description: file.name,
+                                  fileName: file.name,
+                                  filePath,
+                                },
+                              ],
+                            });
+                          }
+                        }}
                         className="flex-1"
-                        disabled={uploadingFile}
+                        disabled={isSubmitting}
                       />
                       <Button
                         type="button"
-                        onClick={handleFileUpload}
-                        disabled={!selectedFile || uploadingFile}
+                        onClick={() => {
+                          const file = document.createElement("input");
+                          file.type = "file";
+                          file.accept = "image/*";
+                          file.onchange = async (e) => {
+                            const imageFile = e.target?.files?.[0];
+                            if (imageFile) {
+                              const filePath = await storage.uploadResource(
+                                imageFile,
+                                unitId
+                              );
+                              updateFormData({
+                                resources: [
+                                  ...form.getValues("resources"),
+                                  {
+                                    resourceType: "image",
+                                    resourceLink: filePath,
+                                    description: imageFile.name,
+                                    fileName: imageFile.name,
+                                    filePath,
+                                  },
+                                ],
+                              });
+                            }
+                          };
+                          file.click();
+                        }}
+                        disabled={isSubmitting}
                         className="flex items-center gap-2"
                       >
                         <Upload className="h-4 w-4" />
-                        {uploadingFile ? "アップロード中..." : "アップロード"}
+                        {isSubmitting
+                          ? "アップロード中..."
+                          : "画像アップロード"}
                       </Button>
                     </div>
                   </div>
 
-                  {resources.length > 0 && (
+                  {form.getValues("resources").length > 0 && (
                     <div className="space-y-2">
-                      {resources.map((resource, index) => (
+                      {form.getValues("resources").map((resource, index) => (
                         <div
                           key={index}
                           className="flex items-center gap-2 p-2 border rounded"
@@ -823,9 +769,9 @@ export default function WizardLogForm({
                             size="sm"
                             onClick={() =>
                               updateFormData({
-                                resources: resources.filter(
-                                  (_, i) => i !== index
-                                ),
+                                resources: form
+                                  .getValues("resources")
+                                  .filter((_, i) => i !== index),
                               })
                             }
                           >
@@ -854,26 +800,26 @@ export default function WizardLogForm({
                   <span className="font-medium text-muted-foreground">
                     タイトル:
                   </span>
-                  <p>{title}</p>
+                  <p>{form.getValues("title")}</p>
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">
                     日付:
                   </span>
-                  <p>{logDate}</p>
+                  <p>{form.getValues("logDate")}</p>
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">
                     学習時間:
                   </span>
-                  <p>{learningTime}分</p>
+                  <p>{form.getValues("learningTime")}分</p>
                 </div>
                 <div>
                   <span className="font-medium text-muted-foreground">
                     効果スコア:
                   </span>
                   <div className="flex items-center gap-1">
-                    {Array(effectScore)
+                    {Array(form.getValues("effectScore"))
                       .fill(0)
                       .map((_, i) => (
                         <Star
@@ -881,7 +827,9 @@ export default function WizardLogForm({
                           className="h-4 w-4 fill-yellow-400 text-yellow-400"
                         />
                       ))}
-                    <span className="ml-1">({effectScore}/5)</span>
+                    <span className="ml-1">
+                      ({form.getValues("effectScore")}/5)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -890,16 +838,22 @@ export default function WizardLogForm({
                 <span className="font-medium text-muted-foreground">
                   効果タイプ:
                 </span>
-                <p>{effectTypes.find((t) => t.value === effectType)?.label}</p>
+                <p>
+                  {
+                    effectTypes.find(
+                      (t) => t.value === form.getValues("effectType")
+                    )?.label
+                  }
+                </p>
               </div>
 
-              {tags.length > 0 && (
+              {form.getValues("tags").length > 0 && (
                 <div>
                   <span className="font-medium text-muted-foreground">
                     タグ:
                   </span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {tags.map((tag) => (
+                    {form.getValues("tags").map((tag) => (
                       <Badge key={tag} variant="secondary">
                         {tag}
                       </Badge>
@@ -913,17 +867,17 @@ export default function WizardLogForm({
                   学習内容:
                 </span>
                 <div className="mt-2 p-4 border rounded-md bg-muted/50 max-h-[300px] overflow-y-auto">
-                  <MarkdownPreview>{note}</MarkdownPreview>
+                  <MarkdownPreview>{form.getValues("note")}</MarkdownPreview>
                 </div>
               </div>
 
-              {resources.length > 0 && (
+              {form.getValues("resources").length > 0 && (
                 <div>
                   <span className="font-medium text-muted-foreground">
                     参考資料:
                   </span>
                   <div className="space-y-2 mt-1">
-                    {resources.map((resource, index) => (
+                    {form.getValues("resources").map((resource, index) => (
                       <div
                         key={index}
                         className="text-sm p-2 bg-muted/50 rounded"
@@ -995,39 +949,67 @@ export default function WizardLogForm({
         </CardHeader>
 
         <CardContent>
-          <div className="min-h-[400px]">{renderStepContent()}</div>
-
-          {/* ナビゲーションボタン */}
-          <div className="flex justify-between mt-8">
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="flex items-center gap-2"
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
             >
-              <ChevronLeft className="h-4 w-4" />
-              前へ
-            </Button>
+              {renderStepContent()}
 
-            {currentStep === steps.length ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitting || !canProceed(currentStep)}
-                className="flex items-center gap-2"
-              >
-                {isSubmitting ? "作成中..." : "ログを作成"}
-              </Button>
-            ) : (
-              <Button
-                onClick={nextStep}
-                disabled={!canProceed(currentStep)}
-                className="flex items-center gap-2"
-              >
-                次へ
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+              {/* ナビゲーションボタン */}
+              <div className="flex justify-between pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    if (currentStep === 1) {
+                      onCancel();
+                    } else {
+                      setCurrentStep(currentStep - 1);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {currentStep === 1 ? "キャンセル" : "戻る"}
+                </Button>
+
+                {currentStep < steps.length ? (
+                  <Button
+                    type="button"
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    disabled={!canProceed(currentStep) || isSubmitting}
+                  >
+                    次へ
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !canProceed(currentStep)}
+                  >
+                    {isSubmitting ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <Save className="w-4 h-4" />
+                      </motion.div>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        作成
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
 

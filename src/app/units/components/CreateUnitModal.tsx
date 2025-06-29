@@ -1,13 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,39 +22,30 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useCompositionInput } from "@/hooks/useCompositionInput";
 import { useAuthStore } from "@/stores/SupabaseAuthStore";
-import { format } from "date-fns";
+import { unitCreateSchema } from "@/types/unit";
+import { handleApiError } from "@/utils/error-handler";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import {
-  BookOpen,
   Calendar,
+  Eye,
   FileText,
-  Globe,
-  Lock,
-  Plus,
   Save,
+  Settings,
   Tag,
   Target,
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
+
+type UnitFormValues = z.infer<typeof unitCreateSchema>;
 
 interface Tag {
   id: number;
   name: string;
-}
-
-interface UnitFormValues {
-  title: string;
-  learningGoal: string;
-  preLearningState: string;
-  reflection: string;
-  nextAction: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  displayFlag: boolean;
-  tags: Tag[];
 }
 
 interface CreateUnitModalProps {
@@ -83,98 +76,53 @@ export function CreateUnitModal({
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [newTag, setNewTag] = useState("");
-  const [values, setValues] = useState<UnitFormValues>({
-    title: "",
-    learningGoal: "",
-    preLearningState: "",
-    reflection: "",
-    nextAction: "",
-    startDate: format(new Date(), "yyyy-MM-dd"),
-    endDate: "",
-    status: "PLANNED",
-    displayFlag: true,
-    tags: [],
+
+  const form = useForm<UnitFormValues>({
+    resolver: zodResolver(unitCreateSchema),
+    defaultValues: {
+      title: "",
+      learningGoal: "",
+      preLearningState: "",
+      reflection: "",
+      nextAction: "",
+      startDate: new Date().toISOString().slice(0, 10), // YYYY-MM-DD形式
+      endDate: undefined,
+      status: "PLANNED",
+      displayFlag: true,
+      tags: [],
+    },
   });
 
   const handleAddTag = () => {
-    if (
-      newTag.trim() &&
-      !values.tags.some((tag) => tag.name === newTag.trim())
-    ) {
-      setValues((prev) => ({
-        ...prev,
-        tags: [...prev.tags, { id: Date.now(), name: newTag.trim() }],
-      }));
+    if (newTag.trim() && !tags.some((tag) => tag.name === newTag.trim())) {
+      const newTagObj = { id: Date.now(), name: newTag.trim() };
+      setTags([...tags, newTagObj]);
+      form.setValue("tags", [...(form.getValues("tags") || []), newTag.trim()]);
       setNewTag("");
     }
   };
 
   const handleRemoveTag = (tagId: number) => {
-    setValues((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((tag) => tag.id !== tagId),
-    }));
+    const updatedTags = tags.filter((tag) => tag.id !== tagId);
+    setTags(updatedTags);
+    form.setValue(
+      "tags",
+      updatedTags.map((tag) => tag.name)
+    );
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const handleSubmit = async (values: UnitFormValues) => {
     try {
-      console.log("[CreateUnitModal] handleSubmit start - session details:", {
-        sessionExists: !!session,
-        sessionType: typeof session,
-        sessionNull: session === null,
-        sessionUndefined: session === undefined,
-        sessionFalsy: !session,
-        sessionTruthy: !!session,
-        accessTokenExists: !!session?.access_token,
-        accessTokenValue: session?.access_token
-          ? session.access_token.substring(0, 20) + "..."
-          : "no access token",
-        userExists: !!session?.user,
-        userId: session?.user?.id,
-      });
-
-      console.log("[CreateUnitModal] Session state:", {
-        hasSession: !!session,
-        hasAccessToken: !!session?.access_token,
-        sessionUserId: session?.user?.id,
-      });
-
-      if (!session) {
-        console.error("[CreateUnitModal] No session available");
-        toast.error("認証が必要です");
-        return;
-      }
-
-      if (!session.access_token) {
-        console.error("[CreateUnitModal] No access token in session");
-        toast.error("認証トークンが見つかりません");
-        return;
-      }
-
-      const requestHeaders = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
-      };
-
-      console.log("[CreateUnitModal] Making API request with headers:", {
-        ...requestHeaders,
-        Authorization: `Bearer ${session.access_token.substring(0, 20)}...`,
-      });
-
+      setIsLoading(true);
       const response = await fetch("/api/units", {
         method: "POST",
-        headers: requestHeaders,
-        body: JSON.stringify({
-          ...values,
-          tags: values.tags.map((tag) => tag.name),
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
       });
-
-      console.log("[CreateUnitModal] API response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -184,9 +132,7 @@ export function CreateUnitModal({
         // 作成したユニットページに遷移
         window.location.href = `/units/${data.data.id}`;
       } else {
-        const error = await response.json();
-        console.error("ユニットの作成に失敗しました:", error);
-        toast.error("ユニットの作成に失敗しました");
+        await handleApiError(response);
       }
     } catch (error) {
       console.error("エラーが発生しました:", error);
@@ -197,18 +143,8 @@ export function CreateUnitModal({
   };
 
   const resetForm = () => {
-    setValues({
-      title: "",
-      learningGoal: "",
-      preLearningState: "",
-      reflection: "",
-      nextAction: "",
-      startDate: format(new Date(), "yyyy-MM-dd"),
-      endDate: "",
-      status: "PLANNED",
-      displayFlag: true,
-      tags: [],
-    });
+    form.reset();
+    setTags([]);
     setNewTag("");
   };
 
@@ -221,412 +157,386 @@ export function CreateUnitModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 gap-0">
+        <DialogTitle className="sr-only">新規ユニット作成</DialogTitle>
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-          className="h-full flex flex-col"
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="flex flex-col h-full"
         >
-          {/* 固定ヘッダー */}
-          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
-            <DialogTitle className="text-xl font-bold flex items-center gap-2">
-              <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center"
-              >
-                <BookOpen className="w-4 h-4 text-blue-600" />
-              </motion.div>
-              新規ユニット作成
-            </DialogTitle>
-            <DialogDescription className="text-muted-foreground">
-              新しい学習ユニットを作成してください
-            </DialogDescription>
-          </DialogHeader>
-
-          <form
-            onSubmit={handleSubmit}
-            className="flex-1 flex flex-col min-h-0"
-          >
-            {/* スクロール可能コンテンツ */}
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-6">
-                {/* 基本情報 */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="title"
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    <FileText className="w-4 h-4" />
-                    タイトル <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="title"
-                    value={values.title}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, title: e.target.value }))
-                    }
-                    required
-                    placeholder="ユニットのタイトルを入力してください"
-                    disabled={isLoading}
-                    onCompositionStart={onCompositionStart}
-                    onCompositionEnd={onCompositionEnd}
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="learningGoal"
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    <Target className="w-4 h-4" />
-                    学習目標
-                  </Label>
-                  <Textarea
-                    id="learningGoal"
-                    value={values.learningGoal}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, learningGoal: e.target.value }))
-                    }
-                    placeholder="この学習で達成したい目標を記述してください"
-                    disabled={isLoading}
-                    onCompositionStart={onCompositionStart}
-                    onCompositionEnd={onCompositionEnd}
-                    rows={3}
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="preLearningState"
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    事前の学習状態
-                  </Label>
-                  <Textarea
-                    id="preLearningState"
-                    value={values.preLearningState}
-                    onChange={(e) =>
-                      setValues((v) => ({
-                        ...v,
-                        preLearningState: e.target.value,
-                      }))
-                    }
-                    placeholder="この学習を始める前の知識レベルや経験を記述してください"
-                    disabled={isLoading}
-                    onCompositionStart={onCompositionStart}
-                    onCompositionEnd={onCompositionEnd}
-                    rows={3}
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="reflection"
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    <FileText className="w-4 h-4" />
-                    振り返り
-                  </Label>
-                  <Textarea
-                    id="reflection"
-                    value={values.reflection}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, reflection: e.target.value }))
-                    }
-                    placeholder="学習を通じて得た知見や感想を記述してください（後で更新可能）"
-                    disabled={isLoading}
-                    onCompositionStart={onCompositionStart}
-                    onCompositionEnd={onCompositionEnd}
-                    rows={3}
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="space-y-2"
-                >
-                  <Label
-                    htmlFor="nextAction"
-                    className="flex items-center gap-2 font-medium"
-                  >
-                    <Target className="w-4 h-4" />
-                    次のアクション
-                  </Label>
-                  <Textarea
-                    id="nextAction"
-                    value={values.nextAction}
-                    onChange={(e) =>
-                      setValues((v) => ({ ...v, nextAction: e.target.value }))
-                    }
-                    placeholder="次に取り組むべき具体的なアクションを記述してください"
-                    disabled={isLoading}
-                    onCompositionStart={onCompositionStart}
-                    onCompositionEnd={onCompositionEnd}
-                    rows={3}
-                    className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </motion.div>
-
-                {/* 日程設定 */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="space-y-2"
-                  >
-                    <Label
-                      htmlFor="startDate"
-                      className="flex items-center gap-2 font-medium"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      開始日
-                    </Label>
-                    <Input
-                      id="startDate"
-                      type="date"
-                      value={values.startDate}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, startDate: e.target.value }))
-                      }
-                      disabled={isLoading}
-                      className="cursor-pointer"
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.7 }}
-                    className="space-y-2"
-                  >
-                    <Label
-                      htmlFor="endDate"
-                      className="flex items-center gap-2 font-medium"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      終了日（予定）
-                    </Label>
-                    <Input
-                      id="endDate"
-                      type="date"
-                      value={values.endDate}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, endDate: e.target.value }))
-                      }
-                      disabled={isLoading}
-                      className="cursor-pointer"
-                      min={values.startDate}
-                    />
-                  </motion.div>
-                </div>
-
-                {/* ステータスと公開設定 */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="space-y-2"
-                  >
-                    <Label htmlFor="status" className="font-medium">
-                      ステータス
-                    </Label>
-                    <Select
-                      value={values.status}
-                      onValueChange={(v) =>
-                        setValues((prev) => ({ ...prev, status: v }))
-                      }
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="ステータスを選択" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PLANNED">未着手</SelectItem>
-                        <SelectItem value="IN_PROGRESS">進行中</SelectItem>
-                        <SelectItem value="COMPLETED">完了</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.9 }}
-                    className="space-y-2"
-                  >
-                    <Label htmlFor="displayFlag" className="font-medium">
-                      公開設定
-                    </Label>
-                    <Select
-                      value={values.displayFlag ? "public" : "private"}
-                      onValueChange={(v) =>
-                        setValues((prev) => ({
-                          ...prev,
-                          displayFlag: v === "public",
-                        }))
-                      }
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="公開設定を選択" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="public">
-                          <div className="flex items-center gap-2">
-                            <Globe className="w-4 h-4 text-green-600" />
-                            <div>
-                              <div className="font-medium">公開</div>
-                              <div className="text-xs text-muted-foreground">
-                                他のユーザーも閲覧可能
-                              </div>
-                            </div>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="private">
-                          <div className="flex items-center gap-2">
-                            <Lock className="w-4 h-4 text-orange-600" />
-                            <div>
-                              <div className="font-medium">非公開</div>
-                              <div className="text-xs text-muted-foreground">
-                                自分のみ閲覧可能
-                              </div>
-                            </div>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </motion.div>
-                </div>
-
-                {/* タグ */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.0 }}
-                  className="space-y-3"
-                >
-                  <Label className="flex items-center gap-2 font-medium">
-                    <Tag className="w-4 h-4" />
-                    タグ
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={newTag}
-                      onChange={(e) => setNewTag(e.target.value)}
-                      placeholder="新しいタグを入力"
-                      disabled={isLoading}
-                      onCompositionStart={onCompositionStart}
-                      onCompositionEnd={onCompositionEnd}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isComposing) {
-                          e.preventDefault();
-                          handleAddTag();
-                        }
-                      }}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleAddTag}
-                      disabled={isLoading || !newTag.trim()}
-                      variant="outline"
-                      size="icon"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {values.tags.map((tag, index) => (
-                      <motion.div
-                        key={tag.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="flex items-center gap-1 bg-secondary px-2 py-1 rounded"
-                      >
-                        <span>{tag.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(tag.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                          disabled={isLoading}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
+          {/* ヘッダー */}
+          <div className="px-6 py-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-foreground">
+                  新規ユニット作成
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  学習の目標と計画を設定してください
+                </p>
               </div>
             </div>
+          </div>
 
-            {/* 固定フッター */}
-            <div className="px-6 py-4 border-t bg-muted/30 flex justify-end gap-3 shrink-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isLoading}
-              >
-                キャンセル
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="min-w-[100px]"
-              >
-                {isLoading ? (
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              {/* スクロール可能コンテンツ */}
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="space-y-6">
+                  {/* 基本情報 */}
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
                   >
-                    <Save className="w-4 h-4" />
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <FileText className="w-4 h-4" />
+                            タイトル <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="ユニットのタイトルを入力してください"
+                              disabled={isLoading}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </motion.div>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    作成
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
+
+                  {/* 学習目標 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="learningGoal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Target className="w-4 h-4" />
+                            学習目標
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="この学習で達成したい目標を記述してください"
+                              rows={3}
+                              disabled={isLoading}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  {/* 事前の学習状態 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="preLearningState"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Eye className="w-4 h-4" />
+                            事前の学習状態
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="学習開始前の知識レベルや経験を記述してください"
+                              rows={3}
+                              disabled={isLoading}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  {/* 日付設定 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="grid md:grid-cols-2 gap-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Calendar className="w-4 h-4" />
+                            開始日
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              disabled={isLoading}
+                              {...field}
+                              value={
+                                field.value
+                                  ? new Date(field.value)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  // date値をYYYY-MM-DD形式で保存
+                                  field.onChange(e.target.value);
+                                } else {
+                                  field.onChange(undefined);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Calendar className="w-4 h-4" />
+                            終了日
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="date"
+                              disabled={isLoading}
+                              {...field}
+                              value={
+                                field.value
+                                  ? new Date(field.value)
+                                      .toISOString()
+                                      .slice(0, 10)
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                if (e.target.value) {
+                                  // date値をYYYY-MM-DD形式で保存
+                                  field.onChange(e.target.value);
+                                } else {
+                                  field.onChange(undefined);
+                                }
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  {/* ステータスと公開設定 */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="grid md:grid-cols-2 gap-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Settings className="w-4 h-4" />
+                            ステータス
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="ステータスを選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="PLANNED">計画中</SelectItem>
+                              <SelectItem value="IN_PROGRESS">
+                                進行中
+                              </SelectItem>
+                              <SelectItem value="COMPLETED">完了</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="displayFlag"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2 font-medium">
+                            <Settings className="w-4 h-4" />
+                            公開設定
+                          </FormLabel>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(value === "public")
+                            }
+                            defaultValue={field.value ? "public" : "private"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="公開設定を選択" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="public">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-green-600">🌐</span>
+                                  <div>
+                                    <div className="font-medium">公開</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      他のユーザーも閲覧可能
+                                    </div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="private">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-orange-600">🔒</span>
+                                  <div>
+                                    <div className="font-medium">非公開</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      自分のみ閲覧可能
+                                    </div>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+
+                  {/* タグ */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="space-y-3"
+                  >
+                    <Label className="flex items-center gap-2 font-medium">
+                      <Tag className="w-4 h-4" />
+                      タグ
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        placeholder="新しいタグを入力"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddTag();
+                          }
+                        }}
+                        disabled={isLoading}
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddTag}
+                        disabled={!newTag.trim() || isLoading}
+                        variant="outline"
+                      >
+                        追加
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {tags.map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center gap-1 bg-secondary px-2 py-1 rounded-full text-sm"
+                        >
+                          <span>{tag.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag.id)}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            disabled={isLoading}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* フッター */}
+              <div className="px-6 py-4 border-t bg-muted/30 flex justify-end gap-3 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="min-w-[100px]"
+                >
+                  {isLoading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <Save className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      作成
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </motion.div>
       </DialogContent>
     </Dialog>
