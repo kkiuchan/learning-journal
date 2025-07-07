@@ -77,8 +77,8 @@ export const logRequestSchema = z.object({
         resourceType: z.string().nullable(),
         resourceLink: z.string(),
         description: z.string().nullable(),
-        fileName: z.string().optional(),
-        filePath: z.string().optional(),
+        fileName: z.string().nullable().optional(),
+        filePath: z.string().nullable().optional(),
       })
     )
     .optional(),
