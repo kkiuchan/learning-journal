@@ -1,27 +1,25 @@
-import "@testing-library/jest-dom";
 import { jest } from "@jest/globals";
-import 
+import "@testing-library/jest-dom";
+import
+    /**
+     * 📚 Jest Mock関数 実践ガイド
+     * 学習ジャーナルプロジェクトでの使用例
+     */
+    // テスト対象の関数群
+    class LogService {
+        constructor(private apiClient: any) { }
 
-/**
- * 📚 Jest Mock関数 実践ガイド
- * 学習ジャーナルプロジェクトでの使用例
- */
+        async createLog(data: any) {
+            const result = await this.apiClient.post("/api/logs", data);
+            return result.data;
+        }
 
-// テスト対象の関数群
-class LogService {
-  constructor(private apiClient: any) {}
-
-  async createLog(data: any) {
-    const result = await this.apiClient.post("/api/logs", data);
-    return result.data;
-  }
-
-  async uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
-    return await this.apiClient.post("/api/upload", formData);
-  }
-}
+        async uploadFile(file: File) {
+            const formData = new FormData();
+            formData.append("file", file);
+            return await this.apiClient.post("/api/upload", formData);
+        }
+    };
 
 class NotificationService {
   showToast(message: string, type: "success" | "error" = "success") {
